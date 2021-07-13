@@ -4,8 +4,10 @@ import platform
 import argparse
 import glob
 import h5py
-import ruutils as ruu
 import multiprocessing as mp
+import shutil
+
+from tools import ruutils as ruu
 
 __version__ = "0.1"
 __logo__ = """▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
@@ -39,6 +41,64 @@ def process_hdf5(arg):
     hdf.close()
     return (result, filename, squiggleres)
 
+def mycallback(arg):
+    (result, filename, squiggleres) = arg
+    filetocheck = os.path.split(filename)
+    sourcefile = filename
+
+    if result == "Sequence":
+        path_output = os.path.join(args.output_folder,'sequence')
+        path_downloads = os.path.join(path_output,'downloads')
+        path_pass = os.path.join(path_downloads,'pass')
+        path_fail = os.path.join(path_downloads,'fail')
+
+        if not os.path.exists(path_output):
+            os.makedirs(path_output)
+        if not os.path.exists(path_downloads):
+            os.makedirs(path_downloads)
+        if not os.path.exists(path_pass):
+            os.makedirs(path_pass)
+        if not os.path.exists(path_fail):
+            os.makedirs(path_fail)
+
+        # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
+        print("\u001b[32mSequence found\u001b[0m \n")
+        if "pass" in filename:
+            destfile = os.path.join(path_pass,filetocheck[1])
+        else:
+            destfile = os.path.join(path_fail,filetocheck[1])
+        try:
+            shutil.copy(sourcefile, destfile)
+        except Exception as err:
+            print("File copy failed..", file=sys.stderr)
+    else:
+        path_output = os.path.join(args.output_folder,'reject')
+        path_downloads = os.path.join(path_output,'downloads')
+        path_pass = os.path.join(path_downloads,'pass')
+        path_fail = os.path.join(path_downloads,'fail')
+
+        if not os.path.exists(path_output):
+            os.makedirs(path_output)
+        if not os.path.exists(path_downloads):
+            os.makedirs(path_downloads)
+        if not os.path.exists(path_pass):
+            os.makedirs(path_pass)
+        if not os.path.exists(path_fail):
+            os.makedirs(path_fail)
+
+        # logger.info("[%s-%s @%s] [%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
+        print("\u001b[31mNo match\u001b[0m \n")
+        if "pass" in filename:
+            destfile = os.path.join(path_pass,filetocheck[1])
+        else:
+            destfile = os.path.join(path_fail,filetocheck[1])
+        try:
+            shutil.copy(sourcefile,destfile)
+        except Exception as err:
+            print("File copy failed...", file=sys.stderr)
+
+
+### Main code
 if __name__ == "__main__":
     global os_platform
     os_platform = platform.system()
@@ -99,29 +159,34 @@ if __name__ == "__main__":
     global kmer_len
     model_ker_means, kmer_len = ruu.process_model_file(model_file)
     # print(model_ker_means)
-    # seqIDs, threedarray = ruu.process_ref_fasta(fast_file, model_ker_means, kmer_len)
+    # print(kmer_len)
+    seqIDs, threedarray = ruu.process_ref_fasta(fast_file, model_ker_means, kmer_len)
 
-    # ## Scrap filenames
-    # data = []
-    # filenamecounter = 0
-    # for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
-    #     filenamecounter += 1
-    #     data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
-    # for filename in glob.glob(os.path.join(args.watchdir, "pass",'*.fast5')):
-    #     filenamecounter += 1
-    #     data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
-    # for filename in glob.glob(os.path.join(args.watchdir, "fail",'*.fast5')):
-    #     filenamecounter += 1
-    #     data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
-    # procdata = tuple(data)
+    print (seqIDs)
+    print(threedarray)
 
-    # # Assign process hdf5 to processes
-    # print("Start spawing hdf5 processes")
-    # results = []
-    # for d in (procdata):
-    #     result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-    #     results.append(result)
-    # for result in results:
-    #     result.wait()
+    ## Scrap filenames
+    data = []
+    filenamecounter = 0
+    for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
+        filenamecounter += 1
+        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "pass",'*.fast5')):
+        filenamecounter += 1
+        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "fail",'*.fast5')):
+        filenamecounter += 1
+        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
+    procdata = tuple(data)
 
-    # print("Read until completed. Exiting...")
+    # Assign process hdf5 to processes
+    print("Start spawing hdf5 processes")
+    results = []
+    for d in (procdata):
+        result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
+        # print(result.get())
+        results.append(result)
+    for result in results:
+        result.wait()
+
+    print("Read until completed. Exiting...")

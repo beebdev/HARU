@@ -7,6 +7,7 @@ import numpy as np
 import multiprocessing as mp
 import sklearn.preprocessing as skprep
 from Bio import SeqIO
+import mlpy
 
 def file_existance_check(files):
     print('Checking files...')
@@ -48,6 +49,7 @@ def process_model_file(model_file):
 
 def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
     kmer_means = {}
+    kmer_len -= 3
 
     for record in SeqIO.parse(ref_fasta, "fasta"):
         kmer_means[record.id] = {}
@@ -57,15 +59,14 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
         print("Record length: ", len(record.seq))
 
         seq = record.seq
-        for i in range(len(seq) + 1):
+        for i in range(len(seq) + 1 - kmer_len):
             kmer = "b'"+str(seq[i:i+kmer_len])+"'"
-            print(kmer)
             forward.append(float(model_kmer_means[kmer]))
         print("Forward ok")
 
         seq = record.seq.reverse_complement()
-        for i in range(len(seq)+1):
-            kmer = str(seq[i:i+kmer_len])
+        for i in range(len(seq) + 1 - kmer_len):
+            kmer = "b'"+str(seq[i:i+kmer_len])+"'"
             reverse.append(float(model_kmer_means[kmer]))
         print("Reverse ok")
 
@@ -82,7 +83,8 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
     row, col = list(arrays)[0].shape
     threedarray = mp.Array(ctypes.c_double, nSeq*row*col)
     # TODO: Check what threedarray_arry is
-    threedarrayshared_array = np.ctypeslib.as_array(threedarray.get_obj())
+    # threedarrayshared_array = np.ctypeslib.as_array(threedarray.get_obj())
+    threedarrayshared_array = np.array(arrays, dtype=np.float32)
     return seqIDs, threedarrayshared_array
     
 def process_items(d):
