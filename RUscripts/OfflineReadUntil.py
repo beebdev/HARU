@@ -8,6 +8,7 @@ import multiprocessing as mp
 import shutil
 
 from tools import ruutils as ruu
+from tools import haruutils as haru
 
 __version__ = "0.1"
 __logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
@@ -31,6 +32,7 @@ def process_hdf5(arg):
         squiggle = event_collection[50:300]
 
         # Search squiggle in reference squiggle
+        haru.send_squiggle(squiggle)
         squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
         seqid = squiggleres[0]
         direction = squiggleres[2]
@@ -170,6 +172,7 @@ if __name__ == "__main__":
         fast_file, model_ker_means, kmer_len)
 
     # TODO: send seqIDs and threedarray to HARU_PS
+    haru.save_reference(seqIDs, threedarray)
 
     # TODO: wait for setup
 
