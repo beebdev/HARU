@@ -10,11 +10,12 @@ import shutil
 from tools import ruutils as ruu
 
 __version__ = "0.1"
-__logo__ = """▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
+__logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
 ▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•  
 ▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪  
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
-.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ """
+.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ \x1b[1;0m"""
+
 
 def process_hdf5(arg):
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
@@ -25,21 +26,24 @@ def process_hdf5(arg):
         event_collection = list()
         for event in events:
             event_collection.append(float(event[0]))
-        
+
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
 
         # Search squiggle in reference squiggle
-        squiggleres = ruu.squiggle_search(squiggle, 0, 0, args, seqIDs, threedarray, seqLen)
-
+        squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
+        seqid = squiggleres[0]
+        direction = squiggleres[2]
+        position = squiggleres[3]
         if True:
-            # logger.info("[%s, %s, %s]", squiggleres[0], squiggleres[2], squiggleres[3])
             try:
-                result = ruu.go_or_no(squiggleres[0], squiggleres[2], squiggleres[3], seqLen, args)
+                result = ruu.go_or_no(
+                    seqid, direction, position, seqLen, args)
             except Exception as err:
                 print("error occurred", err, file=sys.stderr)
     hdf.close()
     return (result, filename, squiggleres)
+
 
 def mycallback(arg):
     (result, filename, squiggleres) = arg
@@ -47,10 +51,10 @@ def mycallback(arg):
     sourcefile = filename
 
     if result == "Sequence":
-        path_output = os.path.join(args.output_folder,'sequence')
-        path_downloads = os.path.join(path_output,'downloads')
-        path_pass = os.path.join(path_downloads,'pass')
-        path_fail = os.path.join(path_downloads,'fail')
+        path_output = os.path.join(args.output_folder, 'sequence')
+        path_downloads = os.path.join(path_output, 'downloads')
+        path_pass = os.path.join(path_downloads, 'pass')
+        path_fail = os.path.join(path_downloads, 'fail')
 
         if not os.path.exists(path_output):
             os.makedirs(path_output)
@@ -62,20 +66,21 @@ def mycallback(arg):
             os.makedirs(path_fail)
 
         # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
-        print("\u001b[32mSequence found\u001b[0m \n")
+        print("[{}-{} @{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
+              squiggleres[2], squiggleres[3], filename))
         if "pass" in filename:
-            destfile = os.path.join(path_pass,filetocheck[1])
+            destfile = os.path.join(path_pass, filetocheck[1])
         else:
-            destfile = os.path.join(path_fail,filetocheck[1])
+            destfile = os.path.join(path_fail, filetocheck[1])
         try:
             shutil.copy(sourcefile, destfile)
         except Exception as err:
             print("File copy failed..", file=sys.stderr)
     else:
-        path_output = os.path.join(args.output_folder,'reject')
-        path_downloads = os.path.join(path_output,'downloads')
-        path_pass = os.path.join(path_downloads,'pass')
-        path_fail = os.path.join(path_downloads,'fail')
+        path_output = os.path.join(args.output_folder, 'reject')
+        path_downloads = os.path.join(path_output, 'downloads')
+        path_pass = os.path.join(path_downloads, 'pass')
+        path_fail = os.path.join(path_downloads, 'fail')
 
         if not os.path.exists(path_output):
             os.makedirs(path_output)
@@ -86,19 +91,19 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        # logger.info("[%s-%s @%s] [%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
-        print("\u001b[31mNo match\u001b[0m \n")
+        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m".format(squiggleres[0],
+              squiggleres[2], squiggleres[3], filename))
         if "pass" in filename:
-            destfile = os.path.join(path_pass,filetocheck[1])
+            destfile = os.path.join(path_pass, filetocheck[1])
         else:
-            destfile = os.path.join(path_fail,filetocheck[1])
+            destfile = os.path.join(path_fail, filetocheck[1])
         try:
-            shutil.copy(sourcefile,destfile)
+            shutil.copy(sourcefile, destfile)
         except Exception as err:
             print("File copy failed...", file=sys.stderr)
 
 
-### Main code
+# Main code
 if __name__ == "__main__":
     global os_platform
     os_platform = platform.system()
@@ -106,10 +111,12 @@ if __name__ == "__main__":
     if os_platform != "Linux":
         print("Platform not supported", file=sys.stderr)
     else:
-        config_fpath = os.path.join(os.path.sep, os.path.dirname(os.path.realpath('__file__')), 'amp.config')
+        config_fpath = os.path.join(os.path.sep, os.path.dirname(
+            os.path.realpath('__file__')), 'amp.config')
 
-    ## Parse arguments
-    parser = argparse.ArgumentParser(description='Offline Read Until simulation.')
+    # Parse arguments
+    parser = argparse.ArgumentParser(
+        description='Offline Read Until simulation.')
     parser.add_argument('-f', '--fasta', metavar='FILE', required=True,
                         dest='fasta', type=str, default=None, action='store',
                         help='The fasta format file describing the reference sequence for your organism.')
@@ -137,46 +144,50 @@ if __name__ == "__main__":
     parser.add_argument('-V', '--verbose',
                         dest='verbose', action='store_true', default=False,
                         help='Print detailed messages while processing files.')
-    parser.add_argument('-v', '--version', action='version', version=('%(prog)s version={version}').format(version=__version__))
+    parser.add_argument('-v', '--version', action='version',
+                        version=('%(prog)s version={version}').format(version=__version__))
     args = parser.parse_args()
 
     print(__logo__)
 
-    ## Validate fasta and model files
+    # Validate fasta and model files
     ruu.file_existance_check((args.fasta, args.model))
     ruu.validate_fasta_file(args.fasta)
 
-    ## Multiprocess setup
+    # Multiprocess setup
     p = mp.Pool(args.procs)
     manager = mp.Manager()
     proc_ampres = manager.dict()
     fast_file = args.fasta
     seq_len = ruu.get_seq_len(fast_file)
 
-    ## Process model and reference fasta
+    # Process model and reference fasta
     model_file = args.model
     global model_ker_means
     global kmer_len
     model_ker_means, kmer_len = ruu.process_model_file(model_file)
-    # print(model_ker_means)
-    # print(kmer_len)
-    seqIDs, threedarray = ruu.process_ref_fasta(fast_file, model_ker_means, kmer_len)
+    seqIDs, threedarray = ruu.process_ref_fasta(
+        fast_file, model_ker_means, kmer_len)
 
-    print (seqIDs)
-    print(threedarray)
+    # TODO: send seqIDs and threedarray to HARU_PS
 
-    ## Scrap filenames
+    # TODO: wait for setup
+
+    # Scrap filenames
     data = []
     filenamecounter = 0
     for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
-    for filename in glob.glob(os.path.join(args.watchdir, "pass",'*.fast5')):
+        data.append([filename, seqIDs, threedarray,
+                    proc_ampres, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
-    for filename in glob.glob(os.path.join(args.watchdir, "fail",'*.fast5')):
+        data.append([filename, seqIDs, threedarray,
+                    proc_ampres, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray, proc_ampres, seq_len, args])
+        data.append([filename, seqIDs, threedarray,
+                    proc_ampres, seq_len, args])
     procdata = tuple(data)
 
     # Assign process hdf5 to processes
