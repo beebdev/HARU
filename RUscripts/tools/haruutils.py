@@ -60,4 +60,3 @@ def send_squiggle(squiggle):
         bytes_sent = s.send(payload)
         if bytes_sent != 1000:
             print("Incomplete send")
-        # print("Sent {} bytes".format(bytes_sent))
