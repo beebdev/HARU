@@ -1,5 +1,7 @@
+from ctypes import Structure
 import socket
-import pickle
+import struct
+from ctypes import *
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 3490        # The port used by the server
@@ -26,6 +28,11 @@ PORT = 3490        # The port used by the server
 #     print("Reference sent!")
 
 
+class Payload(Structure):
+    _fields_ = [("id", c_uint32),
+                ("query_seq", c_double * 250)]
+
+
 def save_reference(seqIDs, threedarray):
     with open("reference.h", "w") as f:
         f.write("#define SEQLEN {}\n".format(len(seqIDs)))
@@ -43,10 +50,14 @@ def save_reference(seqIDs, threedarray):
 
 
 def send_squiggle(squiggle):
+    '''
+    Description: Sends squiggle over to HARU and receives yes or no
+    '''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # TCP connection
         s.connect((HOST, PORT))
-        payload = pickle.dumps(squiggle)
+        payload = Payload(1, (c_double * 250)(*squiggle))
         bytes_sent = s.send(payload)
-        print("Sent {} bytes".format(bytes_sent))
-    print("Reference sent!")
+        if bytes_sent != 1000:
+            print("Incomplete send")
+        # print("Sent {} bytes".format(bytes_sent))

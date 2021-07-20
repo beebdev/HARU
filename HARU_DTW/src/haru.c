@@ -13,7 +13,12 @@
 #include <signal.h>
 #include "include/squiggle_search.h"
 #include "include/haru.h"
-#include "include/reference.h"
+// #include "include/reference.h"
+
+typedef struct payload_t {
+    uint32_t id;
+    double query_seq[250];
+} payload_t;
 
 void sigchld_handler(int s) {
     int saved_errno = errno;
@@ -97,11 +102,13 @@ int main() {
             char msg_buffer[BUFSIZE];
             while (1) {
                 ssize_t numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
-                msg_buffer[numBytesRcvd] = '\0';
+                // msg_buffer[numBytesRcvd] = '\0';
                 printf("(%ld) ", numBytesRcvd);
-                for (int i = 0; i < numBytesRcvd; i += sizeof(float)) {
-                    float v = *(msg_buffer + i);
-                    printf("%f ", v);
+
+                payload_t *payload = (payload_t *) msg_buffer;
+                printf("Content: id=%d, query:", payload->id);
+                for (int i = 0; i < 250; i++) {
+                    printf("%.15f, ", payload->query_seq[i]);
                 }
                 printf("\n");
 
