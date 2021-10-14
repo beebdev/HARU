@@ -31,7 +31,7 @@ def process_hdf5(arg):
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
-        print("ec",len(event_collection))
+        # print("ec", len(event_collection))
 
         # Search squiggle in reference squiggle
         # haru.send_squiggle(squiggle)
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        # print(result.get())
+        print(result.get())
         results.append(result)
     for result in results:
         result.wait()
