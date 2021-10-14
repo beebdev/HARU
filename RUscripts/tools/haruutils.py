@@ -1,6 +1,5 @@
 from ctypes import Structure
 import socket
-import struct
 from ctypes import *
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
@@ -58,5 +57,5 @@ def send_squiggle(squiggle):
         s.connect((HOST, PORT))
         payload = Payload(1, (c_double * 250)(*squiggle))
         bytes_sent = s.send(payload)
-        if bytes_sent != 1000:
+        if bytes_sent != 2008:
             print("Incomplete send")

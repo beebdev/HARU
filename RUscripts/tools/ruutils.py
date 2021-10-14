@@ -175,6 +175,9 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         refID = seqIDs.index(ref)
         Rprime, Fprime = threedarray[refID]
 
+        # query_sequence => length 3000
+        # scale (queryarray) != scale(queryarray[50:300])
+
         # Preprocess squiggle
         queryarray = skprep.scale(
             np.array(squiggle, dtype=float),
@@ -196,6 +199,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
             # Run DTW for squiggle and forward reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
             dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
+            # print(dist)
             result.append(
                 (
                     dist,   # unnormalised min-distance warp path between sequences
@@ -205,8 +209,8 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     path[1][0] + (blockID * overlap),
                     # end position for subref position
                     path[1][-1] + (blockID * overlap),
-                    path[0][0],     # start position for squiggle
-                    path[0][-1],    # end position for squiggle
+                    # path[0][0],     # start position for squiggle
+                    # path[0][-1],    # end position for squiggle
                 )
             )
 
@@ -231,8 +235,8 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     "R",
                     (len(Rprime) - (path[1][0] + (blockID * overlap))),
                     (len(Rprime) - (path[1][-1] + (blockID * overlap))),
-                    path[0][0],
-                    path[0][-1],
+                    # path[0][0],
+                    # path[0][-1],
                 )
             )
 
@@ -240,9 +244,11 @@ def squiggle_search(squiggle, seqIDs, threedarray):
             # logger.info("Rtime_%s: %s sec", blockID, (time.time() - tic))
 
     # Note first two elements flipped for return deliberately.
-    distance, seqid, direction, refStart, refEnd, queryStart, queryEnd = sorted(
+    distance, seqid, direction, refStart, refEnd = sorted(
         result, key=lambda result: result[0])[0]
-    return seqid, distance, direction, refStart, refEnd, queryStart, queryEnd
+    # if (refStart == 8601):
+    #     print(queryarray)
+    return seqid, distance, direction, refStart, refEnd
 
 
 def go_or_no(seqid, direction, position, seqlen, args):

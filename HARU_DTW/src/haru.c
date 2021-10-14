@@ -1,4 +1,3 @@
-// #include "include/haru.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,9 +10,9 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "include/squiggle_search.h"
 #include "include/haru.h"
-// #include "include/reference.h"
+#include "include/squiggle_search.h"
+#include "include/reference.h"
 
 typedef struct payload_t {
     uint32_t id;
@@ -32,6 +31,30 @@ void *get_in_addr(struct sockaddr *sa) {
     }
 
     return &(((struct sockaddr_in6 *) sa)->sin6_addr);
+}
+
+search_result_t squiggle_search(double *query) {
+    /* Info */
+    search_result_t result;
+    result.dist = -1;
+
+    /* For each reference */
+    for (int i = 0; i < NREF; i++) {
+        search_result_t f_res, r_res;
+        /* Forward reference */
+        f_res = subsequence_search(query, ref_signal[i][0]);
+        /* Reverse reference */
+        r_res = subsequence_search(query, ref_signal[i][0]);
+
+        if (result.dist < 0 || result.dist > f_res.dist) {
+            result = f_res;
+        }
+
+        if (result.dist > r_res.dist) {
+            result = r_res;
+        }
+    }
+    return result;
 }
 
 int main() {

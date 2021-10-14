@@ -1,0 +1,296 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'subsequence_search'" level="0">
+<item name = "Date">Thu Aug 12 22:07:51 2021
+</item>
+<item name = "Version">2020.1 (Build 2897737 on Wed May 27 20:21:37 MDT 2020)</item>
+<item name = "Project">squiggle_search_accelerator</item>
+<item name = "Solution">solution3</item>
+<item name = "Product family">zynq</item>
+<item name = "Target device">xc7z020-clg484-1</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">10.00 ns, 8.568 ns, 1.25 ns</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="8">, min, max, min, max, min, max, Type</keys>
+<column name="">49497, 49497, 0.495 ms, 0.495 ms, 49497, 49497, none</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="9">Instance, Module, min, max, min, max, min, max, Type</keys>
+<column name="tmp_s_min3_fu_6122">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_1_min3_fu_6131">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_2_min3_fu_6140">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_3_min3_fu_6149">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_4_min3_fu_6158">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_5_min3_fu_6167">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_6_min3_fu_6176">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_7_min3_fu_6185">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_8_min3_fu_6194">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_9_min3_fu_6203">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_s_min3_fu_6212">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_10_min3_fu_6221">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_11_min3_fu_6230">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_12_min3_fu_6239">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_13_min3_fu_6248">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_14_min3_fu_6257">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_15_min3_fu_6266">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_16_min3_fu_6275">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_17_min3_fu_6284">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_18_min3_fu_6293">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_19_min3_fu_6302">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_20_min3_fu_6311">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_21_min3_fu_6320">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_22_min3_fu_6329">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_23_min3_fu_6338">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_24_min3_fu_6347">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_25_min3_fu_6356">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_26_min3_fu_6365">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_27_min3_fu_6374">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_28_min3_fu_6383">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_29_min3_fu_6392">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_30_min3_fu_6401">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_31_min3_fu_6410">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_32_min3_fu_6419">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_33_min3_fu_6428">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_34_min3_fu_6437">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_35_min3_fu_6446">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_36_min3_fu_6455">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_37_min3_fu_6464">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_38_min3_fu_6473">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_39_min3_fu_6482">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_40_min3_fu_6491">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_41_min3_fu_6500">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_42_min3_fu_6509">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_43_min3_fu_6518">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_44_min3_fu_6527">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_45_min3_fu_6536">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_46_min3_fu_6545">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_47_min3_fu_6554">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_48_min3_fu_6563">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_49_min3_fu_6572">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_50_min3_fu_6581">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_51_min3_fu_6590">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_52_min3_fu_6599">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_53_min3_fu_6608">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_54_min3_fu_6617">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_55_min3_fu_6626">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_56_min3_fu_6635">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_57_min3_fu_6644">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_58_min3_fu_6653">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_59_min3_fu_6662">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_60_min3_fu_6671">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_61_min3_fu_6680">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_62_min3_fu_6689">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_63_min3_fu_6698">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_64_min3_fu_6707">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_65_min3_fu_6716">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_66_min3_fu_6725">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_67_min3_fu_6734">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_68_min3_fu_6743">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_69_min3_fu_6752">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_70_min3_fu_6761">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_71_min3_fu_6770">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_72_min3_fu_6779">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_73_min3_fu_6788">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_74_min3_fu_6797">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_75_min3_fu_6806">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_76_min3_fu_6815">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_77_min3_fu_6824">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_78_min3_fu_6833">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_79_min3_fu_6842">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_80_min3_fu_6851">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_81_min3_fu_6860">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_82_min3_fu_6869">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_83_min3_fu_6878">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_84_min3_fu_6887">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_85_min3_fu_6896">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_86_min3_fu_6905">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_87_min3_fu_6914">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_88_min3_fu_6923">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_89_min3_fu_6932">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_90_min3_fu_6941">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_91_min3_fu_6950">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_92_min3_fu_6959">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_93_min3_fu_6968">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_94_min3_fu_6977">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_95_min3_fu_6986">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_96_min3_fu_6995">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_97_min3_fu_7004">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_98_min3_fu_7013">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_99_min3_fu_7022">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_100_min3_fu_7031">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_101_min3_fu_7040">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_102_min3_fu_7049">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_103_min3_fu_7058">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_104_min3_fu_7067">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_105_min3_fu_7076">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_106_min3_fu_7085">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_107_min3_fu_7094">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_108_min3_fu_7103">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_109_min3_fu_7112">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_110_min3_fu_7121">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_111_min3_fu_7130">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_112_min3_fu_7139">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_113_min3_fu_7148">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_114_min3_fu_7157">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_115_min3_fu_7166">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_116_min3_fu_7175">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_117_min3_fu_7184">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_118_min3_fu_7193">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_119_min3_fu_7202">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_120_min3_fu_7211">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_121_min3_fu_7220">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_122_min3_fu_7229">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_123_min3_fu_7238">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_124_min3_fu_7247">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_125_min3_fu_7256">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_126_min3_fu_7265">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_127_min3_fu_7274">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_128_min3_fu_7283">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_129_min3_fu_7292">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_130_min3_fu_7301">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_131_min3_fu_7310">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_132_min3_fu_7319">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_133_min3_fu_7328">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_134_min3_fu_7337">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_135_min3_fu_7346">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_136_min3_fu_7355">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_137_min3_fu_7364">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_138_min3_fu_7373">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_139_min3_fu_7382">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_140_min3_fu_7391">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_141_min3_fu_7400">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_142_min3_fu_7409">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_143_min3_fu_7418">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_144_min3_fu_7427">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_145_min3_fu_7436">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_146_min3_fu_7445">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_147_min3_fu_7454">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_148_min3_fu_7463">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_149_min3_fu_7472">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_150_min3_fu_7481">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_151_min3_fu_7490">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_152_min3_fu_7499">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_153_min3_fu_7508">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_154_min3_fu_7517">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_155_min3_fu_7526">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_156_min3_fu_7535">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_157_min3_fu_7544">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_158_min3_fu_7553">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_159_min3_fu_7562">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_160_min3_fu_7571">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_161_min3_fu_7580">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_162_min3_fu_7589">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_163_min3_fu_7598">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_164_min3_fu_7607">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_165_min3_fu_7616">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_166_min3_fu_7625">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_167_min3_fu_7634">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_168_min3_fu_7643">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_169_min3_fu_7652">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_170_min3_fu_7661">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_171_min3_fu_7670">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_172_min3_fu_7679">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_173_min3_fu_7688">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_174_min3_fu_7697">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_175_min3_fu_7706">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_176_min3_fu_7715">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_177_min3_fu_7724">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_178_min3_fu_7733">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_179_min3_fu_7742">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_180_min3_fu_7751">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_181_min3_fu_7760">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_182_min3_fu_7769">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_183_min3_fu_7778">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_184_min3_fu_7787">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_185_min3_fu_7796">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_186_min3_fu_7805">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_187_min3_fu_7814">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_188_min3_fu_7823">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_189_min3_fu_7832">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_190_min3_fu_7841">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_191_min3_fu_7850">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_192_min3_fu_7859">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_193_min3_fu_7868">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_194_min3_fu_7877">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_195_min3_fu_7886">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_196_min3_fu_7895">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_197_min3_fu_7904">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_198_min3_fu_7913">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_199_min3_fu_7922">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_200_min3_fu_7931">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_201_min3_fu_7940">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_202_min3_fu_7949">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_203_min3_fu_7958">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_204_min3_fu_7967">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_205_min3_fu_7976">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_206_min3_fu_7985">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_207_min3_fu_7994">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_208_min3_fu_8003">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_209_min3_fu_8012">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_210_min3_fu_8021">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_211_min3_fu_8030">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_212_min3_fu_8039">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_213_min3_fu_8048">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_214_min3_fu_8057">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_215_min3_fu_8066">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_216_min3_fu_8075">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_217_min3_fu_8084">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_218_min3_fu_8093">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_219_min3_fu_8102">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_220_min3_fu_8111">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_221_min3_fu_8120">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_222_min3_fu_8129">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_223_min3_fu_8138">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_224_min3_fu_8147">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_225_min3_fu_8156">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_226_min3_fu_8165">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_227_min3_fu_8174">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_228_min3_fu_8183">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_229_min3_fu_8192">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_230_min3_fu_8201">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_231_min3_fu_8210">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_232_min3_fu_8219">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_233_min3_fu_8228">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_234_min3_fu_8237">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_235_min3_fu_8246">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_236_min3_fu_8255">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_237_min3_fu_8264">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_238_min3_fu_8273">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_239_min3_fu_8282">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_240_min3_fu_8291">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_241_min3_fu_8300">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_242_min3_fu_8309">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_243_min3_fu_8318">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_244_min3_fu_8327">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_245_min3_fu_8336">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_1_246_min3_fu_8345">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+<column name="tmp_min3_fu_8354">min3, 0, 0, 0 ns, 0 ns, 1, 1, function</column>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+<column name="- sdtw_col_0_label">747, 747, 3, -, -, 249, no</column>
+<column name="- sdtw_col_j_label">48746, 48746, 252, 1, 1, 48496, yes</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+</profile>

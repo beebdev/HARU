@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import sys
 import platform
@@ -30,9 +31,10 @@ def process_hdf5(arg):
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
+        print("ec",len(event_collection))
 
         # Search squiggle in reference squiggle
-        haru.send_squiggle(squiggle)
+        # haru.send_squiggle(squiggle)
         squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
         seqid = squiggleres[0]
         direction = squiggleres[2]
@@ -68,8 +70,8 @@ def mycallback(arg):
             os.makedirs(path_fail)
 
         # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
-        print("[{}-{} @{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
-              squiggleres[2], squiggleres[3], filename))
+        print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
+              squiggleres[2], squiggleres[4], squiggleres[1], filename))
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -192,6 +194,7 @@ if __name__ == "__main__":
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
     procdata = tuple(data)
+    # print(procdata)
 
     # Assign process hdf5 to processes
     print("Start spawing hdf5 processes")
