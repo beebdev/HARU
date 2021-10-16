@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
-  <source>
-    <originFiles name="squiggle_search.cpp" path="D:\UNSW\Thesis\HARU\HARU_DTW\src\squiggle_search.cpp"/>
-  </source>
-  <testbench>
-    <originFiles name="squiggle_search_top.cpp" path="D:\UNSW\Thesis\HARU\HARU_DTW\src\squiggle_search_top.cpp"/>
-  </testbench>
-</autopilotfilemapping:AutoPilotFileMapping>
