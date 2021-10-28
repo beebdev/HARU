@@ -195,7 +195,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         for blockID, ref_ in enumerate(subrefs):
             # Get pre-DTW time
             tic = time.time()
-
+            # print("F", ref_[0], ref_[1])
             # Run DTW for squiggle and forward reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
             dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
@@ -209,6 +209,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     path[1][0] + (blockID * overlap),
                     # end position for subref position
                     path[1][-1] + (blockID * overlap),
+                    max(cost[-1, :])
                     # path[0][0],     # start position for squiggle
                     # path[0][-1],    # end position for squiggle
                 )
@@ -221,12 +222,14 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         refsubset = Rprime
         subrefs = [refsubset[i: i + blocksize] for i in indexes[::overlap]]
         for blockID, ref_ in enumerate(subrefs):
+            # print("R", ref_[0], ref_[1])
             # Get pre-DTW time
             tic = time.time()
 
             # Run DTW for squiggle and reverse reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
             dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
+            # print(max(cost))
             # Corrected for the fact that this is a reverse complement
             result.append(
                 (
@@ -235,6 +238,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     "R",
                     (len(Rprime) - (path[1][0] + (blockID * overlap))),
                     (len(Rprime) - (path[1][-1] + (blockID * overlap))),
+                    max(cost[-1, :])
                     # path[0][0],
                     # path[0][-1],
                 )
@@ -244,11 +248,11 @@ def squiggle_search(squiggle, seqIDs, threedarray):
             # logger.info("Rtime_%s: %s sec", blockID, (time.time() - tic))
 
     # Note first two elements flipped for return deliberately.
-    distance, seqid, direction, refStart, refEnd = sorted(
+    distance, seqid, direction, refStart, refEnd, max_cost = sorted(
         result, key=lambda result: result[0])[0]
     # if (refStart == 8601):
     #     print(queryarray)
-    return seqid, distance, direction, refStart, refEnd
+    return seqid, distance, direction, refStart, refEnd, max_cost
 
 
 def go_or_no(seqid, direction, position, seqlen, args):

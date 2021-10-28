@@ -19,6 +19,8 @@ __logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  �
 .▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ \x1b[1;0m"""
 
 
+max_cost = []
+
 def process_hdf5(arg):
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
     hdf = h5py.File(filename, 'r')
@@ -70,8 +72,9 @@ def mycallback(arg):
             os.makedirs(path_fail)
 
         # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
-        print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
-              squiggleres[2], squiggleres[4], squiggleres[1], filename))
+        print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m max {}".format(squiggleres[0],
+              squiggleres[2], squiggleres[4], squiggleres[1], filename, squiggleres[5]))
+        max_cost.append(squiggleres[5])
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -95,8 +98,9 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m".format(squiggleres[0],
-              squiggleres[2], squiggleres[3], filename))
+        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m max{}".format(squiggleres[0],
+              squiggleres[2], squiggleres[3], filename, squiggleres[5]))
+        max_cost.append(squiggleres[5])
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -201,9 +205,10 @@ if __name__ == "__main__":
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        print(result.get())
+        # print(result.get())
         results.append(result)
     for result in results:
         result.wait()
 
+    print("max cost value: ", max(max_cost))
     print("Read until completed. Exiting...")
