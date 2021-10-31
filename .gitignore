@@ -140,6 +140,5 @@ cython_debug/
 ### Project
 client.py
 RUgOUT
-haru
 .vscode/
 *.zip

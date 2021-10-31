@@ -1,10 +1,10 @@
 import os
 import sys
 import csv
-import ctypes
+# import ctypes
 import time
 import numpy as np
-import multiprocessing as mp
+# import multiprocessing as mp
 import sklearn.preprocessing as skprep
 from Bio import SeqIO
 import mlpy
@@ -72,7 +72,7 @@ def process_model_file(model_file):
         data = np.array(raw_data[1:])
         model_kmers = dict(data[:, [kmer_columnID, mean_columnID]])
         kmer_len = len(data[0][kmer_columnID])
-        print(kmer_len)
+        # print(kmer_len)
     return model_kmers, kmer_len
 
 
@@ -126,9 +126,9 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
     seqIDs, arrays = zip(*items_)
 
     # 3d Array containing [nSeq][nLists][ListValues]
-    nSeq = len(seqIDs)
-    row, col = list(arrays)[0].shape
-    threedarray = mp.Array(ctypes.c_double, nSeq * row * col)
+    # nSeq = len(seqIDs)
+    # row, col = list(arrays)[0].shape
+    # threedarray = mp.Array(ctypes.c_double, nSeq * row * col)
     # TODO: Check what threedarray_arry is
     # threedarrayshared_array = np.ctypeslib.as_array(threedarray.get_obj())
     threedarrayshared_array = np.array(arrays, dtype=np.float32)
@@ -148,7 +148,7 @@ def process_items(d):
     result = []
     for _, v in d[1].items():
         result.append(v)
-        print(v)
+        # print(v)
     return seqid, np.array(result)
 
 
@@ -246,8 +246,8 @@ def go_or_no(seqid, direction, position, args):
         balance = args.length / 2
         if seqid.find(sequence.split(":", 1)[0]) >= 0:
             if direction == "F":
-                if args.verbose:
-                    print("Forward Strand")
+                # if args.verbose:
+                #     print("Forward Strand")
 
                 if position >= (start - balance) and position <= stop:
                     return "Sequence"

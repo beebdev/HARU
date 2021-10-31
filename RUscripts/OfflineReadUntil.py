@@ -13,11 +13,11 @@ from tools import ruutils as ruu
 from tools import haruutils as haru
 
 __version__ = "0.1"
-__logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
+__logo__ = """▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
 ▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•  
 ▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪  
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
-.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ \x1b[1;0m"""
+.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ """
 
 
 max_cost = []
@@ -37,7 +37,7 @@ def process_hdf5(arg):
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
 
-        # hw_result = haru.send_squiggle(squiggle)
+        haru.squiggle_search(squiggle)
 
         # Subsequence search for the squiggle
         sw_result = ruu.squiggle_search(squiggle, seqIDs, threedarray)
@@ -52,7 +52,7 @@ def process_hdf5(arg):
         except Exception as err:
             print("error occurred", err, file=sys.stderr)
     hdf.close()
-    return (result, filename, sw_result)
+    return (result, filename, sw_result)#, hw_result)
 
 
 def mycallback(arg):
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     seqIDs, threedarray = ruu.process_ref_fasta(
         fast_file, model_ker_means, kmer_len)
 
-    haru.save_reference(seqIDs, threedarray)
+    # haru.save_reference(seqIDs, threedarray)
 
     # Scrap filenames
     data = []

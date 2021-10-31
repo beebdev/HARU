@@ -1,3 +1,19 @@
+/***********************************************************************
+ * FILENAME: haru_server.h
+ * DESCRIPTION:
+ *     HARU Server hosts a server socket and listens for client connections.
+ *     When a client connects, a new thread is created to handle the client.
+ *     The server calls sDTW on the client data and returns the result to the client.
+ * NOTES:
+ *
+ * AUTHOR: Elton Shih        START DATE: 25/06/2021
+ * CHANGES:
+ *
+ * VERSION DATE       WHO     DETAIL
+ * v0.01   29/09/2021 ES      Init Draft version
+ *
+ **/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,12 +27,18 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "include/haru.h"
-#include "include/squiggle_search.h"
-#include "include/reference.h"
 
+
+/* Server information */
+#define MY_STATIC_IP "10.10.130.3"
+#define PORT 3490
+#define BACKLOG 10
+#define BUFSIZE 3072
+
+/* Payload struct */
 typedef struct payload_t {
     uint32_t id;
-    double query_seq[250];
+    int16_t query_seq[250];
 } payload_t;
 
 void sigchld_handler(int s) {
@@ -31,30 +53,6 @@ void *get_in_addr(struct sockaddr *sa) {
     }
 
     return &(((struct sockaddr_in6 *) sa)->sin6_addr);
-}
-
-search_result_t squiggle_search(double *query) {
-    /* Info */
-    search_result_t result;
-    result.dist = -1;
-
-    /* For each reference */
-    for (int i = 0; i < NREF; i++) {
-        search_result_t f_res, r_res;
-        /* Forward reference */
-        f_res = subsequence_search(query, ref_signal[i][0]);
-        /* Reverse reference */
-        r_res = subsequence_search(query, ref_signal[i][0]);
-
-        if (result.dist < 0 || result.dist > f_res.dist) {
-            result = f_res;
-        }
-
-        if (result.dist > r_res.dist) {
-            result = r_res;
-        }
-    }
-    return result;
 }
 
 int main() {
@@ -73,24 +71,27 @@ int main() {
     myaddr.sin_addr.s_addr = inet_addr(MY_STATIC_IP);
     memset(myaddr.sin_zero, '\0', sizeof myaddr.sin_zero);
 
+    /* Create a socket */
     if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
         perror("HARU: socket");
         exit(1);
     }
 
+    /* Set socket to reuse address */
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
         sizeof(int)) == -1) {
         perror("setsockopt");
         exit(1);
     }
 
+    /* Bind socket to address */
     if (bind(sockfd, (struct sockaddr *) &myaddr, sizeof myaddr) == -1) {
         close(sockfd);
         perror("HARU: bind");
         exit(1);
     }
 
-    /* Start listening with queue of BACKLOG*/
+    /* Start listening with queue of BACKLOG */
     if (listen(sockfd, BACKLOG) == -1) {
         perror("listen");
         exit(1);
@@ -105,7 +106,13 @@ int main() {
         exit(1);
     }
 
+    /* Setup HARU */
+    haru_t haru;
+    haru_init(&haru);
+
     printf("HARU: waiting for connections...\n");
+    
+    /* Accept connections */
     while (1) {
         sin_size = sizeof client_addr;
         confd = accept(sockfd, (struct sockaddr *) &client_addr, &sin_size);
@@ -123,22 +130,29 @@ int main() {
             /* Child */
             close(sockfd);
             char msg_buffer[BUFSIZE];
-            while (1) {
-                ssize_t numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
-                // msg_buffer[numBytesRcvd] = '\0';
+            ssize_t numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
+            while (numBytesRcvd > 0) {
                 printf("(%ld) ", numBytesRcvd);
 
                 payload_t *payload = (payload_t *) msg_buffer;
                 printf("Content: id=%d, query:", payload->id);
-                for (int i = 0; i < 250; i++) {
-                    printf("%.15f, ", payload->query_seq[i]);
-                }
-                printf("\n");
+                // for (int i = 0; i < 250; i++) {
+                //     printf("%d, ", payload->query_seq[i]);
+                // }
+                // printf("\n");
 
-                if (send(confd, "Got it!", 7, 0) == -1) {
+                /* Call sDTW */
+                query_t query;
+                query_init(&query, payload->id);
+                haru_process_query(&haru, payload->query_seq, &query);
+
+                /* Send result to client */
+                if (send(confd, query, sizeof(query), 0) == -1) {
                     perror("send");
                     break;
                 }
+
+                numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
             }
             close(confd);
             exit(0);
