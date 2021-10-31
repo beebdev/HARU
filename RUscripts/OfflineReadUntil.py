@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import os
 import sys
 import platform
@@ -20,6 +21,8 @@ __logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  �
 
 
 max_cost = []
+swDTW_time = []
+hwDTW_time = []
 
 def process_hdf5(arg):
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
@@ -33,28 +36,30 @@ def process_hdf5(arg):
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
-        # print("ec", len(event_collection))
 
-        # Search squiggle in reference squiggle
-        # haru.send_squiggle(squiggle)
-        squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
-        seqid = squiggleres[0]
-        direction = squiggleres[2]
-        position = squiggleres[3]
-        if True:
-            try:
-                result = ruu.go_or_no(
-                    seqid, direction, position, seqLen, args)
-            except Exception as err:
-                print("error occurred", err, file=sys.stderr)
+        # hw_result = haru.send_squiggle(squiggle)
+
+        # Subsequence search for the squiggle
+        sw_result = ruu.squiggle_search(squiggle, seqIDs, threedarray)
+        seqID = sw_result[0]
+        direction = sw_result[2]
+        position = sw_result[3]
+        
+        # Determine rejection decision
+        try:
+            result = ruu.go_or_no(
+                seqID, direction, position, args)
+        except Exception as err:
+            print("error occurred", err, file=sys.stderr)
     hdf.close()
-    return (result, filename, squiggleres)
+    return (result, filename, sw_result)
 
 
 def mycallback(arg):
-    (result, filename, squiggleres) = arg
+    (result, filename, sw_result) = arg
     filetocheck = os.path.split(filename)
     sourcefile = filename
+    swDTW_time.append(sw_result[6])
 
     if result == "Sequence":
         path_output = os.path.join(args.output_folder, 'sequence')
@@ -71,10 +76,10 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
-        print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m max {}".format(squiggleres[0],
-              squiggleres[2], squiggleres[4], squiggleres[1], filename, squiggleres[5]))
-        max_cost.append(squiggleres[5])
+        print("[{}-{} @{}] [{}]\t\u001b[32mSequence found\u001b[0m max {}".format(sw_result[0],
+              sw_result[2], sw_result[4], filename, sw_result[5]))
+        max_cost.append(sw_result[5])
+        
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -98,9 +103,10 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m max{}".format(squiggleres[0],
-              squiggleres[2], squiggleres[3], filename, squiggleres[5]))
-        max_cost.append(squiggleres[5])
+        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m max{}".format(sw_result[0],
+              sw_result[2], sw_result[3], filename, sw_result[5]))
+        max_cost.append(sw_result[5])
+
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -177,10 +183,7 @@ if __name__ == "__main__":
     seqIDs, threedarray = ruu.process_ref_fasta(
         fast_file, model_ker_means, kmer_len)
 
-    # TODO: send seqIDs and threedarray to HARU_PS
     haru.save_reference(seqIDs, threedarray)
-
-    # TODO: wait for setup
 
     # Scrap filenames
     data = []
@@ -198,9 +201,8 @@ if __name__ == "__main__":
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
     procdata = tuple(data)
-    # print(procdata)
 
-    # Assign process hdf5 to processes
+    # Start multiprocessing
     print("Start spawing hdf5 processes")
     results = []
     for d in (procdata):
@@ -211,4 +213,7 @@ if __name__ == "__main__":
         result.wait()
 
     print("max cost value: ", max(max_cost))
+    print("Total runs: ", len(swDTW_time))
+    print("Total time: ", sum(swDTW_time), "sec")
+    print("Average time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
     print("Read until completed. Exiting...")

@@ -171,14 +171,14 @@ def squiggle_search(squiggle, seqIDs, threedarray):
 
     # Search in each seqIDs
     for ref in seqIDs:
-        # Fprime and Rprime of the current reference squiggle
+        # Separate the Fprime and Rprime
         refID = seqIDs.index(ref)
         Rprime, Fprime = threedarray[refID]
 
         # query_sequence => length 3000
         # scale (queryarray) != scale(queryarray[50:300])
 
-        # Preprocess squiggle
+        # Normalise the squiggle
         queryarray = skprep.scale(
             np.array(squiggle, dtype=float),
             axis=0,
@@ -187,49 +187,35 @@ def squiggle_search(squiggle, seqIDs, threedarray):
             copy=True,
         )
 
-        # Run search on forward reference
+        # Start time
+        tic = time.time()
+
+        # Search on the forward reference
         refsubset = Fprime
         indexes = np.array(range(len(refsubset)))
+
         # Reference partitioned into blocks. Stride of ${overlap}
         subrefs = [refsubset[i: i + blocksize] for i in indexes[::overlap]]
         for blockID, ref_ in enumerate(subrefs):
-            # Get pre-DTW time
-            tic = time.time()
-            # print("F", ref_[0], ref_[1])
             # Run DTW for squiggle and forward reference
-            # TODO: change dtw_subsequence to a wrapper instead of mlpy
             dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
-            # print(dist)
             result.append(
                 (
                     dist,   # unnormalised min-distance warp path between sequences
                     ref,    # seqID of current reference
                     "F",    # forward reference
-                    # start position for subref position
-                    path[1][0] + (blockID * overlap),
-                    # end position for subref position
-                    path[1][-1] + (blockID * overlap),
-                    max(cost[-1, :])
-                    # path[0][0],     # start position for squiggle
-                    # path[0][-1],    # end position for squiggle
+                    path[1][0] + (blockID * overlap), # start position for subref position
+                    path[1][-1] + (blockID * overlap), # end position for subref position
+                    max(cost[-1, :]), # max cost for squiggle
                 )
             )
 
-            # Print time spent in DTW
-            # logger.info("Ftime_%s: %s sec", blockID, (time.time() - tic))
-
-        # Run search on reverse reference
+        # Search on the reverse reference
         refsubset = Rprime
         subrefs = [refsubset[i: i + blocksize] for i in indexes[::overlap]]
         for blockID, ref_ in enumerate(subrefs):
-            # print("R", ref_[0], ref_[1])
-            # Get pre-DTW time
-            tic = time.time()
-
             # Run DTW for squiggle and reverse reference
-            # TODO: change dtw_subsequence to a wrapper instead of mlpy
             dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
-            # print(max(cost))
             # Corrected for the fact that this is a reverse complement
             result.append(
                 (
@@ -238,44 +224,27 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     "R",
                     (len(Rprime) - (path[1][0] + (blockID * overlap))),
                     (len(Rprime) - (path[1][-1] + (blockID * overlap))),
-                    max(cost[-1, :])
-                    # path[0][0],
-                    # path[0][-1],
+                    max(cost[-1, :]),
                 )
             )
 
-            # Print time spent in DTW
-            # logger.info("Rtime_%s: %s sec", blockID, (time.time() - tic))
-
+    total_time = time.time() - tic
     # Note first two elements flipped for return deliberately.
     distance, seqid, direction, refStart, refEnd, max_cost = sorted(
         result, key=lambda result: result[0])[0]
-    # if (refStart == 8601):
-    #     print(queryarray)
-    return seqid, distance, direction, refStart, refEnd, max_cost
+
+    return seqid, distance, direction, refStart, refEnd, max_cost, total_time
 
 
-def go_or_no(seqid, direction, position, seqlen, args):
+def go_or_no(seqid, direction, position, args):
     for sequence in args.targets:
-        if args.verbose:
-            print(sequence)
-
         start = int(float(sequence.split(":", 1)[1].split("-", 1)[0]))
         stop = int(float(sequence.split(":", 1)[1].split("-", 1)[1]))
-        length = seqlen[seqid]
-
-        if args.verbose:
-            print(start, stop, length)
-            print(sequence.split(":", 1)[0])
-            print(type(seqid))
 
         # We note that the average template read length is 6kb for the test lambda dataset.
         # Therefore we are interested in reads which start at least 3kb in advance of our position of interest
         balance = args.length / 2
         if seqid.find(sequence.split(":", 1)[0]) >= 0:
-            if args.verbose:
-                print("Found it")
-
             if direction == "F":
                 if args.verbose:
                     print("Forward Strand")
@@ -283,8 +252,6 @@ def go_or_no(seqid, direction, position, seqlen, args):
                 if position >= (start - balance) and position <= stop:
                     return "Sequence"
             elif direction == "R":
-                if args.verbose:
-                    print("Reverse Strand")
                 # We assume that coordinates are reported with respect to the forward strand regardless of
                 # wether you are matching to forward or reverse.
                 if position >= (start - balance) and position <= stop:
