@@ -8,6 +8,7 @@ import glob
 import h5py
 import multiprocessing as mp
 import shutil
+import time
 
 from tools import ruutils as ruu
 from tools import haruutils as haru
@@ -25,7 +26,7 @@ swDTW_time = []
 hwDTW_time = []
 
 def process_hdf5(arg):
-    filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
+    filename, seqIDs, threedarray, proc_ampres, seqLen, args, RID = arg
     hdf = h5py.File(filename, 'r')
 
     for read in hdf['Analyses']['EventDetection_000']['Reads']:
@@ -37,7 +38,10 @@ def process_hdf5(arg):
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
 
-        haru.squiggle_search(squiggle)
+        t1 = time.time()
+        hw_result = haru.squiggle_search(squiggle, RID)
+        t2 = time.time()
+        hw_time = t2 - t1
 
         # Subsequence search for the squiggle
         sw_result = ruu.squiggle_search(squiggle, seqIDs, threedarray)
@@ -52,14 +56,15 @@ def process_hdf5(arg):
         except Exception as err:
             print("error occurred", err, file=sys.stderr)
     hdf.close()
-    return (result, filename, sw_result)#, hw_result)
+    return (result, filename, sw_result, hw_result, hw_time)
 
 
 def mycallback(arg):
-    (result, filename, sw_result) = arg
+    (result, filename, sw_result, hw_result, hw_time) = arg
     filetocheck = os.path.split(filename)
     sourcefile = filename
     swDTW_time.append(sw_result[6])
+    hwDTW_time.append(hw_time)
 
     if result == "Sequence":
         path_output = os.path.join(args.output_folder, 'sequence')
@@ -191,15 +196,15 @@ if __name__ == "__main__":
     for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+                    proc_ampres, seq_len, args, filenamecounter])
     for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.fast5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+                    proc_ampres, seq_len, args, filenamecounter])
     for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.fast5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+                    proc_ampres, seq_len, args, filenamecounter])
     procdata = tuple(data)
 
     # Start multiprocessing
@@ -214,6 +219,8 @@ if __name__ == "__main__":
 
     print("max cost value: ", max(max_cost))
     print("Total runs: ", len(swDTW_time))
-    print("Total time: ", sum(swDTW_time), "sec")
-    print("Average time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
+    print("Total sw time: ", sum(swDTW_time), "sec")
+    print("Average sw time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
+    print("Total hw time: ", sum(hwDTW_time), "sec")
+    print("Average hw time per squiggle: ", sum(hwDTW_time) / len(hwDTW_time), "sec")
     print("Read until completed. Exiting...")

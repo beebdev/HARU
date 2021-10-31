@@ -4,7 +4,7 @@ import numpy as np
 from ctypes import Structure
 from ctypes import *
 
-HOST = '127.0.0.1'  # The server's hostname or IP address
+HOST = '10.10.130.3'  # The server's hostname or IP address
 PORT = 3490        # The port used by the server
 
 # def send_seqID_prep(seqIDs):
@@ -33,6 +33,12 @@ class Payload(Structure):
     _fields_ = [("id", c_uint32),
                 ("query_seq", c_int16 * 250)]
 
+class Results(Structure):
+    _fields_ = [("id", c_int32),
+                ("direction", c_int32),
+                ("position", c_int32),
+                ("score", c_int32)]
+
 
 # At the moment the reference is being stored directly in the on-chip memory
 # of the Zynq device since the reference is small. For larger references, the
@@ -53,7 +59,7 @@ class Payload(Structure):
 #         f.close()
 
 
-def squiggle_search(squiggle):
+def squiggle_search(squiggle, RID):
     '''
     Sends the squiggle to the haru server and returns the direction,
     position and score of the best match.
@@ -74,7 +80,18 @@ def squiggle_search(squiggle):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # TCP connection
         s.connect((HOST, PORT))
-        payload = Payload(1, (c_int16 * 250)(*query))
+        payload = Payload(RID, (c_int16 * 250)(*query))
         bytes_sent = s.send(payload)
-        if bytes_sent != 2008:
-            print("Incomplete send, sent", bytes_sent)
+        # if bytes_sent != 504:
+            # print("Incomplete send, sent", bytes_sent)
+        
+        # Recieve response
+        data = s.recv(2048)
+        # print("Received {} bytes".format(len(data)))
+        result = Results.from_buffer_copy(data)
+        # print("Received result: {}".format(result))
+        # print("ID: {}".format(result.id))
+        # print("Direction: {}".format(result.direction))
+        # print("Position: {}".format(result.position))
+        # print("Score: {}".format(result.score))
+        return result.id, result.direction, result.position, result.score

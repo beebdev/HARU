@@ -106,6 +106,9 @@ int main() {
         exit(1);
     }
 
+    /* Create a shared semaphore */
+    sem_t *sem = sem_open("/haru_sem", O_CREAT, 0644, 1);
+
     /* Setup HARU */
     haru_t haru;
     haru_init(&haru);
