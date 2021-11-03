@@ -100,17 +100,16 @@ int main() {
     }
 
     query_t my_query;
-    query_init(&my_query, 0);
-
-	gettimeofday(&t1, NULL);
-    haru_process_query(&my_haru, strand_sample, &my_query);
-
-	gettimeofday(&t2, NULL);
-	hw_duration += (t2.tv_sec - t1.tv_sec) * 1000;
-	hw_duration += (t2.tv_usec - t1.tv_usec) / 1000;
+    for (int i = 0; i < 200; i++) {
+        gettimeofday(&t1, NULL);
+        query_init(&my_query, 0);
+        haru_process_query(&my_haru, strand_sample, &my_query);
+        gettimeofday(&t2, NULL);
+        hw_duration += (t2.tv_sec - t1.tv_sec) * 1000;
+        hw_duration += (t2.tv_usec - t1.tv_usec) / 1000;
+    }
 
     printf("HW: [%d]@%d (%d)\n", my_query.ID, my_query.position, my_query.min_dist);
-
     printf("SW_time: %lf ms\nHw_time: %lf ms\n", sw_duration, hw_duration);
 
     /////////////////////

@@ -1,6 +1,8 @@
 import socket
 import sklearn.preprocessing as skprep
 import numpy as np
+# import h5py
+import time
 from ctypes import Structure
 from ctypes import *
 
@@ -31,7 +33,7 @@ PORT = 3490        # The port used by the server
 
 class Payload(Structure):
     _fields_ = [("id", c_uint32),
-                ("query_seq", c_int16 * 250)]
+                ("data", c_int16 * 250)]
 
 class Results(Structure):
     _fields_ = [("id", c_int32),
@@ -75,23 +77,71 @@ def squiggle_search(squiggle, RID):
 
     # Scale squiggle
     query = [c_int16(int(i*(2**5))) for i in query]
-    # print(query)
 
+    # Send squiggle to server
+    start = time.time()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # TCP connection
         s.connect((HOST, PORT))
         payload = Payload(RID, (c_int16 * 250)(*query))
-        bytes_sent = s.send(payload)
-        # if bytes_sent != 504:
-            # print("Incomplete send, sent", bytes_sent)
+        _ = s.send(payload) # Should send out 504 bytes
         
         # Recieve response
         data = s.recv(2048)
-        # print("Received {} bytes".format(len(data)))
         result = Results.from_buffer_copy(data)
-        # print("Received result: {}".format(result))
-        # print("ID: {}".format(result.id))
-        # print("Direction: {}".format(result.direction))
-        # print("Position: {}".format(result.position))
-        # print("Score: {}".format(result.score))
-        return result.id, result.direction, result.position, result.score
+
+        hw_time = time.time() - start
+        return hw_time, result.id, result.direction, result.position, result.score
+
+
+# def send_batch_to_hw(args):
+#     '''
+#     Send the batch of queries to the haru server.
+#     '''
+#     print("Sending batch to haru server...")
+
+#     IDs = []
+#     data = []
+
+#     # Read each squiggle from the file
+#     count = 0
+#     for read in args:
+#         filename, RID = read
+#         hdf = h5py.File(filename, 'r')
+
+#         for read in hdf['Analyses']['EventDetection_000']['Reads']:
+#             events = hdf['Analyses']['EventDetection_000']['Reads'][read]['Events'][()]
+#             event_collection = list()
+#             for event in events:
+#                 event_collection.append(float(event[0]))
+#             IDs.append(RID)
+
+#             # Normalise squiggle
+#             squiggle = skprep.scale(
+#                 np.array(event_collection[50:300], dtype=float),
+#                 axis=0,
+#                 with_mean=True,
+#                 with_std=True,
+#                 copy=True,
+#             )
+
+#             # Scale squiggle
+#             scaled_data = [c_int16(int(i*(2**5))) for i in squiggle]
+#             data += scaled_data
+#             count += 1
+#             print(count)
+#             print(scaled_data)
+#             print("===========================")
+
+#     IDs = [c_uint32(i) for i in IDs]
+
+#     # Send batch to haru server
+#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#         # TCP connection
+#         s.connect((HOST, PORT))
+#         payload = Payload((c_uint32 * 55)(*IDs), (c_int16 * 13750)(*data))
+#         s.send(payload)
+
+#     return 0
+#         # Receive results
+#         # data = s.recv(8192)

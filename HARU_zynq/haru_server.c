@@ -18,7 +18,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <string.h>
+#include <semaphore.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -26,19 +29,19 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "include/haru.h"
+#include "haru/haru.h"
 
 
 /* Server information */
 #define MY_STATIC_IP "10.10.130.3"
 #define PORT 3490
 #define BACKLOG 10
-#define BUFSIZE 3072
+#define BUFSIZE 4096
 
 /* Payload struct */
 typedef struct payload_t {
-    uint32_t id;
-    int16_t query_seq[250];
+    uint32_t id[55];
+    int16_t query_seq[55][250];
 } payload_t;
 
 void sigchld_handler(int s) {
@@ -57,13 +60,11 @@ void *get_in_addr(struct sockaddr *sa) {
 
 int main() {
     int sockfd, confd;
-    struct addrinfo *servinfo;
     struct sockaddr_storage client_addr;
     socklen_t sin_size;
     struct sigaction sa;
     int yes = 1;
     char s[INET6_ADDRSTRLEN];
-    int rv;
 
     struct sockaddr_in myaddr;
     myaddr.sin_family = AF_INET;
@@ -106,15 +107,18 @@ int main() {
         exit(1);
     }
 
-    /* Create a shared semaphore */
-    sem_t *sem = sem_open("/haru_sem", O_CREAT, 0644, 1);
-
     /* Setup HARU */
     haru_t haru;
     haru_init(&haru);
 
+    /* Create a shared semaphore */
+    sem_t *sem = sem_open("/haru_sem", O_CREAT, 0644, 1);
+    if (sem == SEM_FAILED) {
+    	perror("Semaphore error\n");
+    }
+
     printf("HARU: waiting for connections...\n");
-    
+
     /* Accept connections */
     while (1) {
         sin_size = sizeof client_addr;
@@ -132,31 +136,50 @@ int main() {
         if (!fork()) {
             /* Child */
             close(sockfd);
-            char msg_buffer[BUFSIZE];
-            ssize_t numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
-            while (numBytesRcvd > 0) {
-                printf("(%ld) ", numBytesRcvd);
 
-                payload_t *payload = (payload_t *) msg_buffer;
-                printf("Content: id=%d, query:", payload->id);
-                // for (int i = 0; i < 250; i++) {
-                //     printf("%d, ", payload->query_seq[i]);
-                // }
-                // printf("\n");
+            /* Receive payload */
+            payload_t payload;
 
-                /* Call sDTW */
-                query_t query;
-                query_init(&query, payload->id);
-                haru_process_query(&haru, payload->query_seq, &query);
-
-                /* Send result to client */
-                if (send(confd, query, sizeof(query), 0) == -1) {
-                    perror("send");
-                    break;
-                }
-
-                numBytesRcvd = recv(confd, msg_buffer, BUFSIZE, 0);
+            /* Receive ids */
+            int bytes_received = recv(confd, payload.id, sizeof(payload.id[0])*55, 0);
+            if (bytes_received == -1) {
+                perror("recv");
+                exit(1);
             }
+
+            for (int i = 0; i < 55; i++) {
+            	int bytes_received = recv(confd, &payload.query_seq[i], sizeof(int16_t)*250, 0);
+                if (bytes_received == -1) {
+                    perror("recv");
+                    exit(1);
+                }
+            }
+
+            for (int i = 0; i < 55; i++) {
+                printf("id: %d\n", payload.id[i]);
+                for (int j = 0; j < 250; j++) {
+                    printf("%d ", payload.query_seq[i][j]);
+                }
+                printf("\n============\n");
+            }
+            printf("\n");
+
+
+			// printf("Content: id=%d\n", payload->id);
+
+			/* Call sDTW */
+			// query_t results;
+			// query_init(&results, payload->id);
+//			sem_wait(sem);
+//			haru_process_query(&haru, payload->query_seq, &results);
+//			sem_post(sem);
+
+			/* Send result to client */
+			// if (send(confd, (char *)&results, sizeof(results), 0) == -1) {
+			// 	perror("send");
+			// 	break;
+			// }
+			// printf("Sent ID=%d\n", results.ID);
             close(confd);
             exit(0);
         }
@@ -164,5 +187,7 @@ int main() {
         close(confd);
     }
 
+    haru_cleanup(&haru);
+    sem_close(sem);
     return 0;
 }

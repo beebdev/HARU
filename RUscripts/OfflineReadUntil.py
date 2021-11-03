@@ -38,10 +38,7 @@ def process_hdf5(arg):
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
 
-        t1 = time.time()
         hw_result = haru.squiggle_search(squiggle, RID)
-        t2 = time.time()
-        hw_time = t2 - t1
 
         # Subsequence search for the squiggle
         sw_result = ruu.squiggle_search(squiggle, seqIDs, threedarray)
@@ -56,15 +53,16 @@ def process_hdf5(arg):
         except Exception as err:
             print("error occurred", err, file=sys.stderr)
     hdf.close()
-    return (result, filename, sw_result, hw_result, hw_time)
+    return (result, filename, sw_result, hw_result)
 
 
 def mycallback(arg):
-    (result, filename, sw_result, hw_result, hw_time) = arg
+    # (result, filename, sw_result, hw_result, hw_time) = arg
+    (result, filename, sw_result, hw_result) = arg
     filetocheck = os.path.split(filename)
     sourcefile = filename
     swDTW_time.append(sw_result[6])
-    hwDTW_time.append(hw_time)
+    hwDTW_time.append(hw_result[0])
 
     if result == "Sequence":
         path_output = os.path.join(args.output_folder, 'sequence')
@@ -136,6 +134,9 @@ if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(
         description='Offline Read Until simulation.')
+    parser.add_argument('-d', "--hw",
+                        action="store_true", default=False,
+                        dest="hw", help="Use hardware search")
     parser.add_argument('-f', '--fasta', metavar='FILE', required=True,
                         dest='fasta', type=str, default=None, action='store',
                         help='The fasta format file describing the reference sequence for your organism.')
@@ -166,6 +167,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--version', action='version',
                         version=('%(prog)s version={version}').format(version=__version__))
     args = parser.parse_args()
+    hw_run = args.hw
 
     print(__logo__)
 
@@ -195,32 +197,52 @@ if __name__ == "__main__":
     filenamecounter = 0
     for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args, filenamecounter])
+        if hw_run:
+            data.append([filename, filenamecounter])
+        else:
+            data.append([filename, seqIDs, threedarray,
+                        proc_ampres, seq_len, args, filenamecounter])
     for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args, filenamecounter])
+        if hw_run:
+            data.append([filename, filenamecounter])
+        else:
+            data.append([filename, seqIDs, threedarray,
+                        proc_ampres, seq_len, args, filenamecounter])
     for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.fast5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args, filenamecounter])
+        if hw_run:
+            data.append([filename, filenamecounter])
+        else:
+            data.append([filename, seqIDs, threedarray,
+                        proc_ampres, seq_len, args, filenamecounter])
     procdata = tuple(data)
 
-    # Start multiprocessing
-    print("Start spawing hdf5 processes")
-    results = []
-    for d in (procdata):
-        result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        # print(result.get())
-        results.append(result)
-    for result in results:
-        result.wait()
 
-    print("max cost value: ", max(max_cost))
-    print("Total runs: ", len(swDTW_time))
-    print("Total sw time: ", sum(swDTW_time), "sec")
-    print("Average sw time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
-    print("Total hw time: ", sum(hwDTW_time), "sec")
-    print("Average hw time per squiggle: ", sum(hwDTW_time) / len(hwDTW_time), "sec")
+    # Start multiprocessing
+    if hw_run:
+        result = haru.send_batch_to_hw(procdata)
+
+        # print("max cost value: ", max(max_cost))
+        # print("Total runs: ", len(swDTW_time))
+        # print("Total hw time: ", sum(hwDTW_time), "sec")
+        # print("Average hw time per squiggle: ", sum(hwDTW_time) / len(hwDTW_time), "sec")
+    else:
+        print("Start spawing hdf5 processes")
+        results = []
+        for d in (procdata):
+            result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
+            # print(result.get())
+            results.append(result)
+        for result in results:
+            result.wait()
+
+        print("max cost value: ", max(max_cost))
+        print("Total runs: ", len(swDTW_time))
+        print("Total sw time: ", sum(swDTW_time), "sec")
+        print("Average sw time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
+        print("Total hw time: ", sum(hwDTW_time), "sec")
+        print("Average hw time per squiggle: ", sum(hwDTW_time) / len(hwDTW_time), "sec")
+
+
     print("Read until completed. Exiting...")
