@@ -30,15 +30,15 @@ def process_hdf5(arg):
     for read in reads:
 
         events_means = events.get_events_from_raw(read['signal'], read['len_raw_signal'])
-        print("read_id:", read['read_id'])
 
         event_collection = list()
-        for event in events_means:
-            event_collection.append(float(event))
+        for i in range(0,len(events_means)):
+            event_collection.append(float(events_means[i]))
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
-        print("ec",len(event_collection))
+        #print("ec",len(event_collection))
+        #print(squiggle)
 
         # Search squiggle in reference squiggle
         # haru.send_squiggle(squiggle)
@@ -46,6 +46,7 @@ def process_hdf5(arg):
         seqid = squiggleres[0]
         direction = squiggleres[2]
         position = squiggleres[3]
+        print(read['read_id'], seqid, direction, position)
         if True:
             try:
                 result = ruu.go_or_no(
@@ -200,7 +201,7 @@ if __name__ == "__main__":
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
     procdata = tuple(data)
-    # print(procdata)
+    #print(procdata)
 
     # Assign process hdf5 to processes
     print("Start spawing hdf5 processes")
