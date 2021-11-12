@@ -4,7 +4,8 @@ import sys
 import platform
 import argparse
 import glob
-import h5py
+import pyslow5
+import events
 import multiprocessing as mp
 import shutil
 
@@ -12,22 +13,28 @@ from tools import ruutils as ruu
 from tools import haruutils as haru
 
 __version__ = "0.1"
-__logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
-▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•  
-▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪  
+__logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌
+▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•
+▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
 .▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ \x1b[1;0m"""
 
 
 def process_hdf5(arg):
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
-    hdf = h5py.File(filename, 'r')
+    #hdf = h5py.File(filename, 'r')
+    s5 = pyslow5.Open(filename,'r')
+    # create generator
+    reads = s5.seq_reads(pA=True)
 
-    for read in hdf['Analyses']['EventDetection_000']['Reads']:
-        events = hdf['Analyses']['EventDetection_000']['Reads'][read]['Events'][()]
+    for read in reads:
+
+        events_means = events.get_events_from_raw(read['signal'], read['len_raw_signal'])
+        print("read_id:", read['read_id'])
+
         event_collection = list()
-        for event in events:
-            event_collection.append(float(event[0]))
+        for event in events_means:
+            event_collection.append(float(event))
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
@@ -45,7 +52,6 @@ def process_hdf5(arg):
                     seqid, direction, position, seqLen, args)
             except Exception as err:
                 print("error occurred", err, file=sys.stderr)
-    hdf.close()
     return (result, filename, squiggleres)
 
 
@@ -181,15 +187,15 @@ if __name__ == "__main__":
     # Scrap filenames
     data = []
     filenamecounter = 0
-    for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
+    for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
-    for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.fast5')):
+    for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.blow5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
-    for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.fast5')):
+    for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.blow5')):
         filenamecounter += 1
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
@@ -201,7 +207,7 @@ if __name__ == "__main__":
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        # print(result.get())
+        print(result.get())
         results.append(result)
     for result in results:
         result.wait()

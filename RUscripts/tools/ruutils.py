@@ -7,7 +7,7 @@ import numpy as np
 import multiprocessing as mp
 import sklearn.preprocessing as skprep
 from Bio import SeqIO
-import mlpy
+import dtw
 
 
 def file_existance_check(files):
@@ -198,7 +198,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
 
             # Run DTW for squiggle and forward reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
-            dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
+            dist, cost, path = dtw.dtw_subsequence(queryarray, ref_)
             # print(dist)
             result.append(
                 (
@@ -226,7 +226,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
 
             # Run DTW for squiggle and reverse reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
-            dist, cost, path = mlpy.dtw_subsequence(queryarray, ref_)
+            dist, cost, path = dtw.dtw_subsequence(queryarray, ref_)
             # Corrected for the fact that this is a reverse complement
             result.append(
                 (
