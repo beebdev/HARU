@@ -2,11 +2,7 @@
 Hardware Accelerated Read Until R9 branch
 
 
-# simulation
-
 # installation
-
-For python 3.5 on Ubuntu 16:
 
 ```
 python3 -m venv haru
