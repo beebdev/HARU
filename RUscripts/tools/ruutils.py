@@ -205,10 +205,8 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     dist,   # unnormalised min-distance warp path between sequences
                     ref,    # seqID of current reference
                     "F",    # forward reference
-                    # start position for subref position
-                    path[1][0] + (blockID * overlap),
-                    # end position for subref position
-                    path[1][-1] + (blockID * overlap),
+                    (len(Rprime) - (path[1][0] + (blockID * overlap))),
+                    (len(Rprime) - (path[1][-1] + (blockID * overlap))),
                     # path[0][0],     # start position for squiggle
                     # path[0][-1],    # end position for squiggle
                 )
@@ -233,8 +231,10 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     dist,
                     ref,
                     "R",
-                    (len(Rprime) - (path[1][0] + (blockID * overlap))),
-                    (len(Rprime) - (path[1][-1] + (blockID * overlap))),
+                    # start position for subref position
+                    path[1][0] + (blockID * overlap),
+                    # end position for subref position
+                    path[1][-1] + (blockID * overlap),
                     # path[0][0],
                     # path[0][-1],
                 )

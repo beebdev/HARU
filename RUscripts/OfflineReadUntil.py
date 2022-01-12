@@ -46,7 +46,41 @@ def process_hdf5(arg):
         seqid = squiggleres[0]
         direction = squiggleres[2]
         position = squiggleres[3]
-        print(read['read_id'], seqid, direction, position)
+
+        # PAF format for the squiggle dtw results
+        res_string = ""
+        # Query sequence name
+        res_string += str(read['read_id']) + "\t"
+        # Query sequence length
+        res_string += "250\t"
+        # Query start
+        # res_string += str(position) + "\t"
+        res_string += "50\t"
+        # Query end
+        # res_string += str(position+250) + "\t"
+        res_string += "300\t"
+        # Direction
+        if direction == "F":
+            res_string += "+\t"
+        else:
+            res_string += "-\t"
+        # Target sequence name
+        res_string += str(seqid) + "\t"
+        # Target sequence length
+        res_string += str(seqLen[seqid]) + "\t"
+        # Target start
+        res_string += str(position) + " \t"
+        # Target end
+        res_string += str(position + 250) + "\t"
+        # Number of residues
+        res_string += str(seqLen[seqid]) + "\t"
+        # Alignment block length
+        res_string += str(seqLen[seqid]) + "\t"
+        # Mapping quality
+        res_string += "60"
+        print(res_string)
+        
+        # print(read['read_id'], seqid, direction, position)
         if True:
             try:
                 result = ruu.go_or_no(
