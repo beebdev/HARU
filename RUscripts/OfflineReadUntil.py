@@ -12,19 +12,22 @@ import shutil
 from tools import ruutils as ruu
 from tools import haruutils as haru
 
-__version__ = "0.1"
-__logo__ = """\x1b[2;33;44m▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌
+__version__ = "v0.0.99"
+__logo__ = """
+▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌
 ▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•
 ▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
-.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ \x1b[1;0m"""
+.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ 
+"""
 
 
 def process_hdf5(arg):
+    # Unpack args
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
-    #hdf = h5py.File(filename, 'r')
+
+    # Create generator
     s5 = pyslow5.Open(filename,'r')
-    # create generator
     reads = s5.seq_reads(pA=True)
 
     for read in reads:
@@ -37,16 +40,16 @@ def process_hdf5(arg):
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
         squiggle = event_collection[50:300]
-        #print("ec",len(event_collection))
-        #print(squiggle)
 
         # Search squiggle in reference squiggle
-        # haru.send_squiggle(squiggle)
+        # haru.send_squiggle(squiggle) # TODO: move this to a separate function or add a condition for HARU flag
         squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
         seqid = squiggleres[0]
         direction = squiggleres[2]
         position = squiggleres[3]
 
+        # Output of results
+        # TODO: tidy up
         # PAF format for the squiggle dtw results
         res_string = ""
         # Query sequence name
@@ -112,7 +115,7 @@ def mycallback(arg):
 
         # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
         print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
-              squiggleres[2], squiggleres[4], squiggleres[1], filename))
+              squiggleres[2], squiggleres[4], squiggleres[1], filename), file=sys.stderr)
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -137,7 +140,7 @@ def mycallback(arg):
             os.makedirs(path_fail)
 
         print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m".format(squiggleres[0],
-              squiggleres[2], squiggleres[3], filename))
+              squiggleres[2], squiggleres[3], filename), file=sys.stderr)
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -193,7 +196,8 @@ if __name__ == "__main__":
                         version=('%(prog)s version={version}').format(version=__version__))
     args = parser.parse_args()
 
-    print(__logo__)
+    # HARU logo
+    sys.stderr.write(__logo__)
 
     # Validate fasta and model files
     ruu.file_existance_check((args.fasta, args.model))
@@ -235,16 +239,15 @@ if __name__ == "__main__":
         data.append([filename, seqIDs, threedarray,
                     proc_ampres, seq_len, args])
     procdata = tuple(data)
-    #print(procdata)
 
     # Assign process hdf5 to processes
-    print("Start spawing hdf5 processes")
+    print("Start spawing hdf5 processes", file=sys.stderr)
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        print(result.get())
+        # print(result.get())
         results.append(result)
     for result in results:
         result.wait()
 
-    print("Read until completed. Exiting...")
+    print("Read until completed. Exiting...", file=sys.stderr)
