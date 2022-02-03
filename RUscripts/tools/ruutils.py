@@ -15,6 +15,7 @@ def file_existance_check(files):
     for file in files:
         if not os.path.isfile(file):
             print("One or more files cannot be found. Exiting..", file=sys.stderr)
+            print(file, file=sys.stderr)
             sys.exit()
     print("File check complete.", file=sys.stderr)
 
