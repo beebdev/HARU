@@ -18,7 +18,7 @@ __logo__ = """
 ▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•
 ▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
-.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ 
+.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀
 """
 
 
@@ -85,7 +85,7 @@ def process_hdf5(arg):
         # Mapping quality
         res_string += "60"
         print(res_string)
-        
+
         # print(read['read_id'], seqid, direction, position)
         if True:
             try:
@@ -93,7 +93,7 @@ def process_hdf5(arg):
                     seqid, direction, position, seqLen, args)
             except Exception as err:
                 print("error occurred", err, file=sys.stderr)
-        break
+
     return (result, filename, squiggleres)
 
 
