@@ -21,20 +21,24 @@ if __name__ == "__main__":
             lines = [line.rstrip('\n') for line in lines]
             lines = [line for line in lines if line]
             # fix lines without newline
-            for line in lines:
-                cells = line.split('\t')
-                if len(cells) > 12:
-                    extra_line = cells[11][2:] + '\t'
-                    extra_line += '\t'.join(cells[12:])
-                    # lines.append(extra_line)
-                    print(extra_line)
+
+            with open(args.out_file, 'w') as out:
+                for line in lines:
+                    cells = line.split('\t')
+                    if len(cells) > 12:
+                        extra_line = cells[11][2:] + '\t'
+                        extra_line += '\t'.join(cells[12:])
+                        # lines.append(extra_line)
+                        out.write(extra_line + '\n')
+                    else:
+                        out.write(line + '\n')
             
-            # print to file
-            if args.out_file:
-                with open(args.out_file, 'w') as out_f:
-                    for line in lines:
-                        out_f.write(line + '\n')
-            else:
-                with open(args.file_path, 'w') as f:
-                    for line in lines:
-                        f.write(line + '\n')
+            # # print to file
+            # if args.out_file:
+            #     with open(args.out_file, 'w') as out_f:
+            #         for line in lines:
+            #             out_f.write(line + '\n')
+            # else:
+            #     with open(args.file_path, 'w') as f:
+            #         for line in lines:
+            #             f.write(line + '\n')

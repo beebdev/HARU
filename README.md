@@ -26,3 +26,18 @@ cd RUscripts
 python3 OfflineReadUntil.py -f dataset/fasta/nCoV-2019.reference.fasta -t MN908947.3:10000-15000 -p 4 -m models/r9.4_450bps.nucleotide.6mer.template.model -w dataset/ncov-testset/slow5 -o RUgOUT -L 3000
 ```
 
+## Testing mapping accuracy
+With venv activated, install UNCALLED with:
+```sh
+pip3 install git+https://github.com/skovaka/UNCALLED.git
+```
+
+Generate the paf output by running offline RUscripts and redirecting the stdout output to a file
+```sh
+python3 OfflineReadUntil.py -f dataset/fasta/nCoV-2019.reference.fasta -t MN908947.3:10000-15000 -p 4 -m models/r9.4_450bps.nucleotide.6mer.template.model -w dataset/ncov-testset/slow5 -o RUgOUT -L 3000 > batch_result.paf
+
+
+python3 OfflineReadUntil.py -f /mnt/d/pr__haru/testset/yeast/GCF_000146045.2_R64_genomic.fna -t NC_001138.5:2000-7000 -p 4 -m models/r9.4_450bps.nucleotide.6mer.template.model -w /mnt/d/pr__haru/testset/yeast/set/ -o RUgOUT -L 3000 > yeast_batch.paf
+```
+
+Setup

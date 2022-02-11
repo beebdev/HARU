@@ -1,4 +1,5 @@
 import os
+from re import T
 import sys
 import csv
 import ctypes
@@ -101,7 +102,7 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
         seq = record.seq
         for i in range(len(seq) + 1 - kmer_len):
             # Slide through the base reference sequence
-            kmer = "b'" + str(seq[i: i + kmer_len]) + "'"
+            kmer = "b'" + str(seq[i: i + kmer_len]).upper() + "'"
             # and append the squiggle value of each window
             forward.append(float(model_kmer_means[kmer]))
         print("Forward ok", file=sys.stderr)
@@ -109,7 +110,7 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
         seq = record.seq.reverse_complement()
         for i in range(len(seq) + 1 - kmer_len):
             # Slide through the base reference sequence
-            kmer = "b'" + str(seq[i: i + kmer_len]) + "'"
+            kmer = "b'" + str(seq[i: i + kmer_len]).upper() + "'"
             # and append the squiggle value of each window
             reverse.append(float(model_kmer_means[kmer]))
         print("Reverse ok", file=sys.stderr)
@@ -120,19 +121,24 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
         kmer_means[record.id]["Rprime"] = skprep.scale(
             reverse, axis=0, with_mean=True, with_std=True, copy=True
         )
+        print("===", file=sys.stderr)
 
     # Iterator for kmer_means
     items = kmer_means.items()
     items_ = map(process_items, items)
     seqIDs, arrays = zip(*items_)
+    print(type(arrays), type(arrays[0]), type(arrays[0][0]), type(arrays[0][0][0]), file=sys.stderr)
 
     # 3d Array containing [nSeq][nLists][ListValues]
-    nSeq = len(seqIDs)
-    row, col = list(arrays)[0].shape
-    threedarray = mp.Array(ctypes.c_double, nSeq * row * col)
-    # TODO: Check what threedarray_arry is
+    # nSeq = len(seqIDs)
+    # row, col = list(arrays)[0].shape
+    # threedarray = mp.Array(ctypes.c_double, nSeq * row * col)
     # threedarrayshared_array = np.ctypeslib.as_array(threedarray.get_obj())
-    threedarrayshared_array = np.array(arrays, dtype=np.float32)
+
+    # for array in arrays:
+        # print(len(array), "->", len(array[0]), len(array[1]), type(array[0][0]))
+    # threedarrayshared_array = np.array(arrays, dtype=np.float32)
+    threedarrayshared_array = arrays
     return seqIDs, threedarrayshared_array
 
 
@@ -149,7 +155,6 @@ def process_items(d):
     result = []
     for _, v in d[1].items():
         result.append(v)
-        # print(v)
     return seqid, np.array(result)
 
 
@@ -212,6 +217,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     # path[0][-1],    # end position for squiggle
                 )
             )
+            print("F", dist, path[1][-1]+ (blockID * overlap), file=sys.stderr)
 
             # Print time spent in DTW
             # logger.info("Ftime_%s: %s sec", blockID, (time.time() - tic))
@@ -240,6 +246,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
                     # path[0][-1],
                 )
             )
+            print("R", dist, path[1][-1]+ (blockID * overlap), file=sys.stderr)
 
             # Print time spent in DTW
             # logger.info("Rtime_%s: %s sec", blockID, (time.time() - tic))

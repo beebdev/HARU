@@ -25,12 +25,15 @@ __logo__ = """
 def process_hdf5(arg):
     # Unpack args
     filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
+    print(filename, file=sys.stderr)
 
     # Create generator
     s5 = pyslow5.Open(filename,'r')
     reads = s5.seq_reads(pA=True)
+    # print(len(reads), file=sys.stderr)
 
-    for read in reads:
+    for i, read in enumerate(reads):
+        print("Read {}".format(i), file=sys.stderr)
 
         events_means = events.get_events_from_raw(read['signal'], read['len_raw_signal'])
 
@@ -90,6 +93,7 @@ def process_hdf5(arg):
                     seqid, direction, position, seqLen, args)
             except Exception as err:
                 print("error occurred", err, file=sys.stderr)
+        break
     return (result, filename, squiggleres)
 
 
@@ -189,6 +193,9 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', required=False,
                         dest='output_folder', type=str, default='test_ru_out',
                         help='Path to a folder to symbolically place reads representing match and not match.')
+    parser.add_argument('-H', '--haru', required=False,
+                        dest='haru', action='store_true', default=False,
+                        help='Use this flag if you are using the Haru version of the model.')
     parser.add_argument('-V', '--verbose',
                         dest='verbose', action='store_true', default=False,
                         help='Print detailed messages while processing files.')
@@ -219,10 +226,15 @@ if __name__ == "__main__":
         fast_file, model_ker_means, kmer_len)
 
     # TODO: send seqIDs and threedarray to HARU_PS
-    haru.save_reference(seqIDs, threedarray)
+    if args.haru:
+        haru.save_reference_bram(seqIDs, threedarray)
+        for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
+            haru.save_query_bram(filename)
+            break
+        print("exiting...")
+        exit()
 
-    # TODO: wait for setup
-
+    print("continuing...", file=sys.stderr)
     # Scrap filenames
     data = []
     filenamecounter = 0
