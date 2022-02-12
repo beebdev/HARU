@@ -31,7 +31,7 @@ def process_hdf5(arg):
     reads = s5.seq_reads(pA=True)
 
     for i, read in enumerate(reads):
-        print("Read {}".format(i), file=sys.stderr)
+        print("\rRead {}".format(i), file=sys.stderr, end="")
 
         events_means = events.get_events_from_raw(read['signal'], read['len_raw_signal'])
 
@@ -65,7 +65,7 @@ def process_hdf5(arg):
         res_string += "60\n"                          # Mapping quality
         print(res_string, end="")
         
-    return 1
+    return ""
 
     # TODO: Currently for accuracy test we don't need go_or_no
         # try:
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,))#, callback=mycallback)
-        # print(result.get(), file=sys.stderr) # uncomment if RU did not run to see error
+        print(result.get(), file=sys.stderr) # uncomment if RU did not run to see error
         results.append(result)
     for result in results:
         result.wait()
