@@ -40,7 +40,7 @@ def process_hdf5(arg):
             event_collection.append(float(events_means[i]))
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
-        squiggle = event_collection[args.barcode_size:args.barcode_size+args.squiggle_query_size]
+        squiggle = event_collection[args.barcode_size : args.barcode_size + args.squiggle_query_size]
 
         # Search squiggle in reference squiggle
         # haru.send_squiggle(squiggle) # TODO: move this to a separate function or add a condition for HARU flag
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     results = []
     for d in (procdata):
         result = p.apply_async(process_hdf5, args=(d,))#, callback=mycallback)
-        print(result.get()) # uncomment if RU did not run to see error
+        # print(result.get(), file=sys.stderr) # uncomment if RU did not run to see error
         results.append(result)
     for result in results:
         result.wait()
