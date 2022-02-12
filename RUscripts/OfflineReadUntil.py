@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import os
 import sys
 import platform
@@ -24,13 +23,12 @@ __logo__ = """
 
 def process_hdf5(arg):
     # Unpack args
-    filename, seqIDs, threedarray, proc_ampres, seqLen, args = arg
+    filename, seqIDs, threedarray, seqLen, args = arg
     print(filename, file=sys.stderr)
 
     # Create generator
     s5 = pyslow5.Open(filename,'r')
     reads = s5.seq_reads(pA=True)
-    # print(len(reads), file=sys.stderr)
 
     for i, read in enumerate(reads):
         print("Read {}".format(i), file=sys.stderr)
@@ -42,7 +40,7 @@ def process_hdf5(arg):
             event_collection.append(float(events_means[i]))
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
-        squiggle = event_collection[50:300]
+        squiggle = event_collection[args.barcode_size:args.barcode_size+args.squiggle_query_size]
 
         # Search squiggle in reference squiggle
         # haru.send_squiggle(squiggle) # TODO: move this to a separate function or add a condition for HARU flag
@@ -52,51 +50,34 @@ def process_hdf5(arg):
         position = squiggleres[3]
 
         # Output of results
-        # TODO: tidy up
-        # PAF format for the squiggle dtw results
-        res_string = ""
-        # Query sequence name
-        res_string += str(read['read_id']) + "\t"
-        # Query sequence length
-        res_string += "250\t"
-        # Query start
-        # res_string += str(position) + "\t"
-        res_string += "50\t"
-        # Query end
-        # res_string += str(position+250) + "\t"
-        res_string += "300\t"
-        # Direction
-        if direction == "F":
+        res_string = str(read['read_id']) + "\t"    # Query sequence name
+        res_string += "250\t50\t300\t"              # Query sequence length, start, end
+        if direction == "F":                        # Direction
             res_string += "+\t"
         else:
             res_string += "-\t"
-        # Target sequence name
-        res_string += str(seqid) + "\t"
-        # Target sequence length
-        res_string += str(seqLen[seqid]) + "\t"
-        # Target start
-        res_string += str(position) + " \t"
-        # Target end
-        res_string += str(position + 250) + "\t"
-        # Number of residues
-        res_string += str(seqLen[seqid]) + "\t"
-        # Alignment block length
-        res_string += str(seqLen[seqid]) + "\t"
-        # Mapping quality
-        res_string += "60"
-        print(res_string)
+        res_string += str(seqid) + "\t"             # Target sequence name
+        res_string += str(seqLen[seqid]) + "\t"     # Target sequence length
+        res_string += str(position) + " \t"         # Target start
+        res_string += str(position + 250) + "\t"    # Target end
+        res_string += str(seqLen[seqid]) + "\t"     # Number of residues
+        res_string += str(seqLen[seqid]) + "\t"     # Alignment block length
+        res_string += "60\n"                          # Mapping quality
+        print(res_string, end="")
+        
+    return 1
 
-        # print(read['read_id'], seqid, direction, position)
-        if True:
-            try:
-                result = ruu.go_or_no(
-                    seqid, direction, position, seqLen, args)
-            except Exception as err:
-                print("error occurred", err, file=sys.stderr)
+    # TODO: Currently for accuracy test we don't need go_or_no
+        # try:
+        #     result = ruu.go_or_no(
+        #         seqid, direction, position, seqLen, args)
+        # except Exception as err:
+        #     print("error occurred", err, file=sys.stderr)
 
-    return (result, filename, squiggleres)
+    # return (result, filename, squiggleres)
 
 
+# TODO: Currently for accuracy test we don't need go_or_no
 def mycallback(arg):
     (result, filename, squiggleres) = arg
     filetocheck = os.path.split(filename)
@@ -196,6 +177,12 @@ if __name__ == "__main__":
     parser.add_argument('-H', '--haru', required=False,
                         dest='haru', action='store_true', default=False,
                         help='Use this flag if you are using the Haru version of the model.')
+    parser.add_argument('-b', '--barcode-size', required=False,
+                        dest='barcode_size', type=int, default=50,
+                        help='The size of barcode sequence in read. RU skips the barcode sequence. Default is 50.')
+    parser.add_argument('-q', '--squiggle-query-size', required=False,
+                        dest='squiggle_query_size', type=int, default=250,
+                        help='The size of squiggle query to be mapped with DTW. Default uis 250.')
     parser.add_argument('-V', '--verbose',
                         dest='verbose', action='store_true', default=False,
                         help='Print detailed messages while processing files.')
@@ -212,8 +199,6 @@ if __name__ == "__main__":
 
     # Multiprocess setup
     p = mp.Pool(args.procs)
-    manager = mp.Manager()
-    proc_ampres = manager.dict()
     fast_file = args.fasta
     seq_len = ruu.get_seq_len(fast_file)
 
@@ -225,7 +210,7 @@ if __name__ == "__main__":
     seqIDs, threedarray = ruu.process_ref_fasta(
         fast_file, model_ker_means, kmer_len)
 
-    # TODO: send seqIDs and threedarray to HARU_PS
+    # Currently used for HARU FPGA setup 
     if args.haru:
         haru.save_reference_bram(seqIDs, threedarray)
         for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
@@ -240,24 +225,21 @@ if __name__ == "__main__":
     filenamecounter = 0
     for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+        data.append([filename, seqIDs, threedarray, seq_len, args])
     for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.blow5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+        data.append([filename, seqIDs, threedarray, seq_len, args])
     for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.blow5')):
         filenamecounter += 1
-        data.append([filename, seqIDs, threedarray,
-                    proc_ampres, seq_len, args])
+        data.append([filename, seqIDs, threedarray, seq_len, args])
     procdata = tuple(data)
 
     # Assign process hdf5 to processes
     print("Start spawing hdf5 processes", file=sys.stderr)
     results = []
     for d in (procdata):
-        result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-        # print(result.get())
+        result = p.apply_async(process_hdf5, args=(d,))#, callback=mycallback)
+        print(result.get()) # uncomment if RU did not run to see error
         results.append(result)
     for result in results:
         result.wait()

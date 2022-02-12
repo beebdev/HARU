@@ -127,7 +127,7 @@ def process_ref_fasta(ref_fasta, model_kmer_means, kmer_len):
     items = kmer_means.items()
     items_ = map(process_items, items)
     seqIDs, arrays = zip(*items_)
-    print(type(arrays), type(arrays[0]), type(arrays[0][0]), type(arrays[0][0][0]), file=sys.stderr)
+    # print(type(arrays), type(arrays[0]), type(arrays[0][0]), type(arrays[0][0][0]), file=sys.stderr)
 
     # 3d Array containing [nSeq][nLists][ListValues]
     # nSeq = len(seqIDs)
@@ -181,9 +181,6 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         refID = seqIDs.index(ref)
         Rprime, Fprime = threedarray[refID]
 
-        # query_sequence => length 3000
-        # scale (queryarray) != scale(queryarray[50:300])
-
         # Preprocess squiggle
         queryarray = skprep.scale(
             np.array(squiggle, dtype=float),
@@ -200,11 +197,11 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         subrefs = [refsubset[i: i + blocksize] for i in indexes[::overlap]]
         for blockID, ref_ in enumerate(subrefs):
             # Get pre-DTW time
-            tic = time.time()
+            # tic = time.time()
 
             # Run DTW for squiggle and forward reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
-            dist, cost, path = dtw.dtw_subsequence(queryarray, ref_)
+            dist, _, path = dtw.dtw_subsequence(queryarray, ref_)
             # print(dist)
             result.append(
                 (
@@ -227,7 +224,7 @@ def squiggle_search(squiggle, seqIDs, threedarray):
         subrefs = [refsubset[i: i + blocksize] for i in indexes[::overlap]]
         for blockID, ref_ in enumerate(subrefs):
             # Get pre-DTW time
-            tic = time.time()
+            # tic = time.time()
 
             # Run DTW for squiggle and reverse reference
             # TODO: change dtw_subsequence to a wrapper instead of mlpy
@@ -252,8 +249,8 @@ def squiggle_search(squiggle, seqIDs, threedarray):
             # logger.info("Rtime_%s: %s sec", blockID, (time.time() - tic))
 
     # Note first two elements flipped for return deliberately.
-    distance, seqid, direction, refStart, refEnd = sorted(
-        result, key=lambda result: result[0])[0]
+    distance, seqid, direction, refStart, refEnd = min(
+        result, key=lambda result: result[0])
     # if (refStart == 8601):
     #     print(queryarray)
     return seqid, distance, direction, refStart, refEnd
