@@ -1,3 +1,4 @@
+
 `timescale 1 ns / 1 ps
 
 module dtw_core #(
@@ -9,20 +10,21 @@ module dtw_core #(
     // Main DTW signals
     input clk, rst, start,
     input [axi_dwidth-1 : 0] ref_len,
-    output [dtw_dwidth-1:0] DTW_minval,
-    output [axi_dwidth-1 : 0] position,
+    input op_mode,
     output running,
     output done,
 
-    // DTW FIFO signals
-    input op_mode,
-    output fifo_rden,
-    input fifo_empty,
-    input [dtw_dwidth-1:0] fifo_data,
+    // src FIFO signals
+    output src_fifo_rden,                   // Src FIFO Read enable
+    input src_fifo_empty,                   // Src FIFO Empty
+    input [31:0] src_fifo_data,   // Src FIFO Data
 
-    // debug ports
-    output [31:0] DTW_debug0,
-    output [31:0] DTW_debug1
+    // sink FIFO signals
+    output sink_fifo_wren,                   // Sink FIFO Write enable
+    input sink_fifo_full,                    // Sink FIFO Full
+    output [dtw_dwidth-1:0] sink_minval,
+    output [31:0] sink_position,
+    output [31:0] sink_qid
 );
 
 /* Internal signals */
@@ -32,9 +34,12 @@ wire [dtw_dwidth-1:0] dataout_ref;
 reg [14:0] addrR_ref;
 reg [7:0]  addrR_squiggle;
 
+reg [31:0] ref_curr_id;
+
 reg [axi_dwidth:0] debug0;
 reg [axi_dwidth:0] debug1;
 
+assign sink_qid = ref_curr_id;
 assign DTW_debug0 = debug0;
 assign DTW_debug1 = debug1;
 
@@ -72,7 +77,7 @@ always @(posedge clk) begin
         IDLE: begin
             if (start) begin
                 if (op_mode == MODE_NORMAL) begin
-                    r_next_state <= DTW_Q_RUN;
+                    r_next_state <= DTW_Q_INIT;
                 end else if (op_mode == MODE_LOAD_REF) begin
                     r_next_state <= REF_LOAD
                 end else begin
@@ -90,6 +95,9 @@ always @(posedge clk) begin
                 r_next_state <= IDLE;
             end
         end
+        DTW_Q_INIT: begin
+            r_next_state <= DTW_Q_RUN;
+        end
         DTW_Q_RUN: begin // TODO: not done
             if (!param_done) begin
                 r_next_state <= DTW_Q_RUN;
@@ -98,27 +106,29 @@ always @(posedge clk) begin
             end
         end
         DTW_Q_DONE: begin
-            r_next_state <= IDLE;
+            if (sink_fifo_full) begin
+                r_next_state <= DTW_Q_DONE;
+            end else begin
+                r_next_state <= IDLE;
+            end
         end
-    end
+    endcase
 end
 
 always @(posedge) begin
-    case (r_state)
+    case (r_state) begin
         IDLE: begin
             running <= 0;
             fifo_rden <= 0; // Don't read enable
             addrW_ref <= 0;
             param_rst <= 1;
             param_running <= 0;
-            done <= 0;
         end
         REF_LOAD: begin
             running <= 1;
             fifo_rden <= 1;
             param_rst <= 1;
             param_running <= 0;
-            done <= 0;
             if (!fifo_empty) begin
                 addrW_ref <= addrW_ref + 1;
                 wren_ref <= 1;
@@ -126,11 +136,19 @@ always @(posedge) begin
                 wren_ref <= 0;
             end
         end
+        DTW_Q_INIT: begin
+            running <= 1;
+            fifo_rden <= 1;
+            param_rst <= 1;
+            param_running <= 0;
+            if (!fifo_empty) begin
+                ref_curr_id <= src_fifo_data;
+            end
+        end
         DTW_Q_RUN: begin
             running <= 1;
             fifo_rden <= 1;
             param_rst <= 0;
-            done <= 0;
             if (!fifo_empty) begin
                 param_running <= 1;
                 addrR_ref <= addrR_ref + 1;
@@ -139,11 +157,12 @@ always @(posedge) begin
             end
         end
         DTW_Q_DONE: begin
-            running <= 1;
+            running <= 0;
             fifo_rden <= 0;
             param_rst <= 0;
-            done <= 1;
+            param_running <= 0;
         end
+    endcase
 end
 
 
@@ -155,7 +174,7 @@ dgn_memreference #(
     .addrR      (addrR_ref),
     .addrW      (addrW_ref),
     .wren       (wren_ref),
-    .datain     (fifo_data),
+    .datain     (src_fifo_data),
     .dataout    (dataout_ref)
 );
 
@@ -168,10 +187,10 @@ dgn_dtwdatapath_param #(
     .clk            (clk),
     .rst            (param_rst),
     .running        (param_running),
-    .Input_squiggle (fifo_data),
+    .Input_squiggle (src_fifo_data),
     .Rword          (dataout_ref),
-    .DTW_minval     (DTW_minval),
-    .position       (position),
+    .DTW_minval     (sink_minval),
+    .position       (sink_position),
     .done           (param_done)
 );
 

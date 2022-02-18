@@ -8,7 +8,7 @@ module dtw_accel_v1_0 #(
 
     /* Parameters of Axi Slave Bus Interface S00_AXI */
     parameter integer C_S00_AXI_DATA_WIDTH	= 32,
-    parameter integer C_S00_AXI_ADDR_WIDTH	= 5
+    parameter integer C_S00_AXI_ADDR_WIDTH	= 5,
 
     /* Parameters of Axi Slave Bus Interface S00_AXIS */
     parameter integer C_S00_AXIS_TDATA_WIDTH = 32
