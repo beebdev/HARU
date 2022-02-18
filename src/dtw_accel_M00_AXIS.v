@@ -69,18 +69,18 @@
 	//wait counter. The master waits for the user defined number of clock cycles before initiating a transfer.
 	reg [WAIT_COUNT_BITS-1 : 0] 	count;
 	//streaming data valid
-	wire  	axis_tvalid;
+	wire axis_tvalid;
 	//streaming data valid delayed by one clock cycle
-	reg  	axis_tvalid_delay;
+	reg axis_tvalid_delay;
 	//Last of the streaming data
-	wire  	axis_tlast;
+	wire axis_tlast;
 	//Last of the streaming data delayed by one clock cycle
-	reg  	axis_tlast_delay;
+	reg axis_tlast_delay;
 	//FIFO implementation signals
 	reg [C_M_AXIS_TDATA_WIDTH-1 : 0] 	stream_data_out;
-	wire  	tx_en;
+	wire tx_en;
 	//The master has issued all the streaming data stored in FIFO
-	reg  	tx_done;
+	reg tx_done;
 
 
 	// I/O Connections assignments

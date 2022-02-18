@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 
-module dgn_dtwdatapath #(
-    parameter width = 18,
-    parameter SQG_SIZE = 250,
-    parameter REF_SIZE = 29898
-) (
+module dtw_core_datapath #(
+    parameter width = 16,
+    parameter SQG_SIZE = 10,
+    parameter REF_SIZE = 1000 
+)(
     input clk, rst, running,
     input [width-1:0] Input_squiggle, Rword,
+    input [31:0] ref_len,
     output [width-1:0] DTW_minval,
     output [31:0] position,
     output done
@@ -14,120 +15,184 @@ module dgn_dtwdatapath #(
 
 integer k;
 
-reg  [31:0] cycle_counter;
+reg [31:0] cycle_counter ;
+reg [7:0]  squiggle_buffaddress;
 
-reg  [width-1:0] Squiggle_Buffer [1:SQG_SIZE];
-reg  [width-1:0] Rword_buff;
+reg [width-1:0] Squiggle_Buffer [1:SQG_SIZE];
+reg [width-1:0] Rword_buff;
 
 wire [width-1:0] DTW_curr  [1:SQG_SIZE];
 wire [width-1:0] p_Rword   [1:SQG_SIZE];
 
-reg  [width-1:0] DTW_prev  [1:SQG_SIZE];
-reg  [width-1:0] DTW_pprev [1:SQG_SIZE];
-reg  [0:SQG_SIZE+1] running_d;
+reg [width-1:0] DTW_prev  [1:SQG_SIZE];
+reg [width-1:0] DTW_pprev [1:SQG_SIZE];
+reg [0:SQG_SIZE+1]  running_d;
 
-reg  [width-1:0] Minval;
-reg  [31:0]      Minpos ;
-reg  [width-1:0] DTW_lastrow;
+reg [width-1:0] Minval;
+reg [31:0]      Minpos ;
+reg [width-1:0] DTW_lastrow;
 
-//--------------------------
-always @(posedge clk)
-if(rst)
-    DTW_lastrow <= -1;
-else if(running_d[SQG_SIZE])
-    DTW_lastrow <= DTW_curr[SQG_SIZE];
 
-//--------------------------
-always @(posedge clk)
-if(rst) 
-	for(k = 0; k <= SQG_SIZE + 1; k = k + 1)
-        running_d[k] <= 0;
-else begin
-	running_d[0] <= running;
-	for(k = 1; k <= SQG_SIZE; k = k + 1)
-        running_d[k] <= running_d[k-1];
+/* ===============================
+ * PE running status
+ * =============================== */
+always @(posedge clk) begin
+    if(rst) begin
+        for (k = 0; k <= SQG_SIZE + 1; k = k + 1) begin
+            running_d[k] <= 0;
+        end
+    end else if (running) begin
+        running_d[0] <= 1;
+        for (k = 1; k <= SQG_SIZE + 1; k = k + 1) begin
+            running_d[k] <= running_d[k-1];
+        end
+    end
 end
 
-//--------------------------
-always @(posedge clk)
-if(rst)
-	for(k = 1; k <= SQG_SIZE; k = k + 1) begin
-		DTW_prev  [k] <= -1;
-		DTW_pprev [k] <= -1;
-	end
-else
-	for(k = 1; k <= SQG_SIZE; k = k + 1) begin
-		if(running_d[k  ])
-            DTW_prev  [k]<= DTW_curr[k];
-		if(running_d[k+1])
-            DTW_pprev [k]<= DTW_prev[k];
-	end
+/* ===============================
+ * DTW prev and pprev value
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
+            DTW_prev [k] <= -1;
+            DTW_pprev[k] <= -1;
+        end
+    end else if (running) begin
+        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
+            if(running_d[k]) begin
+                DTW_prev[k] <= DTW_curr[k];
+            end
+            if(running_d[k+1]) begin
+                DTW_pprev[k] <= DTW_prev[k];
+            end
+        end
+    end
+end
 	
-//--------------------------
-always @(posedge clk)
-if (rst) 
-	for(k = 1; k <= SQG_SIZE; k = k + 1)
-		Squiggle_Buffer[k] <= 0;
-else if(running_d[0])
-		Squiggle_Buffer[cycle_counter]<= Input_squiggle;
-
-always @(posedge clk)
-if(rst) begin
-	cycle_counter <=  1;
-	Rword_buff    <=  0;
-end else if(running_d[0]) begin
-	cycle_counter <= cycle_counter + 1;
-	Rword_buff    <= Rword;
+/* ===============================
+ * Load squiggle value
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
+            Squiggle_Buffer[k] <= 0;
+        end
+    end else if (running) begin
+        if (running_d[0]) begin
+            Squiggle_Buffer[squiggle_buffaddress] <= Input_squiggle;
+        end
+    end
 end
 
-// Minimum position and value
-always @(posedge clk)
-if (rst) begin
-		Minval <= -1;
-		Minpos <= 0;
-end else if(DTW_lastrow < Minval) begin 
-		Minval <=  DTW_curr[SQG_SIZE];
-		Minpos <=  cycle_counter;
+/* ===============================
+ * Handle Squiggle buffer address
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        squiggle_buffaddress <= 1;
+    end else if (running) begin
+        if(running_d[0] && (squiggle_buffaddress <= SQG_SIZE)) begin
+            squiggle_buffaddress <= squiggle_buffaddress + 1;
+        end
+    end
 end
 
-// output signals
+/* ===============================
+ * Load Rword value
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        Rword_buff <= 0;
+    end else if (running) begin
+        if(running_d[0]) begin
+            Rword_buff <= Rword;
+        end
+    end
+end
+
+/* ===============================
+ * Cycle counter
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        cycle_counter <=  0;
+    end else if (running) begin
+        if(running_d[SQG_SIZE]) begin
+            cycle_counter <= cycle_counter + 1;
+        end
+    end
+end
+
+/* ===============================
+ * Last row value
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        DTW_lastrow <= -1;
+    end else if (running) begin
+        if(running_d[SQG_SIZE]) begin
+            DTW_lastrow <= DTW_curr[SQG_SIZE];
+        end
+    end
+end
+
+/* ===============================
+ * Min value and position update
+ * =============================== */
+always @(posedge clk) begin
+    if (rst) begin
+        Minval <= -1;
+        Minpos <= 0;
+    end else if (running) begin
+        if(DTW_lastrow < Minval) begin 
+            Minval <= DTW_lastrow;
+            Minpos <= cycle_counter;
+        end
+    end
+end
+
+/* ===============================
+ * Assignments
+ * =============================== */
 assign DTW_minval = Minval;
 assign position   = Minpos;
-assign done       = (cycle_counter >= (SQG_SIZE + REF_SIZE) ); //48497+250
+assign done       = (cycle_counter >= ref_len); // REF_LEN + SQG_LEN
 
-
-// PE array
-dgn_processingelement #(
+/* ===============================
+ * PE DTW calculation
+ * =============================== */
+dtw_core_pe #(
     .width(width)
-) inst_dgn_pe_1 (
+) inst_dtw_core_pe_001 (
     .clk  (clk),
-    .rst (rst),
-    .x  (Squiggle_Buffer[001]),
-    .y (Rword_buff),
-    .W (DTW_prev[001]),
-    .N (32'd0),
-    .NW (32'd0),
+    .rst  (rst),
+    .x    (Squiggle_Buffer[001]),
+    .y    (Rword_buff),
+    .W    (DTW_prev[001]),
+    .N    (32'd0),
+    .NW   (32'd0),
     .DTWc (DTW_curr[001]),
-    .yp (p_Rword[001])
+    .yp   (p_Rword[001])
 );
 
-genvar i;
+genvar m;
 generate
-    for (i = 2; i < SQG_SIZE; i = i + 1) begin
-        dgn_processingelement #(
-            .width (width)
-        ) inst_dgn_pe_i (
-            .clk (clk),
-            .rst (rst),
-            .x (Squiggle_Buffer[i]),
-            .y (p_Rword[i-1]),
-            .W (DTW_prev[i]),
-            .N (DTW_prev[i-1]),
-            .NW (DTW_pprev[i-1]),
-            .DTWc (DTW_curr[i]),
-            .yp (p_Rword[i])
-        );
-    end
+for (m = 2; m <= SQG_SIZE; m = m + 1) begin
+	dtw_core_pe #(
+        .width(width)
+    ) inst_dtw_core_pe (
+        .clk    (clk),
+        .rst    (rst),
+        .x      (Squiggle_Buffer[m]),
+        .y      (p_Rword[m-1]),
+        .W      (DTW_prev[m]),
+        .N      (DTW_prev[m-1]),
+        .NW     (DTW_pprev[m-1]),
+        .DTWc   (DTW_curr[m]),
+        .yp     (p_Rword[m])
+    );
+end
 endgenerate
 
 endmodule

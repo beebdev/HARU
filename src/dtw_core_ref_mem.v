@@ -1,4 +1,4 @@
-module dgn_memreference #(
+module dtw_core_ref_mem #(
     parameter width = 16,
     parameter ptrWid = 15,
     parameter depth = 2**ptrWid
