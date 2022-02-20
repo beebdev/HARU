@@ -12,7 +12,6 @@ module dtw_core #(
     input [axi_dwidth-1 : 0] ref_len,
     input op_mode,              // Mode 0: Reference, 1: Query
     output running,             // Idle: 0, Running: 1
-    // output done,
 
     // src FIFO signals
     output src_fifo_rden,                   // Src FIFO Read enable
@@ -36,6 +35,7 @@ reg [14:0] addrW_ref;                   // Write address for refmem
 reg [31:0] curr_qid;                    // Current query id
 reg param_rst;                          // Reset for core
 reg param_running;                      // Run enable for core
+reg param_done;
 
 wire wren_ref;                          // Write enable for refmem
 
@@ -94,7 +94,7 @@ always @(posedge clk) begin
         end
         DTW_Q_INIT: begin
             // Read in ID if FIFO is not empty
-            if (!fifo_empty) begin
+            if (!src_fifo_empty) begin
                 r_next_state <= DTW_Q_RUN;
             end else begin
                 r_next_state <= DTW_Q_INIT;
@@ -122,7 +122,7 @@ always @(posedge) begin
     case (r_state) begin
         IDLE: begin
             running <= 0;
-            fifo_rden <= 0; // Don't read enable
+            src_fifo_rden <= 0; // Don't read enable
             addrR_ref <= 0;
             addrW_ref <= 0;
             param_rst <= 1;
@@ -130,10 +130,10 @@ always @(posedge) begin
         end
         REF_LOAD: begin
             running <= 1;
-            fifo_rden <= 1; // Read enable -> read reference
+            src_fifo_rden <= 1; // Read enable -> read reference
             param_rst <= 1;
             param_running <= 0;
-            if (!fifo_empty) begin
+            if (!src_fifo_empty) begin
                 addrW_ref <= addrW_ref + 1; // Increment write pointer
                 wren_ref <= 1;              // FIFO not full -> write enable
             end else begin
@@ -142,18 +142,18 @@ always @(posedge) begin
         end
         DTW_Q_INIT: begin
             running <= 1;
-            fifo_rden <= 1; // Read enable -> read id
+            src_fifo_rden <= 1; // Read enable -> read id
             param_rst <= 1;
             param_running <= 0;
-            if (!fifo_empty) begin
+            if (!src_fifo_empty) begin
                 curr_qid <= src_fifo_data;
             end
         end
         DTW_Q_RUN: begin
             running <= 1;
-            fifo_rden <= 1; // Read enable -> read data
+            src_fifo_rden <= 1; // Read enable -> read data
             param_rst <= 0;
-            if (!fifo_empty) begin
+            if (!src_fifo_empty) begin
                 param_running <= 1;
                 addrR_ref <= addrR_ref + 1;
             end else begin
@@ -162,7 +162,7 @@ always @(posedge) begin
         end
         DTW_Q_DONE: begin
             running <= 1;
-            fifo_rden <= 0; // Don't read enable
+            src_fifo_rden <= 0; // Don't read enable
             param_rst <= 0;
             param_running <= 0;
         end
@@ -170,7 +170,7 @@ always @(posedge) begin
 end
 
 /* ===============================
- * Modules
+ * Module instantiation
  * =============================== */
 
 /* Reference memory */

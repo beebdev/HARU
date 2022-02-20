@@ -49,11 +49,7 @@ module dtw_accel_v1_0 #(
 /* DTW internal signals */
 wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_cr;           // DTW Core control register
 wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_sr;		    // DTW Core status register
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_min_val;    	// DTW Core min_val
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_pos;	        // DTW Core position
 wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_debug0;	    // Debug 0: query start, end
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_debug1;	    // Debug 1: referemce start, end
 wire s00_dtw_reset;
 wire s00_dtw_start;
 wire s00_dtw_done;
@@ -77,11 +73,7 @@ dtw_accel_v1_0_S00_AXI # (
 ) dtw_accel_v1_0_S00_AXI_inst (
     .dtw_cr         (s00_dtw_cr),
     .dtw_sr         (s00_dtw_sr),
-    .dtw_min_val    (s00_dtw_min_val),
-    .dtw_pos        (s00_dtw_pos),
     .dtw_ref_len    (s00_dtw_ref_len),
-    .dtw_debug0     (s00_dtw_debug0),
-    .dtw_debug1     (s00_dtw_debug1),
 
     .S_AXI_ACLK     (s00_axi_aclk),
     .S_AXI_ARESETN  (s00_axi_aresetn),
@@ -127,7 +119,10 @@ dtw_accel_v1_0_S00_AXIS # (
    .S_AXIS_TVALID(s00_axis_tvalid)
 );
 
-
+/*
+ * AXI Stream Bus M00_AXIS
+ */
+axis_inout_M00_AXIS 
 
 /*
  * DTW core
@@ -136,21 +131,21 @@ dtw_core #(
     .width (width),
     .axi_dwidth (C_S00_AXI_DATA_WIDTH),
     .SQG_SIZE (SQG_SIZE),
-    .REF_SIZE (REF_SIZE)
 ) inst_dtw_core (
     // Main DTW signals
     .clk            (s00_axi_aclk), // TODO: Is this a good clock?
     .rst            (s00_dtw_reset),
     .start          (s00_dtw_start),
+    .ref_len        (),
     .op_mode        (),
     .running        (),
 
-    // DTW FIFO signals -> to the inside world!
+    // DTW FIFO signals -> to the inside world! (S00_AXIS)
     .src_fifo_rden  (),
     .src_fifo_empty (),
     .src_fifo_data  (),
 
-    // DTW FIFO signals -> to the outside world!
+    // DTW FIFO signals -> to the outside world! (M00_AXIS)
     .sink_fifo_wren (),
     .sink_fifo_full (),
     .sink_minval    (),

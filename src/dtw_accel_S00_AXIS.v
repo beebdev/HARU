@@ -25,7 +25,7 @@ module dtw_accel_v1_0_S00_AXIS #(]
 // Returns an integer which has the value of the ceiling of the log base 2.
 function integer clogb2 (input integer bit_depth);
 begin
-	for (clogb2 = 0; bit_depth > 0; clogb2 = clogb2 + 1) begin
+	for (clogb2 = 0; bit_depth > 0; clogb2 = clogb2 + 1) begin 
 		bit_depth = bit_depth >> 1;
 	end
 end
@@ -137,7 +137,7 @@ always @(posedge S_AXIS_ACLK) begin
 			fifo_data_count <= fifo_data_count + 1;
 		end else if (!fifo_wren && fifo_rden) begin
 			fifo_data_count <= fifo_data_count - 1;
-		end
+		end;
 
 		// Write index
 		if (fifo_wren) begin
@@ -156,6 +156,31 @@ always @(posedge S_AXIS_ACLK) begin
 				read_pointer <= read_pointer + 1;
 			end
 		end
+
+		// Write to FIFO
+		if (fifo_wren) begin
+			fifo_data[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
+		end
+	end
+end
+
+
+// FIFO Implementation
+// generate
+// 	for (byte_index = 0; byte_index <= (C_S_AXIS_TDATA_WIDTH/8-1); byte_index = byte_index + 1)
+// 	begin:FIFO_GEN
+// 		reg  [(C_S_AXIS_TDATA_WIDTH/4)-1:0] stream_data_fifo [0 : NUMBER_OF_INPUT_WORDS-1];
+
+// 		// Streaming input data is stored in FIFO
+// 		always @( posedge S_AXIS_ACLK ) begin
+// 			if (fifo_wren) begin // && S_AXIS_TSTRB[byte_index])
+// 				stream_data_fifo[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
+// 			end  
+// 		end
+// 	end		
+// endgenerate
+endmodule
+
 
 		// Write to FIFO
 		if (fifo_wren) begin

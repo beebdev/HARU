@@ -10,12 +10,8 @@ module dtw_accel_v1_0_S00_AXI #(
 	/* DTW core ports to pass data over */
 	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_cr,	// DTW Core control register
 	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_sr,		// DTW Core status register
-	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_min_val,	// DTW Core min_val
-	input wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_pos,	// DTW Core position
 	output wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
-	input wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_debug0,	// Debug 0: query start, end
-	input wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_debug1,	// Debug 1: referemce start, end
-
+	
 	/* S_AXI ports */
 	// Global Clock Signal
 	input wire  S_AXI_ACLK,
@@ -105,11 +101,11 @@ localparam integer OPT_MEM_ADDR_BITS = 2;
 //-- Number of Slave Registers 8
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg0;	// DTW Core Control Register
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg1;	// DTW Core Status Register
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg2;	// DTW Core min_val
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg3;	// DTW Core position
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg4;	// DTW Core reference length
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg5;	// Debug 0: query start, end
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg6;	// Debug 1: referemce start, end
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg2;	// DTW Core ref len
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg3;	// reserved
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg4;	// reserved
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg5;	// reserved
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg6;	// reserved
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg7;  // reserved
 wire slv_reg_rden;
 wire slv_reg_wren;
@@ -198,26 +194,27 @@ assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID
 always @( posedge S_AXI_ACLK ) begin
 	if ( S_AXI_ARESETN == 1'b0 ) begin
 		slv_reg0 <= 0;	// This is output so it is cleared
+		slv_reg2 <= 29898;	// Default to 29898
 	end else begin
 		if (slv_reg_wren) begin
 			case ( axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
-				3'h0:
+				3'h0: // Control reg
 				for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 					if ( S_AXI_WSTRB[byte_index] == 1 ) begin
 					// Respective byte enables are asserted as per write strobes 
 					// Slave register 0
 					slv_reg0[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 					end
-				3'h4:
+				3'h2: // Ref len
 				for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 					if ( S_AXI_WSTRB[byte_index] == 1 ) begin
 					// Respective byte enables are asserted as per write strobes 
 					// Slave register 4
-					slv_reg4[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+					slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 					end
 				default : begin
 					slv_reg0 <= slv_reg0;
-					slv_reg4 <= slv_reg4;
+					slv_reg2 <= slv_reg2;
 				end
 			endcase
 		end
@@ -336,13 +333,12 @@ always @(posedge S_AXI_ACLK) begin
 	end else begin
 		dtw_cr <= slv_reg0;
 	end
-	// dtw_cr <= slv_reg0;			// control register (axi -> dtw)
 	slv_reg1 <= dtw_sr;			// status register (dtw -> axi)
-	slv_reg2 <= dtw_min_val;	// min_value (dtw -> axi)
-	slv_reg3 <= dtw_pos;		// position (dtw -> axi)
-	dtw_ref_len <= slv_reg4;	// reference length (axi -> dtw)
-	slv_reg5 <= dtw_debug0;
-	slv_reg6 <= dtw_debug1;
+	dtw_ref_len <= slv_reg2;		// reference length
+	slv_reg3 <= 0;
+	slv_reg4 <= 0;
+	slv_reg5 <= 0;
+	slv_reg6 <= 0;
 	slv_reg7 <= 0;
 end
 
