@@ -1,7 +1,6 @@
-
 `timescale 1 ns / 1 ps
 
-module axis_inout_M00_AXIS #(
+module dtw_accel_M00_AXIS #(
 	/* ===============================
 	* HARU parameters
 	* =============================== */
@@ -12,11 +11,11 @@ module axis_inout_M00_AXIS #(
 	// Width of S_AXIS address bus. The slave accepts the read and write addresses of width C_M_AXIS_TDATA_WIDTH.
 	parameter integer C_M_AXIS_TDATA_WIDTH = 32,
 	// Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
-	parameter integer C_M_START_COUNT = 32
+	parameter integer C_M_START_COUNT = 32 // keep this as default
 )(
 	/* HARU ports */
 	input wire dtw_fifo_wren,
-	input wire [(C_M_AXIS_TDATA_WIDTH/4)-1:0] dtw_fifo_din,
+	input wire [C_S_AXIS_TDATA_WIDTH-1:0] dtw_fifo_din,
 	output wire dtw_fifo_full,
 
 	/* M AXIs */
@@ -230,6 +229,11 @@ always @(posedge M_AXIS_ACLK) begin
 			end else begin
 				read_pointer <= read_pointer + 1;
 			end
+		end
+
+		// Write to FIFO
+		if (fifo_wren) begin
+			fifo_data[write_pointer] <= dtw_fifo_din;
 		end
 
 		// Read from FIFO

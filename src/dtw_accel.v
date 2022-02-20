@@ -1,17 +1,19 @@
 `timescale 1 ns / 1 ps
 
-module dtw_accel_v1_0 #(
+module dtw_accel #(
     /* HARU-PL parameters */
     parameter width = 16,
     parameter SQG_SIZE = 250,
-    parameter REF_SIZE = 29898,
 
     /* Parameters of Axi Slave Bus Interface S00_AXI */
     parameter integer C_S00_AXI_DATA_WIDTH	= 32,
     parameter integer C_S00_AXI_ADDR_WIDTH	= 5,
 
     /* Parameters of Axi Slave Bus Interface S00_AXIS */
-    parameter integer C_S00_AXIS_TDATA_WIDTH = 32
+    parameter integer C_S00_AXIS_TDATA_WIDTH = 32,
+
+    /* Parameters of Axi Master Bus Interface M00_AXI */
+    parameter integer C_M00_AXIS_TDATA_WIDTH = 32,
 )(
     /* S00_AXi ports */
     input wire  s00_axi_aclk,
@@ -44,6 +46,15 @@ module dtw_accel_v1_0 #(
     input wire [(C_S00_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
     input wire  s00_axis_tlast,
     input wire  s00_axis_tvalid
+
+    /* M00_AXIS ports */
+    input wire m00_axis_aclk,
+    input wire m00_axis_aresetn,
+    output wire m00_axis_tvalid,
+	output wire [C_M00_AXIS_TDATA_WIDTH-1 : 0] m00_axis_tdata,
+	output wire [(C_M00_AXIS_TDATA_WIDTH/8)-1 : 0] m00_axis_tstrb,
+	output wire  m00_axis_tlast,
+    input wire m00_axis_tready
 );
 
 /* DTW internal signals */
@@ -59,22 +70,29 @@ assign s00_dtw_start = s00_dtw_cr[1];      // CR Offset 1: start
 assign s00_dtw_mode = s00_dtw_cr[2];       // CR Offset 2: mode
 assign s00_dtw_done = s00_dtw_sr[0];       // SR Offset 0: done
 
-/* AXIS FIFO signals */
-wire w_fifo_rden;
-wire [(C_S00_AXIS_TDATA_WIDTH/4)-1:0] w_fifo_dout;
-wire w_fifo_empty;
+/* Src AXIS FIFO signals */
+wire s00_axis_fifo_rden;
+wire [C_S00_AXIS_TDATA_WIDTH-1:0] s00_axis_fifo_dout;
+wire s00_axis_fifo_empty;
+
+/* Sink AXIS FIFO signals */
+wire m00_axis_dtw_fifo_wren;
+wire [C_S00_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
+wire m00_axis_dtw_fifo_full;
 
 /*
  * AXI Bus S00_AXI
  */
-dtw_accel_v1_0_S00_AXI # ( 
+dtw_accel_S00_AXI # ( 
     .C_S_AXI_DATA_WIDTH (C_S00_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH (C_S00_AXI_ADDR_WIDTH)
-) dtw_accel_v1_0_S00_AXI_inst (
+) dtw_accel_S00_AXI_inst (
+    // dtw
     .dtw_cr         (s00_dtw_cr),
     .dtw_sr         (s00_dtw_sr),
     .dtw_ref_len    (s00_dtw_ref_len),
 
+    // axi
     .S_AXI_ACLK     (s00_axi_aclk),
     .S_AXI_ARESETN  (s00_axi_aresetn),
     .S_AXI_AWADDR   (s00_axi_awaddr),
@@ -101,28 +119,44 @@ dtw_accel_v1_0_S00_AXI # (
 /*
  * AXI Stream Bus S00_AXIS
  */
-dtw_accel_v1_0_S00_AXIS # ( 
+dtw_accel_S00_AXIS # ( 
    .C_S_AXIS_TDATA_WIDTH(C_S00_AXIS_TDATA_WIDTH)
-) dtw_accel_v1_0_S00_AXIS_inst (
+) dtw_accel_S00_AXIS_inst (
     // dtw
-    .dtw_fifo_rden(w_fifo_rden),
-    .dtw_fifo_dout(w_fifo_dout),
-    .dtw_fifo_empty(w_fifo_empty),
+    .dtw_fifo_rden  (s00_axis_fifo_rden),
+    .dtw_fifo_dout  (s00_axis_fifo_dout),
+    .dtw_fifo_empty (s00_axis_fifo_empty),
 
     // axis
-   .S_AXIS_ACLK(s00_axis_aclk),
-   .S_AXIS_ARESETN(s00_axis_aresetn),
-   .S_AXIS_TREADY(s00_axis_tready),
-   .S_AXIS_TDATA(s00_axis_tdata),
-   .S_AXIS_TSTRB(s00_axis_tstrb),
-   .S_AXIS_TLAST(s00_axis_tlast),
-   .S_AXIS_TVALID(s00_axis_tvalid)
+   .S_AXIS_ACLK     (s00_axis_aclk),
+   .S_AXIS_ARESETN  (s00_axis_aresetn),
+   .S_AXIS_TREADY   (s00_axis_tready),
+   .S_AXIS_TDATA    (s00_axis_tdata),
+   .S_AXIS_TSTRB    (s00_axis_tstrb),
+   .S_AXIS_TLAST    (s00_axis_tlast),
+   .S_AXIS_TVALID   (s00_axis_tvalid)
 );
 
 /*
  * AXI Stream Bus M00_AXIS
  */
-axis_inout_M00_AXIS 
+dtw_accel_M00_AXIS #(
+    .C_M_AXIS_TDATA_WIDTH (C_M00_AXIS_TDATA_WIDTH)
+) dtw_accel_M00_AXIS_inst (
+    // dtw
+    .dtw_fifo_wren  (m00_axis_dtw_fifo_wren),
+    .dtw_fifo_din   (m00_axis_dtw_fifo_din),
+    .dtw_fifo_full  (m00_axis_dtw_fifo_full),
+
+    // axis
+    .M_AXIS_ACLK    (m00_axis_aclk),
+    .M_AXIS_ARESETN (m00_axis_aresetn),
+    .M_AXIS_TVALID  (m00_axis_tvalid),
+    .M_AXIS_TDATA   (m00_axis_tdata),
+    .M_AXIS_TSTRB   (m00_axis_tstrb),
+    .M_AXIS_TLAST   (m00_axis_tlast),
+    .M_AXIS_TREADY  (m00_axis_tready)
+);
 
 /*
  * DTW core
@@ -141,14 +175,14 @@ dtw_core #(
     .running        (),
 
     // DTW FIFO signals -> to the inside world! (S00_AXIS)
-    .src_fifo_rden  (),
-    .src_fifo_empty (),
-    .src_fifo_data  (),
+    .src_fifo_rden  (s00_axis_fifo_rden),
+    .src_fifo_empty (s00_axis_fifo_dout),
+    .src_fifo_data  (s00_axis_fifo_empty),
 
     // DTW FIFO signals -> to the outside world! (M00_AXIS)
-    .sink_fifo_wren (),
-    .sink_fifo_full (),
-    .sink_minval    (),
+    .sink_fifo_wren (m00_axis_dtw_fifo_wren),
+    .sink_fifo_full (m00_axis_dtw_fifo_full),
+    .sink_minval    (), // TODO: Should this be one single dout and serialised?
     .sink_position  (),
     .sink_qid       ()
 );

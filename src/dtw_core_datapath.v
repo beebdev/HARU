@@ -2,8 +2,7 @@
 
 module dtw_core_datapath #(
     parameter width = 16,
-    parameter SQG_SIZE = 10,
-    parameter REF_SIZE = 1000 
+    parameter SQG_SIZE =250,
 )(
     input clk, rst, running,
     input [width-1:0] Input_squiggle, Rword,
@@ -15,18 +14,18 @@ module dtw_core_datapath #(
 
 integer k;
 
-reg [31:0] cycle_counter ;
+reg [31:0] cycle_counter;
 reg [7:0]  squiggle_buffaddress;
 
 reg [width-1:0] Squiggle_Buffer [1:SQG_SIZE];
 reg [width-1:0] Rword_buff;
 
-wire [width-1:0] DTW_curr  [1:SQG_SIZE];
-wire [width-1:0] p_Rword   [1:SQG_SIZE];
+wire [width-1:0] DTW_curr [1:SQG_SIZE];
+wire [width-1:0] p_Rword  [1:SQG_SIZE];
 
 reg [width-1:0] DTW_prev  [1:SQG_SIZE];
 reg [width-1:0] DTW_pprev [1:SQG_SIZE];
-reg [0:SQG_SIZE+1]  running_d;
+reg [0:SQG_SIZE+1] running_d;
 
 reg [width-1:0] Minval;
 reg [31:0]      Minpos ;
@@ -181,7 +180,7 @@ generate
 for (m = 2; m <= SQG_SIZE; m = m + 1) begin
 	dtw_core_pe #(
         .width(width)
-    ) inst_dtw_core_pe (
+    ) inst_dtw_core_pe_n (
         .clk    (clk),
         .rst    (rst),
         .x      (Squiggle_Buffer[m]),
