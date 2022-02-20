@@ -127,6 +127,8 @@ dtw_accel_v1_0_S00_AXIS # (
    .S_AXIS_TVALID(s00_axis_tvalid)
 );
 
+
+
 /*
  * DTW core
  */
@@ -139,20 +141,21 @@ dtw_core #(
     // Main DTW signals
     .clk            (s00_axi_aclk), // TODO: Is this a good clock?
     .rst            (s00_dtw_reset),
-    .running        (s00_dtw_start),
-    .DTW_minval     (s00_dtw_min_val),
-    .position       (s00_dtw_pos),
-    .done           (s00_dtw_done),
+    .start          (s00_dtw_start),
+    .op_mode        (),
+    .running        (),
+
+    // DTW FIFO signals -> to the inside world!
+    .src_fifo_rden  (),
+    .src_fifo_empty (),
+    .src_fifo_data  (),
 
     // DTW FIFO signals -> to the outside world!
-    .op_mode(s00_dtw_mode),
-    .fifo_rden(w_fifo_rden),
-    .fifo_empty(w_fifo_empty),
-    .fifo_data(w_fifo_dout),
-
-    // Debug
-    .DTW_debug0    (s00_dtw_debug0),
-    .DTW_debug1    (s00_dtw_debug1)
+    .sink_fifo_wren (),
+    .sink_fifo_full (),
+    .sink_minval    (),
+    .sink_position  (),
+    .sink_qid       ()
 );
 
 endmodule

@@ -10,9 +10,9 @@ module dtw_core #(
     // Main DTW signals
     input clk, rst, start,
     input [axi_dwidth-1 : 0] ref_len,
-    input op_mode,
-    output running,
-    output done,
+    input op_mode,              // Mode 0: Reference, 1: Query
+    output running,             // Idle: 0, Running: 1
+    // output done,
 
     // src FIFO signals
     output src_fifo_rden,                   // Src FIFO Read enable
@@ -28,26 +28,16 @@ module dtw_core #(
 );
 
 /* Internal signals */
-wire [dtw_dwidth-1:0] dataout_squiggle;
-wire [dtw_dwidth-1:0] dataout_ref;
+wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
 
-reg [14:0] addrR_ref;
-reg [14:0] addrW_ref;
-// reg [7:0]  addrR_squiggle;
+reg [14:0] addrR_ref;                   // Read address for refmem 
+reg [14:0] addrW_ref;                   // Write address for refmem
 
-reg [31:0] ref_curr_id;
-reg param_running;
-reg param_rst;
-wire param_running;
+reg [31:0] curr_qid;                    // Current query id
+reg param_rst;                          // Reset for core
+reg param_running;                      // Run enable for core
 
-wire wren_ref;
-
-reg [axi_dwidth:0] debug0;
-reg [axi_dwidth:0] debug1;
-
-assign sink_qid = ref_curr_id;
-assign DTW_debug0 = debug0;
-assign DTW_debug1 = debug1;
+wire wren_ref;                          // Write enable for refmem
 
 // Operation mode
 localparam // operation mode
@@ -57,12 +47,13 @@ localparam // operation mode
 // OP state variables
 reg [1:0] r_state;
 reg [1:0] r_next_state;
-parameter [1:0] // n states
+localparam [1:0] // n states
     IDLE = 0,
     REF_LOAD = 1,
     DTW_Q_RUN = 2,
     DTW_Q_DONE = 3;
 
+assign sink_qid = curr_qid;
 
 /* ===============================
  * Core FSM 
@@ -132,6 +123,7 @@ always @(posedge) begin
         IDLE: begin
             running <= 0;
             fifo_rden <= 0; // Don't read enable
+            addrR_ref <= 0;
             addrW_ref <= 0;
             param_rst <= 1;
             param_running <= 0;
@@ -154,7 +146,7 @@ always @(posedge) begin
             param_rst <= 1;
             param_running <= 0;
             if (!fifo_empty) begin
-                ref_curr_id <= src_fifo_data;
+                curr_qid <= src_fifo_data;
             end
         end
         DTW_Q_RUN: begin

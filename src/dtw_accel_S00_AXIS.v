@@ -137,7 +137,7 @@ always @(posedge S_AXIS_ACLK) begin
 			fifo_data_count <= fifo_data_count + 1;
 		end else if (!fifo_wren && fifo_rden) begin
 			fifo_data_count <= fifo_data_count - 1;
-		end;
+		end
 
 		// Write index
 		if (fifo_wren) begin
@@ -164,19 +164,4 @@ always @(posedge S_AXIS_ACLK) begin
 	end
 end
 
-
-// FIFO Implementation
-// generate
-// 	for (byte_index = 0; byte_index <= (C_S_AXIS_TDATA_WIDTH/8-1); byte_index = byte_index + 1)
-// 	begin:FIFO_GEN
-// 		reg  [(C_S_AXIS_TDATA_WIDTH/4)-1:0] stream_data_fifo [0 : NUMBER_OF_INPUT_WORDS-1];
-
-// 		// Streaming input data is stored in FIFO
-// 		always @( posedge S_AXIS_ACLK ) begin
-// 			if (fifo_wren) begin // && S_AXIS_TSTRB[byte_index])
-// 				stream_data_fifo[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
-// 			end  
-// 		end
-// 	end		
-// endgenerate
 endmodule
