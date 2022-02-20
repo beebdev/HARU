@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-module dtw_accel_v1_0_S00_AXIS #(]
+module dtw_accel_S00_AXIS #(]
 	/* HARU parameters */
 
 	/* AXI4Stream sink: Data Width */

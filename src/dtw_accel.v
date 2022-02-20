@@ -127,7 +127,25 @@ dtw_accel_v1_0_S00_AXIS # (
    .S_AXIS_TVALID(s00_axis_tvalid)
 );
 
+/*
+ * AXI Stream Bus M00_AXIS
+ */
+dtw_accel_M00_AXIS #(
+    .C_M_AXIS_TDATA_WIDTH (),
+    .C_M_START_COUNT ()
+) dtw_accel_M00_AXIS_inst (
+    .dtw_fifo_wren (),
+    .dtw_fifo_din  (),
+    .dtw_fifo_full (),
 
+    .M_AXIS_ACLK(m00_axis_aclk),
+    .M_AXIS_ARESETN(m00_axis_aresetn),
+    .M_AXIS_TVALID(m00_axis_tvalid),
+    .M_AXIS_TDATA(),
+    .M_AXIS_TSTRB(),
+    .M_AXIS_TLAST(),
+    M_AXIS_TREADY()
+);
 
 /*
  * DTW core

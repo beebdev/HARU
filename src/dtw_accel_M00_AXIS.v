@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-module axis_inout_M00_AXIS #(
+module dtw_accel_M00_AXIS #(
 	/* ===============================
 	* HARU parameters
 	* =============================== */
