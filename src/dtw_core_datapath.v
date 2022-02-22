@@ -7,7 +7,7 @@ module dtw_core_datapath #(
     input clk, rst, running,
     input [width-1:0] Input_squiggle, Rword,
     input [31:0] ref_len,
-    output [width-1:0] DTW_minval,
+    output [width-1:0] minval,
     output [31:0] position,
     output done
 );

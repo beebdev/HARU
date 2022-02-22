@@ -9,13 +9,10 @@ module dtw_accel #(
     parameter integer C_S00_AXI_DATA_WIDTH	= 32,
     parameter integer C_S00_AXI_ADDR_WIDTH	= 5,
 
-    /* Parameters of Axi Slave Bus Interface S00_AXIS */
-    parameter integer C_S00_AXIS_TDATA_WIDTH = 32,
-
-    /* Parameters of Axi Master Bus Interface M00_AXI */
-    parameter integer C_M00_AXIS_TDATA_WIDTH = 32
+    /* Parameters of Axi stream */
+    parameter integer C_AXIS_TDATA_WIDTH = 32
 )(
-    /* S00_AXi ports */
+    /* S00_AXI ports */
     input wire  s00_axi_aclk,
     input wire  s00_axi_aresetn,
     input wire  [C_S00_AXI_ADDR_WIDTH-1 : 0] s00_axi_awaddr,
@@ -57,32 +54,46 @@ module dtw_accel #(
     input wire m00_axis_tready
 );
 
-/* DTW internal signals */
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_cr;           // DTW Core control register
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_sr;		    // DTW Core status register
+/* =========================
+ * Signal declaration
+ * ========================= */
+
+// DTW signals within S AXI
+wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control register
+reg  [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
 wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
 wire s00_dtw_reset;
 wire s00_dtw_start;
-wire s00_dtw_done;
+wire s00_dtw_running;
 
-assign s00_dtw_reset = s00_dtw_cr[0];      // CR Offset 0: reset
-assign s00_dtw_start = s00_dtw_cr[1];      // CR Offset 1: start
-assign s00_dtw_mode = s00_dtw_cr[2];       // CR Offset 2: mode
-assign s00_dtw_done = s00_dtw_sr[0];       // SR Offset 0: done
-
-/* Src AXIS FIFO signals */
+// Src AXIS FIFO signals
 wire s00_axis_fifo_rden;
 wire [C_S00_AXIS_TDATA_WIDTH-1:0] s00_axis_fifo_dout;
 wire s00_axis_fifo_empty;
 
-/* Sink AXIS FIFO signals */
+// Sink AXIS FIFO signals
 wire m00_axis_dtw_fifo_wren;
 wire [C_S00_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
 wire m00_axis_dtw_fifo_full;
 
-/*
- * AXI Bus S00_AXI
- */
+/* =========================
+ * IO assignments
+ * ========================= */
+ 
+// DTW CR
+assign s00_dtw_reset = s00_dtw_cr[0];      // CR Offset 0: reset
+assign s00_dtw_start = s00_dtw_cr[1];      // CR Offset 1: start
+assign s00_dtw_mode = s00_dtw_cr[2];       // CR Offset 2: mode
+
+// DTW SR
+assign s00_dtw_sr[0] = s00_dtw_running;       // SR Offset 0: running
+assign s00_dtw_sr[31:1] = 30'h0;              // SR Offset n: reserved
+
+/* =========================
+ * Module instantiation
+ * ========================= */
+
+// AXI Bus S00_AXI
 dtw_accel_S00_AXI # ( 
     .C_S_AXI_DATA_WIDTH (C_S00_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH (C_S00_AXI_ADDR_WIDTH)
@@ -116,11 +127,10 @@ dtw_accel_S00_AXI # (
     .S_AXI_RREADY   (s00_axi_rready)
 );
 
-/*
- * AXI Stream Bus S00_AXIS
- */
+
+// AXI Stream Bus S00_AXIS
 dtw_accel_S00_AXIS # ( 
-   .C_S_AXIS_TDATA_WIDTH(C_S00_AXIS_TDATA_WIDTH)
+   .C_S_AXIS_TDATA_WIDTH(C_AXIS_TDATA_WIDTH)
 ) dtw_accel_S00_AXIS_inst (
     // dtw
     .dtw_fifo_rden  (s00_axis_fifo_rden),
@@ -137,11 +147,10 @@ dtw_accel_S00_AXIS # (
    .S_AXIS_TVALID   (s00_axis_tvalid)
 );
 
-/*
- * AXI Stream Bus M00_AXIS
- */
+
+// AXI Stream Bus M00_AXIS
 dtw_accel_M00_AXIS #(
-    .C_M_AXIS_TDATA_WIDTH (C_M00_AXIS_TDATA_WIDTH)
+    .C_M_AXIS_TDATA_WIDTH (C_AXIS_TDATA_WIDTH)
 ) dtw_accel_M00_AXIS_inst (
     // dtw
     .dtw_fifo_wren  (m00_axis_dtw_fifo_wren),
@@ -158,21 +167,19 @@ dtw_accel_M00_AXIS #(
     .M_AXIS_TREADY  (m00_axis_tready)
 );
 
-/*
- * DTW core
- */
+// DTW core
 dtw_core #(
     .width (width),
-    .axi_dwidth (C_S00_AXI_DATA_WIDTH),
+    .axi_dwidth (C_AXIS_TDATA_WIDTH),
     .SQG_SIZE (SQG_SIZE),
 ) inst_dtw_core (
     // Main DTW signals
     .clk            (s00_axi_aclk), // TODO: Is this a good clock?
     .rst            (s00_dtw_reset),
     .start          (s00_dtw_start),
-    .ref_len        (),
-    .op_mode        (),
-    .running        (),
+    .ref_len        (s00_dtw_ref_len),
+    .op_mode        (s00_dtw_mode),
+    .running        (s00_dtw_running),
 
     // DTW FIFO signals -> to the inside world! (S00_AXIS)
     .src_fifo_rden  (s00_axis_fifo_rden),
@@ -182,9 +189,7 @@ dtw_core #(
     // DTW FIFO signals -> to the outside world! (M00_AXIS)
     .sink_fifo_wren (m00_axis_dtw_fifo_wren),
     .sink_fifo_full (m00_axis_dtw_fifo_full),
-    .sink_minval    (), // TODO: Should this be one single dout and serialised?
-    .sink_position  (),
-    .sink_qid       ()
+    .sink_fifo_data (m00_axis_dtw_fifo_din)
 );
 
 endmodule

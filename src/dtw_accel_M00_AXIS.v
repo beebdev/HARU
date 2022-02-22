@@ -215,6 +215,7 @@ always @(posedge M_AXIS_ACLK) begin
 
 		// Manage write pointer
 		if (fifo_wren) begin
+			fifo_data[write_pointer] <= dtw_fifo_din;
 			if (write_pointer == NUMBER_OF_OUTPUT_WORDS - 1) begin
 				write_pointer <= 0;
 			end else begin
@@ -224,21 +225,12 @@ always @(posedge M_AXIS_ACLK) begin
 
 		// Manage read pointer
 		if (fifo_rden) begin
+			stream_data_fifo <= fifo_data[read_pointer];
 			if (read_pointer == NUMBER_OF_OUTPUT_WORDS - 1) begin
 				read_pointer <= 0;
 			end else begin
 				read_pointer <= read_pointer + 1;
 			end
-		end
-
-		// Write to FIFO
-		if (fifo_wren) begin
-			fifo_data[write_pointer] <= dtw_fifo_din;
-		end
-
-		// Read from FIFO
-		if (fifo_rden) begin // TODO: rename tx_en to fifo_rden
-			stream_data_fifo <= fifo_data[read_pointer];
 		end
 	end
 end

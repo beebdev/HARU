@@ -8,8 +8,8 @@ module dtw_accel_S00_AXI #(
 	parameter integer C_S_AXI_ADDR_WIDTH = 5		// S_AXI address bus width
 )(
 	/* DTW core ports to pass data over */
-	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_cr,	// DTW Core control register
-	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_sr,		// DTW Core status register
+	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_cr,			// DTW Core control register
+	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_sr,			// DTW Core status register
 	output wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
 	
 	/* S_AXI ports */
@@ -265,7 +265,7 @@ always @( posedge S_AXI_ACLK ) begin
 			axi_arready <= 1'b0;
 		end
 	end 
-end       
+end
 
 // Implement axi_arvalid generation
 // axi_rvalid is asserted for one S_AXI_ACLK clock cycle when both 
@@ -328,8 +328,8 @@ end
 always @(posedge S_AXI_ACLK) begin
 	// Reset is done by dtw core itself
 	if (slv_reg0[0]) begin // start
-		dtw_cr = slv_reg0;
-		slv_reg0[0] = 0;
+		dtw_cr <= {slv_reg0[31:1], 1'b1};
+		slv_reg0[0] <= 0;
 	end else begin
 		dtw_cr <= slv_reg0;
 	end

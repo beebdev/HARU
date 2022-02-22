@@ -21,30 +21,33 @@ module dtw_core #(
     // sink FIFO signals
     output sink_fifo_wren,                  // Sink FIFO Write enable
     input sink_fifo_full,                   // Sink FIFO Full
-    output [dtw_dwidth-1:0] sink_minval,
-    output [31:0] sink_position,
-    output [31:0] sink_qid
+    input [31:0] sink_fifo_data,             // Src FIFO Data
 );
 
-/* Internal signals */
-wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
+/* ===============================
+ * Signal declarations
+ * =============================== */
 
+// Ref mem signals
 reg [14:0] addrR_ref;                   // Read address for refmem 
 reg [14:0] addrW_ref;                   // Write address for refmem
+reg wren_ref;                          // Write enable for refmem
+wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
 
+// DTW datapath signals
+reg dp_rst;                          // Reset for core
+reg dp_running;                      // Run enable for core
+reg dp_done;                         // Core done
 reg [31:0] curr_qid;                    // Current query id
-reg param_rst;                          // Reset for core
-reg param_running;                      // Run enable for core
-reg param_done;
-
-wire wren_ref;                          // Write enable for refmem
+wire [dtw_dwidth-1:0] curr_minval;      // Current minimum value
+wire [31:0] curr_position;              // Current best position
 
 // Operation mode
 localparam // operation mode
     MODE_NORMAL = 1'b0,
     MODE_LOAD_REF = 1'b1;
 
-// OP state variables
+// State variables
 reg [1:0] r_state;
 reg [1:0] r_next_state;
 localparam [1:0] // n states
@@ -53,10 +56,11 @@ localparam [1:0] // n states
     DTW_Q_RUN = 2,
     DTW_Q_DONE = 3;
 
-assign sink_qid = curr_qid;
+// Others
+reg [1:0] stream_out_counter;
 
 /* ===============================
- * Core FSM 
+ * Core FSM
  * =============================== */
 
 // State transition
@@ -101,14 +105,14 @@ always @(posedge clk) begin
             end
         end
         DTW_Q_RUN: begin
-            if (!param_done) begin
+            if (!dp_done) begin
                 r_next_state <= DTW_Q_RUN;
             end else begin
                 r_next_state <= DTW_Q_DONE;
             end
         end
         DTW_Q_DONE: begin
-            if (sink_fifo_full) begin
+            if (sink_fifo_full || stream_out_counter < 2'h3) begin
                 r_next_state <= DTW_Q_DONE;
             end else begin
                 r_next_state <= IDLE;
@@ -122,17 +126,21 @@ always @(posedge clk) begin
     case (r_state)
         IDLE: begin
             running <= 0;
-            src_fifo_rden <= 0; // Don't read enable
+            src_fifo_rden <= 0;
+            sink_fifo_wren <= 0;
             addrR_ref <= 0;
             addrW_ref <= 0;
-            param_rst <= 1;
-            param_running <= 0;
+            dp_rst <= 1;
+            dp_running <= 0;
+            stream_out_counter <= 0;
         end
         REF_LOAD: begin
             running <= 1;
-            src_fifo_rden <= 1; // Read enable -> read reference
-            param_rst <= 1;
-            param_running <= 0;
+            src_fifo_rden <= 1; // Read reference
+            sink_fifo_wren <= 0;
+            dp_rst <= 1;
+            dp_running <= 0;
+            stream_out_counter <= 0;
             if (!src_fifo_empty) begin
                 addrW_ref <= addrW_ref + 1; // Increment write pointer
                 wren_ref <= 1;              // FIFO not full -> write enable
@@ -143,21 +151,25 @@ always @(posedge clk) begin
         DTW_Q_INIT: begin
             running <= 1;
             src_fifo_rden <= 1; // Read enable -> read id
-            param_rst <= 1;
-            param_running <= 0;
+            sink_fifo_wren <= 0;
+            dp_rst <= 1;
+            dp_running <= 0;
+            stream_out_counter <= 0;
             if (!src_fifo_empty) begin
                 curr_qid <= src_fifo_data;
             end
         end
         DTW_Q_RUN: begin
             running <= 1;
-            src_fifo_rden <= 1; // Read enable -> read data
-            param_rst <= 0;
+            src_fifo_rden <= 1; // Read query data
+            sink_fifo_wren <= 0;
+            dp_rst <= 0;
+            stream_out_counter <= 0;
             if (!src_fifo_empty) begin
-                param_running <= 1;
+                dp_running <= 1;
                 addrR_ref <= addrR_ref + 1;
             end else begin
-                param_running <= 0;
+                dp_running <= 0;
             end
         end
         DTW_Q_DONE: begin
@@ -165,6 +177,19 @@ always @(posedge clk) begin
             src_fifo_rden <= 0; // Don't read enable
             param_rst <= 0;
             param_running <= 0;
+
+            // Serialise output
+            sink_fifo_wren <= 1;
+            if (!sink_fifo_full) begin
+                stream_out_counter <= stream_out_counter + 1;
+                if (stream_out_counter == 0) begin
+                    sink_fifo_data <= curr_qid;
+                end else if (stream_out_counter == 1) begin
+                    sink_fifo_data <= curr_position;
+                end else if (stream_out_counter == 2) begin
+                    sink_fifo_data <= {(32-dtw_dwidth)'b0, curr_minval};
+                end
+            end
         end
     endcase
 end
@@ -192,14 +217,14 @@ dtw_core_datapath #(
     .REF_SIZE(REF_SIZE)
 ) inst_dtw_core_datapath (
     .clk            (clk),
-    .rst            (param_rst),
-    .running        (param_running),
+    .rst            (dp_rst),
+    .running        (dp_running),
     .Input_squiggle (src_fifo_data),
     .Rword          (dataout_ref),
     .ref_len        (ref_len),
-    .DTW_minval     (sink_minval),
-    .position       (sink_position),
-    .done           (param_done)
+    .minval         (curr_minval),
+    .position       (curr_position),
+    .done           (dp_done)
 );
 
 endmodule

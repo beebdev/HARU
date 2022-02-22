@@ -141,6 +141,7 @@ always @(posedge S_AXIS_ACLK) begin
 
 		// Write index
 		if (fifo_wren) begin
+			fifo_data[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
 			if (write_pointer == NUMBER_OF_INPUT_WORDS - 1) begin
 				write_pointer <= 0;
 			end else begin
@@ -150,21 +151,12 @@ always @(posedge S_AXIS_ACLK) begin
 
 		// Read index
 		if (fifo_rden) begin
+			dtw_fifo_dout <= fifo_data[read_pointer];
 			if (read_pointer == NUMBER_OF_INPUT_WORDS - 1) begin
 				read_pointer <= 0;
 			end else begin
 				read_pointer <= read_pointer + 1;
 			end
-		end
-
-		// Write to FIFO
-		if (fifo_wren) begin
-			fifo_data[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
-		end
-
-		// Read from FIFO
-		if (fifo_rden) begin
-			dtw_fifo_dout <= fifo_data[read_pointer];
 		end
 	end
 end
