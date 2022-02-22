@@ -50,7 +50,7 @@ genvar byte_index;     				// FIFO implementation signals
 reg [(C_S_AXIS_TDATA_WIDTH/4)-1:0] fifo_data [0 : NUMBER_OF_INPUT_WORDS-1];
 wire fifo_wren;						// FIFO write enable
 wire fifo_rden;						// FIFO read enable
-reg fifo_data_count;				// FIFO data count
+reg [bit_num-1:0] fifo_data_count;				// FIFO data count
 reg fifo_full_flag;					// FIFO full flag
 reg fifo_empty_flag;				// FIFO empty flag
 reg [bit_num-1:0] write_pointer;	// FIFO write pointer

@@ -21,7 +21,7 @@ module dtw_core #(
     // sink FIFO signals
     output sink_fifo_wren,                  // Sink FIFO Write enable
     input sink_fifo_full,                   // Sink FIFO Full
-    input [31:0] sink_fifo_data,             // Src FIFO Data
+    input [31:0] sink_fifo_data             // Src FIFO Data
 );
 
 /* ===============================
@@ -31,13 +31,13 @@ module dtw_core #(
 // Ref mem signals
 reg [14:0] addrR_ref;                   // Read address for refmem 
 reg [14:0] addrW_ref;                   // Write address for refmem
-reg wren_ref;                          // Write enable for refmem
+reg wren_ref;                           // Write enable for refmem
 wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
 
 // DTW datapath signals
-reg dp_rst;                          // Reset for core
-reg dp_running;                      // Run enable for core
-reg dp_done;                         // Core done
+reg dp_rst;                             // Reset for core
+reg dp_running;                         // Run enable for core
+reg dp_done;                            // Core done
 reg [31:0] curr_qid;                    // Current query id
 wire [dtw_dwidth-1:0] curr_minval;      // Current minimum value
 wire [31:0] curr_position;              // Current best position
@@ -187,7 +187,7 @@ always @(posedge clk) begin
                 end else if (stream_out_counter == 1) begin
                     sink_fifo_data <= curr_position;
                 end else if (stream_out_counter == 2) begin
-                    sink_fifo_data <= {(32-dtw_dwidth)'b0, curr_minval};
+                    sink_fifo_data <= {0, curr_minval};
                 end
             end
         end
