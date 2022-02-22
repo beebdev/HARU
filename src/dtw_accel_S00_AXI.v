@@ -1,6 +1,6 @@
 `timescale 1 ns / 1 ps
 
-module dtw_accel_v1_0_S00_AXI #(
+module dtw_accel_S00_AXI #(
 	/* DTW param in S_AXI */
 
 	/* S_AXI Bus paramters */

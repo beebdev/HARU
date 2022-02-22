@@ -101,10 +101,10 @@ assign M_AXIS_TSTRB	= {(C_M_AXIS_TDATA_WIDTH/8){1'b1}};
  * Control state machine implementation
  * =============================== */
 always @(posedge M_AXIS_ACLK) begin
-	if (!M_AXIS_ARESETN)
+	if (!M_AXIS_ARESETN) begin
 		mst_exec_state <= IDLE; // Synchronous reset (active low)
-		count    <= 0;
-	end else
+		count <= 0;
+	end else begin
 		case (mst_exec_state)
 		IDLE:
 			// The slave starts accepting tdata when
@@ -146,7 +146,7 @@ end
 //tvalid generation
 //axis_tvalid is asserted when the control state machine's state is SEND_STREAM and
 //number of output streaming data is less than the NUMBER_OF_OUTPUT_WORDS.
-assign axis_tvalid = ((mst_exec_state == SEND_STREAM) && (read_pointer < NUMBER_OF_OUTPUT_WORDS) && );
+assign axis_tvalid = ((mst_exec_state == SEND_STREAM) && (read_pointer < NUMBER_OF_OUTPUT_WORDS)); // TODO: missing sth?
 
 // AXI tlast generation
 // axis_tlast is asserted number of output streaming data is NUMBER_OF_OUTPUT_WORDS-1

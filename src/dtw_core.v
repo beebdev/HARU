@@ -76,7 +76,7 @@ always @(posedge clk) begin
                 if (op_mode == MODE_NORMAL) begin
                     r_next_state <= DTW_Q_INIT;
                 end else if (op_mode == MODE_LOAD_REF) begin
-                    r_next_state <= REF_LOAD
+                    r_next_state <= REF_LOAD;
                 end else begin
                     r_next_state <= IDLE;
                 end
@@ -118,8 +118,8 @@ always @(posedge clk) begin
 end
 
 // state machine output
-always @(posedge) begin
-    case (r_state) begin
+always @(posedge clk) begin
+    case (r_state)
         IDLE: begin
             running <= 0;
             src_fifo_rden <= 0; // Don't read enable

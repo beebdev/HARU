@@ -13,7 +13,7 @@ module dtw_accel #(
     parameter integer C_S00_AXIS_TDATA_WIDTH = 32,
 
     /* Parameters of Axi Master Bus Interface M00_AXI */
-    parameter integer C_M00_AXIS_TDATA_WIDTH = 32,
+    parameter integer C_M00_AXIS_TDATA_WIDTH = 32
 )(
     /* S00_AXi ports */
     input wire  s00_axi_aclk,
@@ -36,7 +36,7 @@ module dtw_accel #(
     output wire [C_S00_AXI_DATA_WIDTH-1 : 0] s00_axi_rdata,
     output wire [1 : 0] s00_axi_rresp,
     output wire s00_axi_rvalid,
-    input wire  s00_axi_rready
+    input wire  s00_axi_rready,
 
     /* S00_AXIS ports */
     input wire  s00_axis_aclk,
@@ -45,7 +45,7 @@ module dtw_accel #(
     input wire [C_S00_AXIS_TDATA_WIDTH-1 : 0] s00_axis_tdata,
     input wire [(C_S00_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
     input wire  s00_axis_tlast,
-    input wire  s00_axis_tvalid
+    input wire  s00_axis_tvalid,
 
     /* M00_AXIS ports */
     input wire m00_axis_aclk,

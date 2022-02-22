@@ -2,7 +2,7 @@
 
 module dtw_core_datapath #(
     parameter width = 16,
-    parameter SQG_SIZE =250,
+    parameter SQG_SIZE =250
 )(
     input clk, rst, running,
     input [width-1:0] Input_squiggle, Rword,

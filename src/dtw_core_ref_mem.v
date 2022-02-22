@@ -18,7 +18,7 @@ initial begin
     $readmemb("D:/UNSW/Thesis/dtw_core/bram_init/reference.txt", MEM);
 end
 
-assign dataout <= MEM[addrR];
+assign dataout = MEM[addrR];
 always @(posedge clk) begin
 	if (wren) begin
 		MEM[addrW] <= datain;

@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-module dtw_accel_S00_AXIS #(]
+module dtw_accel_S00_AXIS #(
 	/* HARU parameters */
 
 	/* AXI4Stream sink: Data Width */
@@ -117,14 +117,14 @@ end
 /* FIFO */
 
 // port assignment
-assign dtw_fifo_dout <= fifo_data[read_pointer];
-assign dtw_fifo_empty <= fifo_empty_flag;
+assign dtw_fifo_dout = fifo_data[read_pointer];
+assign dtw_fifo_empty = fifo_empty_flag;
 
 // inner assignment
-assign fifo_full_flag <= (fifo_data_count == NUMBER_OF_INPUT_WORDS);
-assign fifo_empty_flag <= (fifo_data_count == 0);
-assign fifo_wren <= S_AXIS_TVALID && axis_tready;			// src -> axis
-assign fifo_rden <= dtw_fifo_rden  && !fifo_empty_flag;		// sink -> dtw
+assign fifo_full_flag = (fifo_data_count == NUMBER_OF_INPUT_WORDS);
+assign fifo_empty_flag = (fifo_data_count == 0);
+assign fifo_wren = S_AXIS_TVALID && axis_tready;			// src -> axis
+assign fifo_rden = dtw_fifo_rden  && !fifo_empty_flag;		// sink -> dtw
 
 always @(posedge S_AXIS_ACLK) begin
 	if (!S_AXIS_ARESETN) begin
@@ -137,7 +137,7 @@ always @(posedge S_AXIS_ACLK) begin
 			fifo_data_count <= fifo_data_count + 1;
 		end else if (!fifo_wren && fifo_rden) begin
 			fifo_data_count <= fifo_data_count - 1;
-		end;
+		end
 
 		// Write index
 		if (fifo_wren) begin
