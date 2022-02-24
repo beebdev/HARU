@@ -13,13 +13,16 @@ module dtw_accel_M00_AXIS #(
 	// Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
 	parameter integer C_M_START_COUNT = 32 // keep this as default
 )(
-	/* HARU ports */
+	/* ===============================
+	* HARU ports
+	* =============================== */
 	input wire dtw_fifo_wren,
 	input wire [C_M_AXIS_TDATA_WIDTH-1:0] dtw_fifo_din,
 	output wire dtw_fifo_full,
 
-	/* M AXIs */
-	// Global ports
+	/* ===============================
+	* M AXIs ports
+	* =============================== */
 	input wire  M_AXIS_ACLK,
 	// Reset
 	input wire  M_AXIS_ARESETN,
@@ -45,7 +48,7 @@ localparam NUMBER_OF_OUTPUT_WORDS = 8;
 // Returns an integer which has the value of the ceiling of the log base 2.
 function integer clogb2 (input integer bit_depth);
 begin
-	for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
+	for(clogb2 = 0; bit_depth > 0; clogb2 = clogb2 + 1)
 		bit_depth = bit_depth >> 1;
 end
 endfunction
@@ -60,7 +63,6 @@ localparam bit_num = clogb2(NUMBER_OF_OUTPUT_WORDS);
 // The control state machine oversees the writing of input streaming data to the FIFO,
 // and outputs the streaming data from the FIFO
 parameter [1:0] IDLE = 2'b00,        // This is the initial/idle state
-
 				INIT_COUNTER  = 2'b01, // This state initializes the counter, once
 								// the counter reaches C_M_START_COUNT count,
 								// the state machine changes state to SEND_STREAM
@@ -70,27 +72,26 @@ parameter [1:0] IDLE = 2'b00,        // This is the initial/idle state
 /* ===============================
  * Reg and wires
  * =============================== */
-// State variable
+/* State variable */
 reg [1:0] mst_exec_state;
 
-// AXI Stream internal signals
-//wait counter. The master waits for the user defined number of clock cycles before initiating a transfer.
+/* AXI Stream internal signals */
+// wait counter. The master waits for the user defined number of clock cycles before initiating a transfer.
 reg [WAIT_COUNT_BITS-1 : 0] count;
-//streaming data valid
+// streaming data valid
 wire axis_tvalid;
-//streaming data valid delayed by one clock cycle
+// streaming data valid delayed by one clock cycle
 reg axis_tvalid_delay;
-//Last of the streaming data
+// Last of the streaming data
 wire axis_tlast;
-//Last of the streaming data delayed by one clock cycle
+// Last of the streaming data delayed by one clock cycle
 reg axis_tlast_delay;
-//FIFO implementation signals
+// FIFO implementation signals
 reg [C_M_AXIS_TDATA_WIDTH-1 : 0] stream_data_out;
-wire tx_en;
-//The master has issued all the streaming data stored in FIFO
+// The master has issued all the streaming data stored in FIFO
 reg tx_done;
 
-// Other signals
+/* Other signals */
 wire fifo_rden;
 wire fifo_wren;
 reg [bit_num-1:0] fifo_data_count;
@@ -105,7 +106,6 @@ assign M_AXIS_TDATA	= stream_data_out;
 assign M_AXIS_TLAST	= axis_tlast_delay;
 assign M_AXIS_TSTRB	= {(C_M_AXIS_TDATA_WIDTH/8){1'b1}};
 
-
 /* ===============================
  * Control state machine implementation
  * =============================== */
@@ -119,14 +119,7 @@ always @(posedge M_AXIS_ACLK) begin
 			// The slave starts accepting tdata when
 			// there tvalid is asserted to mark the
 			// presence of valid streaming data
-			//if ( count == 0 )
-			//  begin
-				mst_exec_state  <= INIT_COUNTER;
-			//  end
-			//else
-			//  begin
-			//    mst_exec_state  <= IDLE;
-			//  end
+			mst_exec_state  <= INIT_COUNTER;
 
 		INIT_COUNTER:
 			// The slave starts accepting tdata when
@@ -155,7 +148,7 @@ end
 //tvalid generation
 //axis_tvalid is asserted when the control state machine's state is SEND_STREAM and
 //number of output streaming data is less than the NUMBER_OF_OUTPUT_WORDS.
-assign axis_tvalid = ((mst_exec_state == SEND_STREAM) && (read_pointer < NUMBER_OF_OUTPUT_WORDS)); // TODO: missing sth?
+assign axis_tvalid = ((mst_exec_state == SEND_STREAM) && (fifo_data_count > 0));
 
 // AXI tlast generation
 // axis_tlast is asserted number of output streaming data is NUMBER_OF_OUTPUT_WORDS-1
@@ -182,8 +175,7 @@ end
  * FIFO Implementation
  * =============================== */
 // FIFO read enable generation
-assign tx_en = M_AXIS_TREADY && axis_tvalid;
-assign fifo_rden = tx_en && (fifo_data_count < NUMBER_OF_OUTPUT_WORDS);
+assign fifo_rden = M_AXIS_TREADY && axis_tvalid;
 assign fifo_wren = dtw_fifo_wren && (fifo_data_count < NUMBER_OF_OUTPUT_WORDS);
 reg [C_M_AXIS_TDATA_WIDTH-1 : 0] fifo_data [0:NUMBER_OF_OUTPUT_WORDS-1];
 
@@ -222,7 +214,6 @@ always @(posedge M_AXIS_ACLK) begin
 				read_pointer <= read_pointer + 1;
 				tx_done <= 1'b0;
 			end
-
 		end
 	end
 end
