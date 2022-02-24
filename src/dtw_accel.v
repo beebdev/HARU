@@ -39,8 +39,8 @@ module dtw_accel #(
     input wire  s00_axis_aclk,
     input wire  s00_axis_aresetn,
     output wire  s00_axis_tready,
-    input wire [C_S00_AXIS_TDATA_WIDTH-1 : 0] s00_axis_tdata,
-    input wire [(C_S00_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
+    input wire [C_AXIS_TDATA_WIDTH-1 : 0] s00_axis_tdata,
+    input wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
     input wire  s00_axis_tlast,
     input wire  s00_axis_tvalid,
 
@@ -48,8 +48,8 @@ module dtw_accel #(
     input wire m00_axis_aclk,
     input wire m00_axis_aresetn,
     output wire m00_axis_tvalid,
-	output wire [C_M00_AXIS_TDATA_WIDTH-1 : 0] m00_axis_tdata,
-	output wire [(C_M00_AXIS_TDATA_WIDTH/8)-1 : 0] m00_axis_tstrb,
+	output wire [C_AXIS_TDATA_WIDTH-1 : 0] m00_axis_tdata,
+	output wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] m00_axis_tstrb,
 	output wire  m00_axis_tlast,
     input wire m00_axis_tready
 );
@@ -59,21 +59,22 @@ module dtw_accel #(
  * ========================= */
 
 // DTW signals within S AXI
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control register
-reg  [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
-wire [C_S00_AXI_DATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
+wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control register
+wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
+wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
 wire s00_dtw_reset;
 wire s00_dtw_start;
+wire s00_dtw_mode;
 wire s00_dtw_running;
 
 // Src AXIS FIFO signals
 wire s00_axis_fifo_rden;
-wire [C_S00_AXIS_TDATA_WIDTH-1:0] s00_axis_fifo_dout;
+wire [C_AXIS_TDATA_WIDTH-1:0] s00_axis_fifo_dout;
 wire s00_axis_fifo_empty;
 
 // Sink AXIS FIFO signals
 wire m00_axis_dtw_fifo_wren;
-wire [C_S00_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
+wire [C_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
 wire m00_axis_dtw_fifo_full;
 
 /* =========================
@@ -86,8 +87,7 @@ assign s00_dtw_start = s00_dtw_cr[1];      // CR Offset 1: start
 assign s00_dtw_mode = s00_dtw_cr[2];       // CR Offset 2: mode
 
 // DTW SR
-assign s00_dtw_sr[0] = s00_dtw_running;       // SR Offset 0: running
-assign s00_dtw_sr[31:1] = 30'h0;              // SR Offset n: reserved
+assign s00_dtw_sr = {30'b0, s00_dtw_running}; // SR Offset 0: running;              
 
 /* =========================
  * Module instantiation
@@ -171,7 +171,7 @@ dtw_accel_M00_AXIS #(
 dtw_core #(
     .width (width),
     .axi_dwidth (C_AXIS_TDATA_WIDTH),
-    .SQG_SIZE (SQG_SIZE),
+    .SQG_SIZE (SQG_SIZE)
 ) inst_dtw_core (
     // Main DTW signals
     .clk            (s00_axi_aclk), // TODO: Is this a good clock?

@@ -17,10 +17,13 @@ wire running;
 wire src_fifo_rden;
 wire src_fifo_empty;
 wire [31:0] src_fifo_data;
+reg [14:0] src_fifo_addr;
 
 wire sink_fifo_wren;
 wire sink_fifo_full;
 wire [31:0] sink_fifo_data;
+
+reg started;
 
 /* IO assignment */
 assign result_fifo_wren = sink_fifo_wren;
@@ -40,48 +43,15 @@ always begin
 end
 
 // Reference FIFO
-stim_fifo #(
-    .SQG_SIZE(SQG_SIZE),
-    .REF_SIZE(REF_SIZE)
-) ref_fifo (
+dtw_core_ref_mem #(
+    .MODE(1)
+) inst_dtw_core_ref_mem (
     .clk(clk),
-    .rst(rst),
-    .wren(ref_fifo_wren),
-    .rden(ref_fifo_rden),
-    .fifo_empty(ref_fifo_empty),
-    .fifo_full(ref_fifo_full),
-    .data_in(ref_fifo_din),
-    .data_out(ref_fifo_dout)
-);
-
-// Query FIFO
-stim_fifo #(
-    .SQG_SIZE(SQG_SIZE),
-    .REF_SIZE(REF_SIZE)
-) query_fifo (
-    .clk(clk),
-    .rst(rst),
-    .wren(query_fifo_wren),
-    .rden(query_fifo_rden),
-    .fifo_empty(query_fifo_empty),
-    .fifo_full(query_fifo_full),
-    .data_in(query_fifo_din),
-    .data_out(query_fifo_dout)
-);
-
-// Output FIFO
-stim_fifo #(
-    .SQG_SIZE(SQG_SIZE),
-    .REF_SIZE(REF_SIZE)
-) result_fifo (
-    .clk(clk),
-    .rst(rst),
-    .wren(result_fifo_wren),
-    .rden(result_fifo_rden),
-    .fifo_empty(result_fifo_empty),
-    .fifo_full(result_fifo_full),
-    .data_in(result_fifo_din),
-    .data_out(result_fifo_dout)
+    .addrR(src_fifo_addr),
+    .addrW(15'b0),
+    .wren(1'b0),
+    .datain(31'b0),
+    .dataout(src_fifo_data)
 );
 
 
@@ -106,13 +76,29 @@ dtw_core #(
     .sink_fifo_data   (sink_fifo_data)
 );
 
+// Clock gen
+always
+#5 clk = ~clk;
+
+always
+src_fifo_empty <= 1'b0;
+#50 src_fifo_empty <= 1'b1;
+#60 src_fifo_empty <= 1'b0;
+
+always @(posedge clk) begin
+    if (!src_fifo_empty && started) begin
+        src_fifo_addr <= src_fifo_addr + 1;
+    end
+end
 
 initial begin
 	rst = 1;
 	start = 0;
+    started = 0;
 #250
 	rst = 0;
 	start = 1;
+    started = 1;
 #255
     start = 0;
 

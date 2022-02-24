@@ -15,7 +15,7 @@ module dtw_accel_M00_AXIS #(
 )(
 	/* HARU ports */
 	input wire dtw_fifo_wren,
-	input wire [C_S_AXIS_TDATA_WIDTH-1:0] dtw_fifo_din,
+	input wire [C_M_AXIS_TDATA_WIDTH-1:0] dtw_fifo_din,
 	output wire dtw_fifo_full,
 
 	/* M AXIs */
@@ -42,8 +42,7 @@ module dtw_accel_M00_AXIS #(
 // Total number of output data
 localparam NUMBER_OF_OUTPUT_WORDS = 8;
 
-// function called clogb2 that returns an integer which has the
-// value of the ceiling of the log base 2.
+// Returns an integer which has the value of the ceiling of the log base 2.
 function integer clogb2 (input integer bit_depth);
 begin
 	for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
@@ -67,10 +66,12 @@ parameter [1:0] IDLE = 2'b00,        // This is the initial/idle state
 								// the state machine changes state to SEND_STREAM
 				SEND_STREAM   = 2'b10; // In this state the
 										// stream data is output through M_AXIS_TDATA
+
+/* ===============================
+ * Reg and wires
+ * =============================== */
 // State variable
 reg [1:0] mst_exec_state;
-// Example design FIFO read pointer
-reg [bit_num-1:0] read_pointer;
 
 // AXI Stream internal signals
 //wait counter. The master waits for the user defined number of clock cycles before initiating a transfer.
@@ -89,6 +90,13 @@ wire tx_en;
 //The master has issued all the streaming data stored in FIFO
 reg tx_done;
 
+// Other signals
+wire fifo_rden;
+wire fifo_wren;
+reg [bit_num-1:0] fifo_data_count;
+reg [bit_num-1:0] write_pointer;	// FIFO write pointer
+reg [bit_num-1:0] read_pointer;		// FIFO read pointer
+
 /* ===============================
  * I/O Connections assignments
  * =============================== */
@@ -96,6 +104,7 @@ assign M_AXIS_TVALID = axis_tvalid_delay;
 assign M_AXIS_TDATA	= stream_data_out;
 assign M_AXIS_TLAST	= axis_tlast_delay;
 assign M_AXIS_TSTRB	= {(C_M_AXIS_TDATA_WIDTH/8){1'b1}};
+
 
 /* ===============================
  * Control state machine implementation
@@ -168,27 +177,6 @@ always @(posedge M_AXIS_ACLK) begin
 	end
 end
 
-/* ===============================
- * Read pointer
- * =============================== */
-always@(posedge M_AXIS_ACLK) begin
-	if(!M_AXIS_ARESETN) begin
-		read_pointer <= 0;
-		tx_done <= 1'b0;
-	end else if (read_pointer <= NUMBER_OF_OUTPUT_WORDS-1) begin
-		if (tx_en) begin
-			// read pointer is incremented after every read from the FIFO
-			// when FIFO read signal is enabled.
-			read_pointer <= read_pointer + 1;
-			tx_done <= 1'b0;
-		end
-	end else if (read_pointer == NUMBER_OF_OUTPUT_WORDS) begin
-		// tx_done is asserted when NUMBER_OF_OUTPUT_WORDS numbers of streaming data
-		// has been out.
-		tx_done <= 1'b1;
-	end
-end
-
 
 /* ===============================
  * FIFO Implementation
@@ -197,7 +185,7 @@ end
 assign tx_en = M_AXIS_TREADY && axis_tvalid;
 assign fifo_rden = tx_en && (fifo_data_count < NUMBER_OF_OUTPUT_WORDS);
 assign fifo_wren = dtw_fifo_wren && (fifo_data_count < NUMBER_OF_OUTPUT_WORDS);
-reg [C_S_AXIS_TDATA_WIDTH-1 : 0] fifo_data [0:NUMBER_OF_OUTPUT_WORDS-1];
+reg [C_M_AXIS_TDATA_WIDTH-1 : 0] fifo_data [0:NUMBER_OF_OUTPUT_WORDS-1];
 
 // logic for FIFO
 always @(posedge M_AXIS_ACLK) begin
@@ -205,6 +193,7 @@ always @(posedge M_AXIS_ACLK) begin
 		fifo_data_count <= 0;
 		write_pointer <= 0;
 		read_pointer <= 0;
+		tx_done <= 1'b0;
 	end else begin
 		// Manage fifo data count
 		if (fifo_wren && !fifo_rden) begin
@@ -225,12 +214,15 @@ always @(posedge M_AXIS_ACLK) begin
 
 		// Manage read pointer
 		if (fifo_rden) begin
-			stream_data_fifo <= fifo_data[read_pointer];
+			stream_data_out <= fifo_data[read_pointer];
 			if (read_pointer == NUMBER_OF_OUTPUT_WORDS - 1) begin
 				read_pointer <= 0;
+				tx_done <= 1'b1;
 			end else begin
 				read_pointer <= read_pointer + 1;
+				tx_done <= 1'b0;
 			end
+
 		end
 	end
 end

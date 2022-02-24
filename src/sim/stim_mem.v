@@ -1,8 +1,7 @@
 module dtw_core_ref_mem #(
     parameter width = 16,
     parameter ptrWid = 15,
-    parameter depth = 2**ptrWid,
-    parameter initalize = 0
+    parameter depth = 2**ptrWid
 )(
     input clk,
     input [ptrWid-1:0] addrR,
@@ -14,20 +13,13 @@ module dtw_core_ref_mem #(
 
 (* ram_style = "block" *) 
 reg [width-1:0] MEM [0:depth-1];
-reg [depth-1:0] i;
 
 initial begin
-    if (initalize) begin
-        $readmemb("D:/UNSW/Thesis/dtw_core/bram_init/reference.txt", MEM);
-    end else begin
-        for (i=0; i<depth; i=i+1) begin
-            MEM[i] = 0;
-        end
-    end
+    $readmemb("D:/UNSW/Thesis/dtw_core/bram_init/reference.txt", MEM);
 end
 
+assign dataout = MEM[addrR];
 always @(posedge clk) begin
-    dataout <= MEM[addrR];
 	if (wren) begin
 		MEM[addrW] <= datain;
     end

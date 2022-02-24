@@ -10,7 +10,7 @@ module dtw_accel_S00_AXI #(
 	/* DTW core ports to pass data over */
 	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_cr,			// DTW Core control register
 	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_sr,			// DTW Core status register
-	output wire  [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
+	output reg  [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
 	
 	/* S_AXI ports */
 	// Global Clock Signal

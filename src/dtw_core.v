@@ -8,20 +8,20 @@ module dtw_core #(
     parameter REF_SIZE = 29898  // Reference size
 )(
     // Main DTW signals
-    input clk, rst, start,
-    input [axi_dwidth-1 : 0] ref_len,
-    input op_mode,              // Mode 0: Reference, 1: Query
-    output running,             // Idle: 0, Running: 1
+    input wire clk, rst, start,
+    input wire [axi_dwidth-1 : 0] ref_len,
+    input wire op_mode,              // Mode 0: Reference, 1: Query
+    output reg running,             // Idle: 0, Running: 1
 
     // src FIFO signals
-    output src_fifo_rden,                   // Src FIFO Read enable
-    input src_fifo_empty,                   // Src FIFO Empty
-    input [31:0] src_fifo_data,             // Src FIFO Data
+    output reg src_fifo_rden,                   // Src FIFO Read enable
+    input wire src_fifo_empty,                   // Src FIFO Empty
+    input wire [31:0] src_fifo_data,             // Src FIFO Data
 
     // sink FIFO signals
-    output sink_fifo_wren,                  // Sink FIFO Write enable
-    input sink_fifo_full,                   // Sink FIFO Full
-    input [31:0] sink_fifo_data             // Src FIFO Data
+    output reg sink_fifo_wren,                  // Sink FIFO Write enable
+    input wire sink_fifo_full,                   // Sink FIFO Full
+    output reg [31:0] sink_fifo_data             // Src FIFO Data
 );
 
 /* ===============================
@@ -48,13 +48,14 @@ localparam // operation mode
     MODE_LOAD_REF = 1'b1;
 
 // State variables
-reg [1:0] r_state;
-reg [1:0] r_next_state;
-localparam [1:0] // n states
+reg [2:0] r_state;
+reg [2:0] r_next_state;
+localparam [2:0] // n states
     IDLE = 0,
     REF_LOAD = 1,
-    DTW_Q_RUN = 2,
-    DTW_Q_DONE = 3;
+    DTW_Q_INIT = 2,
+    DTW_Q_RUN = 3,
+    DTW_Q_DONE = 4;
 
 // Others
 reg [1:0] stream_out_counter;
@@ -175,8 +176,8 @@ always @(posedge clk) begin
         DTW_Q_DONE: begin
             running <= 1;
             src_fifo_rden <= 0; // Don't read enable
-            param_rst <= 0;
-            param_running <= 0;
+            dp_rst <= 0;
+            dp_running <= 0;
 
             // Serialise output
             sink_fifo_wren <= 1;

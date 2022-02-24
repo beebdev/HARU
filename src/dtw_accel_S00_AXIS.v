@@ -9,7 +9,7 @@ module dtw_accel_S00_AXIS #(
 )(
 	/* HARU ports */
 	input wire dtw_fifo_rden,
-	output wire [(C_S_AXIS_TDATA_WIDTH/4)-1:0] dtw_fifo_dout,
+	output reg [(C_S_AXIS_TDATA_WIDTH/4)-1:0] dtw_fifo_dout,
 	output wire dtw_fifo_empty,
 
 	/* AXI stream ports */
@@ -117,12 +117,14 @@ end
 /* FIFO */
 
 // port assignment
-assign dtw_fifo_dout = fifo_data[read_pointer];
 assign dtw_fifo_empty = fifo_empty_flag;
 
 // inner assignment
-assign fifo_full_flag = (fifo_data_count == NUMBER_OF_INPUT_WORDS);
-assign fifo_empty_flag = (fifo_data_count == 0);
+always @(fifo_data_count) begin
+    fifo_full_flag = (fifo_data_count == NUMBER_OF_INPUT_WORDS);
+    fifo_empty_flag = (fifo_data_count == 0);
+end
+ 
 assign fifo_wren = S_AXIS_TVALID && axis_tready;			// src -> axis
 assign fifo_rden = dtw_fifo_rden  && !fifo_empty_flag;		// sink -> dtw
 
@@ -151,7 +153,7 @@ always @(posedge S_AXIS_ACLK) begin
 
 		// Read index
 		if (fifo_rden) begin
-			dtw_fifo_dout <= fifo_data[read_pointer];
+            dtw_fifo_dout = fifo_data[read_pointer];
 			if (read_pointer == NUMBER_OF_INPUT_WORDS - 1) begin
 				read_pointer <= 0;
 			end else begin
