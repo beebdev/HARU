@@ -170,7 +170,6 @@ always @(posedge M_AXIS_ACLK) begin
 	end
 end
 
-
 /* ===============================
  * FIFO Implementation
  * =============================== */

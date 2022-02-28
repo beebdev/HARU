@@ -5,7 +5,7 @@ module dtw_core #(
     parameter dtw_dwidth = 16,  // Data width
     parameter axi_dwidth = 32,  // AXI data width
     parameter SQG_SIZE = 250,   // Squiggle size
-    parameter REF_SIZE = 29898  // Reference size
+    parameter init_ref = 0
 )(
     // Main DTW signals
     input wire clk, rst, start,
@@ -37,7 +37,7 @@ wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
 // DTW datapath signals
 reg dp_rst;                             // Reset for core
 reg dp_running;                         // Run enable for core
-reg dp_done;                            // Core done
+wire dp_done;                            // Core done
 reg [31:0] curr_qid;                    // Current query id
 wire [dtw_dwidth-1:0] curr_minval;      // Current minimum value
 wire [31:0] curr_position;              // Current best position
@@ -52,10 +52,11 @@ reg [2:0] r_state;
 reg [2:0] r_next_state;
 localparam [2:0] // n states
     IDLE = 0,
-    REF_LOAD = 1,
-    DTW_Q_INIT = 2,
-    DTW_Q_RUN = 3,
-    DTW_Q_DONE = 4;
+    REF_PRELOAD = 1,
+    REF_LOAD = 2,
+    DTW_Q_INIT = 3,
+    DTW_Q_RUN = 4,
+    DTW_Q_DONE = 5;
 
 // Others
 reg [1:0] stream_out_counter;
@@ -81,12 +82,19 @@ always @(posedge clk) begin
                 if (op_mode == MODE_NORMAL) begin
                     r_next_state <= DTW_Q_INIT;
                 end else if (op_mode == MODE_LOAD_REF) begin
-                    r_next_state <= REF_LOAD;
+                    r_next_state <= REF_PRELOAD;
                 end else begin
                     r_next_state <= IDLE;
                 end
             end else begin
                 r_next_state <= IDLE;
+            end
+        end
+        REF_PRELOAD: begin
+            if (!src_fifo_empty) begin
+                r_next_state <= REF_LOAD;
+            end else begin
+                r_next_state <= REF_PRELOAD;
             end
         end
         REF_LOAD: begin
@@ -134,6 +142,16 @@ always @(posedge clk) begin
             dp_rst <= 1;
             dp_running <= 0;
             stream_out_counter <= 0;
+            wren_ref <= 0;
+        end
+        REF_PRELOAD: begin
+            running <= 1;
+            src_fifo_rden <= 1;
+            sink_fifo_wren <= 0;
+            dp_rst <= 1;
+            dp_running <= 0;
+            stream_out_counter <= 0;
+            wren_ref <= 1;
         end
         REF_LOAD: begin
             running <= 1;
@@ -142,7 +160,7 @@ always @(posedge clk) begin
             dp_rst <= 1;
             dp_running <= 0;
             stream_out_counter <= 0;
-            if (!src_fifo_empty) begin
+            if (!src_fifo_empty && src_fifo_rden) begin
                 addrW_ref <= addrW_ref + 1; // Increment write pointer
                 wren_ref <= 1;              // FIFO not full -> write enable
             end else begin
@@ -188,7 +206,7 @@ always @(posedge clk) begin
                 end else if (stream_out_counter == 1) begin
                     sink_fifo_data <= curr_position;
                 end else if (stream_out_counter == 2) begin
-                    sink_fifo_data <= {0, curr_minval};
+                    sink_fifo_data <= {16'b0, curr_minval};
                 end
             end
         end
@@ -201,26 +219,26 @@ end
 
 /* Reference memory */
 dtw_core_ref_mem #(
-    .width (dtw_dwidth)
+    .width (dtw_dwidth),
+    .initialise (init_ref)
 ) inst_dtw_core_ref_mem (
     .clk        (clk),
     .addrR      (addrR_ref),
     .addrW      (addrW_ref),
     .wren       (wren_ref),
-    .datain     (src_fifo_data),
+    .datain     (src_fifo_data[15:0]),
     .dataout    (dataout_ref)
 );
 
 /* DTW datapath */
 dtw_core_datapath #(
     .width(dtw_dwidth),
-    .SQG_SIZE(SQG_SIZE),
-    .REF_SIZE(REF_SIZE)
+    .SQG_SIZE(SQG_SIZE)
 ) inst_dtw_core_datapath (
     .clk            (clk),
     .rst            (dp_rst),
     .running        (dp_running),
-    .Input_squiggle (src_fifo_data),
+    .Input_squiggle (src_fifo_data[15:0]),
     .Rword          (dataout_ref),
     .ref_len        (ref_len),
     .minval         (curr_minval),

@@ -169,8 +169,8 @@ dtw_core_pe #(
     .x    (Squiggle_Buffer[001]),
     .y    (Rword_buff),
     .W    (DTW_prev[001]),
-    .N    (32'd0),
-    .NW   (32'd0),
+    .N    (16'd0),
+    .NW   (16'd0),
     .DTWc (DTW_curr[001]),
     .yp   (p_Rword[001])
 );
