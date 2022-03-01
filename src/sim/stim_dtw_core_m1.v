@@ -22,6 +22,7 @@ reg [14:0] src_fifo_addr;
 wire sink_fifo_wren;
 reg sink_fifo_full;
 wire [31:0] sink_fifo_data;
+reg [14:0] sink_fifo_addr;
 
 reg started;
 
@@ -82,7 +83,7 @@ always
 always begin
     src_fifo_empty <= 1'b0;
      #50 src_fifo_empty <= 1'b1;
-     #5 src_fifo_empty <= 1'b0;
+     #10 src_fifo_empty <= 1'b0;
 end
 
 always @(posedge clk) begin

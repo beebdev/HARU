@@ -2,7 +2,7 @@ module dtw_core_ref_mem #(
     parameter width = 16,
     parameter ptrWid = 15,
     parameter depth = 2**ptrWid,
-    parameter initalize = 0
+    parameter initalize = 1
 )(
     input clk,
     input [ptrWid-1:0] addrR,

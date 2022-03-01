@@ -1,4 +1,4 @@
-module stim_code;
+module stim_code_0;
 
 // Parameters
 parameter MODE = 0;

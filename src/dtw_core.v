@@ -77,7 +77,7 @@ end
 // State change
 always @(posedge clk) begin
     case (r_state)
-        IDLE: begin
+        IDLE: begin // 0
             if (start) begin
                 if (op_mode == MODE_NORMAL) begin
                     r_next_state <= DTW_Q_INIT;
@@ -90,14 +90,14 @@ always @(posedge clk) begin
                 r_next_state <= IDLE;
             end
         end
-        REF_PRELOAD: begin
+        REF_PRELOAD: begin // 1
             if (!src_fifo_empty) begin
                 r_next_state <= REF_LOAD;
             end else begin
                 r_next_state <= REF_PRELOAD;
             end
         end
-        REF_LOAD: begin
+        REF_LOAD: begin // 2
             // Continue load mode if write pointer is not at the reference length
             if (addrW_ref < ref_len) begin
                 r_next_state <= REF_LOAD;
@@ -105,7 +105,7 @@ always @(posedge clk) begin
                 r_next_state <= IDLE;
             end
         end
-        DTW_Q_INIT: begin
+        DTW_Q_INIT: begin // 3
             // Read in ID if FIFO is not empty
             if (!src_fifo_empty) begin
                 r_next_state <= DTW_Q_RUN;
@@ -113,14 +113,14 @@ always @(posedge clk) begin
                 r_next_state <= DTW_Q_INIT;
             end
         end
-        DTW_Q_RUN: begin
+        DTW_Q_RUN: begin // 4
             if (!dp_done) begin
                 r_next_state <= DTW_Q_RUN;
             end else begin
                 r_next_state <= DTW_Q_DONE;
             end
         end
-        DTW_Q_DONE: begin
+        DTW_Q_DONE: begin // 5
             if (sink_fifo_full || stream_out_counter < 2'h3) begin
                 r_next_state <= DTW_Q_DONE;
             end else begin
@@ -171,7 +171,7 @@ always @(posedge clk) begin
             running <= 1;
             src_fifo_rden <= 1; // Read enable -> read id
             sink_fifo_wren <= 0;
-            dp_rst <= 1;
+            dp_rst <= 0;
             dp_running <= 0;
             stream_out_counter <= 0;
             if (!src_fifo_empty) begin
@@ -220,7 +220,7 @@ end
 /* Reference memory */
 dtw_core_ref_mem #(
     .width (dtw_dwidth),
-    .initialise (init_ref)
+    .initalize (init_ref)
 ) inst_dtw_core_ref_mem (
     .clk        (clk),
     .addrR      (addrR_ref),
