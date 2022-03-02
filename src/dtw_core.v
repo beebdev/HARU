@@ -5,7 +5,7 @@ module dtw_core #(
     parameter dtw_dwidth = 16,  // Data width
     parameter axi_dwidth = 32,  // AXI data width
     parameter SQG_SIZE = 250,   // Squiggle size
-    parameter init_ref = 0
+    parameter init_ref = 1
 )(
     // Main DTW signals
     input wire clk, rst, start,
@@ -49,10 +49,10 @@ localparam // operation mode
 
 // State variables
 reg [2:0] r_state;
-reg [2:0] r_next_state;
+//reg [2:0] r_next_state;
 localparam [2:0] // n states
     IDLE = 0,
-    REF_PRELOAD = 1,
+    REF_STALL = 1,
     REF_LOAD = 2,
     DTW_Q_INIT = 3,
     DTW_Q_RUN = 4,
@@ -66,68 +66,71 @@ reg [1:0] stream_out_counter;
  * =============================== */
 
 // State transition
+//always @(posedge clk) begin
+//    if (rst) begin
+//        r_state <= IDLE;
+//    end
+//end
+
+// State change
 always @(posedge clk) begin
     if (rst) begin
         r_state <= IDLE;
     end else begin
-        r_state <= r_next_state;
-    end
-end
 
-// State change
-always @(posedge clk) begin
     case (r_state)
         IDLE: begin // 0
             if (start) begin
                 if (op_mode == MODE_NORMAL) begin
-                    r_next_state <= DTW_Q_INIT;
+                    r_state <= DTW_Q_INIT;
                 end else if (op_mode == MODE_LOAD_REF) begin
-                    r_next_state <= REF_PRELOAD;
+                    r_state <= REF_STALL;
                 end else begin
-                    r_next_state <= IDLE;
+                    r_state <= IDLE;
                 end
             end else begin
-                r_next_state <= IDLE;
+                r_state <= IDLE;
             end
         end
-        REF_PRELOAD: begin // 1
+        REF_STALL: begin // 1
             if (!src_fifo_empty) begin
-                r_next_state <= REF_LOAD;
+                r_state <= REF_LOAD;
             end else begin
-                r_next_state <= REF_PRELOAD;
+                r_state <= REF_STALL;
             end
         end
         REF_LOAD: begin // 2
             // Continue load mode if write pointer is not at the reference length
             if (addrW_ref < ref_len) begin
-                r_next_state <= REF_LOAD;
+                r_state <= REF_LOAD;
             end else begin
-                r_next_state <= IDLE;
+                r_state <= IDLE;
             end
         end
         DTW_Q_INIT: begin // 3
             // Read in ID if FIFO is not empty
             if (!src_fifo_empty) begin
-                r_next_state <= DTW_Q_RUN;
+                r_state <= DTW_Q_RUN;
             end else begin
-                r_next_state <= DTW_Q_INIT;
+                r_state <= DTW_Q_INIT;
             end
         end
         DTW_Q_RUN: begin // 4
             if (!dp_done) begin
-                r_next_state <= DTW_Q_RUN;
+                r_state <= DTW_Q_RUN;
             end else begin
-                r_next_state <= DTW_Q_DONE;
+                r_state <= DTW_Q_DONE;
             end
         end
         DTW_Q_DONE: begin // 5
             if (sink_fifo_full || stream_out_counter < 2'h3) begin
-                r_next_state <= DTW_Q_DONE;
+                r_state <= DTW_Q_DONE;
             end else begin
-                r_next_state <= IDLE;
+                r_state <= IDLE;
             end
         end
     endcase
+    end
 end
 
 // state machine output
@@ -144,7 +147,7 @@ always @(posedge clk) begin
             stream_out_counter <= 0;
             wren_ref <= 0;
         end
-        REF_PRELOAD: begin
+        REF_STALL: begin
             running <= 1;
             src_fifo_rden <= 1;
             sink_fifo_wren <= 0;
@@ -172,7 +175,7 @@ always @(posedge clk) begin
             src_fifo_rden <= 1; // Read enable -> read id
             sink_fifo_wren <= 0;
             dp_rst <= 0;
-            dp_running <= 0;
+            dp_running <= 1;
             stream_out_counter <= 0;
             if (!src_fifo_empty) begin
                 curr_qid <= src_fifo_data;

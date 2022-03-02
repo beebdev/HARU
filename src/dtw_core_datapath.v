@@ -143,11 +143,12 @@ always @(posedge clk) begin
     if (rst) begin
         Minval <= -1;
         Minpos <= 0;
-    end else if (running) begin
-        if(DTW_lastrow < Minval) begin 
+    end else if (DTW_lastrow < Minval) begin
+//    end else if (running) begin
+//        if(DTW_lastrow < Minval) begin 
             Minval <= DTW_lastrow;
             Minpos <= cycle_counter;
-        end
+//        end
     end
 end
 
@@ -166,6 +167,7 @@ dtw_core_pe #(
 ) inst_dtw_core_pe_001 (
     .clk  (clk),
     .rst  (rst),
+    .running (running),
     .x    (Squiggle_Buffer[001]),
     .y    (Rword_buff),
     .W    (DTW_prev[001]),
@@ -183,6 +185,7 @@ for (m = 2; m <= SQG_SIZE; m = m + 1) begin
     ) inst_dtw_core_pe_n (
         .clk    (clk),
         .rst    (rst),
+        .running (running),
         .x      (Squiggle_Buffer[m]),
         .y      (p_Rword[m-1]),
         .W      (DTW_prev[m]),
