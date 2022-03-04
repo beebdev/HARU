@@ -8,10 +8,11 @@ module dtw_core #(
     parameter init_ref = 1
 )(
     // Main DTW signals
-    input wire clk, rst, start,
+    input wire clk, rst, running,
     input wire [axi_dwidth-1 : 0] ref_len,
     input wire op_mode,              // Mode 0: Reference, 1: Query
-    output reg running,             // Idle: 0, Running: 1
+    output reg busy,                 // Idle: 0, else: 1
+    output wire load_done,
 
     // src FIFO signals
     output reg src_fifo_rden,                   // Src FIFO Read enable
@@ -27,6 +28,7 @@ module dtw_core #(
 /* ===============================
  * Signal declarations
  * =============================== */
+reg r_load_done;
 
 // Ref mem signals
 reg [14:0] addrR_ref;                   // Read address for refmem 
@@ -59,77 +61,73 @@ localparam [2:0] // n states
     DTW_Q_DONE = 5;
 
 // Others
-reg [1:0] stream_out_counter;
+reg [1:0] stall_counter;
+
+assign load_done = r_load_done;
 
 /* ===============================
  * Core FSM
  * =============================== */
 
-// State transition
-//always @(posedge clk) begin
-//    if (rst) begin
-//        r_state <= IDLE;
-//    end
-//end
-
 // State change
 always @(posedge clk) begin
     if (rst) begin
         r_state <= IDLE;
+        r_load_done <= 0;
     end else begin
-
-    case (r_state)
-        IDLE: begin // 0
-            if (start) begin
-                if (op_mode == MODE_NORMAL) begin
-                    r_state <= DTW_Q_INIT;
-                end else if (op_mode == MODE_LOAD_REF) begin
-                    r_state <= REF_STALL;
+        case (r_state)
+            IDLE: begin // 0
+                if (running) begin
+                    if (op_mode == MODE_NORMAL && r_load_done == 0) begin
+                        r_state <= DTW_Q_INIT;
+                    end else if (op_mode == MODE_LOAD_REF) begin
+                        r_state <= REF_STALL;
+                    end else begin
+                        r_state <= IDLE;
+                    end
                 end else begin
                     r_state <= IDLE;
                 end
-            end else begin
-                r_state <= IDLE;
             end
-        end
-        REF_STALL: begin // 1
-            if (!src_fifo_empty) begin
-                r_state <= REF_LOAD;
-            end else begin
-                r_state <= REF_STALL;
+            REF_STALL: begin // 1
+                if (!src_fifo_empty) begin
+                    r_state <= REF_LOAD;
+                end else begin
+                    r_state <= REF_STALL;
+                end
             end
-        end
-        REF_LOAD: begin // 2
-            // Continue load mode if write pointer is not at the reference length
-            if (addrW_ref < ref_len) begin
-                r_state <= REF_LOAD;
-            end else begin
-                r_state <= IDLE;
+            REF_LOAD: begin // 2
+                // Continue load mode if write pointer is not at the reference length
+                if (addrW_ref < ref_len) begin
+                    r_state <= REF_LOAD;
+                end else begin
+                    r_load_done <= 1;
+                    r_state <= IDLE;
+                end
             end
-        end
-        DTW_Q_INIT: begin // 3
-            // Read in ID if FIFO is not empty
-            if (!src_fifo_empty) begin
-                r_state <= DTW_Q_RUN;
-            end else begin
-                r_state <= DTW_Q_INIT;
+            DTW_Q_INIT: begin // 3
+                // Read in ID if FIFO is not empty
+                if (!src_fifo_empty) begin
+                    r_state <= DTW_Q_RUN;
+                end else begin
+                    r_state <= DTW_Q_INIT;
+                end
             end
-        end
-        DTW_Q_RUN: begin // 4
-            if (!dp_done) begin
-                r_state <= DTW_Q_RUN;
-            end else begin
-                r_state <= DTW_Q_DONE;
+            DTW_Q_RUN: begin // 4
+                if (!dp_done) begin
+                    r_state <= DTW_Q_RUN;
+                end else begin
+                    r_state <= DTW_Q_DONE;
+                end
             end
-        end
-        DTW_Q_DONE: begin // 5
-            if (sink_fifo_full || stream_out_counter < 2'h3) begin
-                r_state <= DTW_Q_DONE;
-            end else begin
-                r_state <= IDLE;
+            DTW_Q_DONE: begin // 5
+                if (sink_fifo_full || stall_counter < 2'h3) begin
+                    r_state <= DTW_Q_DONE;
+                end else begin
+                    r_state <= IDLE;
+                end
             end
-        end
-    endcase
+        endcase
     end
 end
 
@@ -137,32 +135,32 @@ end
 always @(posedge clk) begin
     case (r_state)
         IDLE: begin
-            running <= 0;
+            busy <= 0;
             src_fifo_rden <= 0;
             sink_fifo_wren <= 0;
             addrR_ref <= 0;
             addrW_ref <= 0;
             dp_rst <= 1;
             dp_running <= 0;
-            stream_out_counter <= 0;
+            stall_counter <= 0;
             wren_ref <= 0;
         end
         REF_STALL: begin
-            running <= 1;
+            busy <= 1;
             src_fifo_rden <= 1;
             sink_fifo_wren <= 0;
             dp_rst <= 1;
             dp_running <= 0;
-            stream_out_counter <= 0;
+            stall_counter <= 0;
             wren_ref <= 1;
         end
         REF_LOAD: begin
-            running <= 1;
+            busy <= 1;
             src_fifo_rden <= 1; // Read reference
             sink_fifo_wren <= 0;
             dp_rst <= 1;
             dp_running <= 0;
-            stream_out_counter <= 0;
+            stall_counter <= 0;
             if (!src_fifo_empty && src_fifo_rden) begin
                 addrW_ref <= addrW_ref + 1; // Increment write pointer
                 wren_ref <= 1;              // FIFO not full -> write enable
@@ -171,23 +169,28 @@ always @(posedge clk) begin
             end
         end
         DTW_Q_INIT: begin
-            running <= 1;
+            busy <= 1;
             src_fifo_rden <= 1; // Read enable -> read id
             sink_fifo_wren <= 0;
             dp_rst <= 0;
             dp_running <= 1;
-            stream_out_counter <= 0;
+            stall_counter <= 0;
             if (!src_fifo_empty) begin
                 curr_qid <= src_fifo_data;
             end
         end
         DTW_Q_RUN: begin
-            running <= 1;
-            src_fifo_rden <= 1; // Read query data
+            busy <= 1;
             sink_fifo_wren <= 0;
             dp_rst <= 0;
-            stream_out_counter <= 0;
+            stall_counter <= 0;
+                
             if (!src_fifo_empty) begin
+                if (addrR_ref < SQG_SIZE) begin
+                    src_fifo_rden <= 1;
+                end else begin
+                    src_fifo_rden <= 0;
+                end
                 dp_running <= 1;
                 addrR_ref <= addrR_ref + 1;
             end else begin
@@ -195,7 +198,7 @@ always @(posedge clk) begin
             end
         end
         DTW_Q_DONE: begin
-            running <= 1;
+            busy <= 1;
             src_fifo_rden <= 0; // Don't read enable
             dp_rst <= 0;
             dp_running <= 0;
@@ -203,12 +206,12 @@ always @(posedge clk) begin
             // Serialise output
             sink_fifo_wren <= 1;
             if (!sink_fifo_full) begin
-                stream_out_counter <= stream_out_counter + 1;
-                if (stream_out_counter == 0) begin
+                stall_counter <= stall_counter + 1;
+                if (stall_counter == 0) begin
                     sink_fifo_data <= curr_qid;
-                end else if (stream_out_counter == 1) begin
+                end else if (stall_counter == 1) begin
                     sink_fifo_data <= curr_position;
-                end else if (stream_out_counter == 2) begin
+                end else if (stall_counter == 2) begin
                     sink_fifo_data <= {16'b0, curr_minval};
                 end
             end
@@ -246,6 +249,7 @@ dtw_core_datapath #(
     .ref_len        (ref_len),
     .minval         (curr_minval),
     .position       (curr_position),
+    .sq_load        (sq_load),
     .done           (dp_done)
 );
 

@@ -1,7 +1,7 @@
 module stim_code;
 
 // Parameters
-parameter MODE = 0; // 0->query; 1->ref
+parameter MODE = 1; // 0->query; 1->ref
 parameter bitwidth = 16;
 parameter SQG_SIZE = 250;
 parameter REF_SIZE = 29898;
@@ -9,10 +9,11 @@ parameter REF_SIZE = 29898;
 // Module IO
 reg clk = 0;  
 reg rst;
-reg start;
+reg running;
 reg [31:0] ref_len = REF_SIZE;
 reg op_mode;
-wire running;
+wire busy;
+wire load_done;
 
 wire src_fifo_rden;
 reg src_fifo_empty;
@@ -42,14 +43,16 @@ stim_mem #(
 dtw_core #(
     .dtw_dwidth(bitwidth),
     .axi_dwidth(32),
-    .SQG_SIZE(SQG_SIZE)
+    .SQG_SIZE(SQG_SIZE),
+    .init_ref(0)
 ) inst_dtw_core (
     .clk        (clk),
     .rst        (rst),
-    .start      (start),
+    .running    (running),
     .ref_len    (ref_len),
     .op_mode    (op_mode),
-    .running    (running),
+    .busy       (busy),
+    .load_done  (load_done),
 
     .src_fifo_rden    (src_fifo_rden),
     .src_fifo_empty   (src_fifo_empty),
@@ -67,8 +70,9 @@ always
 //assign src_fifo_empty = 1'b0;
 always begin
     src_fifo_empty <= 1'b0;
-     #55 src_fifo_empty <= 1'b1;
+     #65 src_fifo_empty <= 1'b1;
      #10 src_fifo_empty <= 1'b0;
+     #5 src_fifo_empty <= 1'b0;
 end
 
 always @(posedge clk) begin
@@ -81,17 +85,14 @@ end
 
 initial begin
 	rst = 1;
-	start = 0;
+	running = 0;
     started = 0;
     op_mode = MODE;
     sink_fifo_full = 1'b0;
 #20
 	rst = 0;
-	start = 1;
+	running = 1;
     started = 1;
-#30
-    start = 0;
-
 #1000000
 	$finish;
 end

@@ -63,9 +63,10 @@ wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control regist
 wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
 wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
 wire s00_dtw_reset;
-wire s00_dtw_start;
-wire s00_dtw_mode;
 wire s00_dtw_running;
+wire s00_dtw_mode;
+wire s00_dtw_busy;
+wire s00_dtw_load_done;
 
 // Src AXIS FIFO signals
 wire s00_axis_fifo_rden;
@@ -82,19 +83,21 @@ wire m00_axis_dtw_fifo_full;
  * ========================= */
  
 // DTW CR
-assign s00_dtw_reset = s00_dtw_cr[0];      // CR Offset 0: reset
-assign s00_dtw_start = s00_dtw_cr[1];      // CR Offset 1: start
-assign s00_dtw_mode = s00_dtw_cr[2];       // CR Offset 2: mode
+assign s00_dtw_reset = s00_dtw_cr[0];        // CR Offset 0: reset
+assign s00_dtw_running = s00_dtw_cr[1];      // CR Offset 1: start
+assign s00_dtw_mode = s00_dtw_cr[2];         // CR Offset 2: mode
 
 // DTW SR
-assign s00_dtw_sr = {30'b0, s00_dtw_running}; // SR Offset 0: running;              
+// SR offset 0: busy
+// SR offset 1: reference loading done
+assign s00_dtw_sr = {29'b0, s00_dtw_load_done, s00_dtw_busy};
 
 /* =========================
  * Module instantiation
  * ========================= */
 
 // AXI Bus S00_AXI
-dtw_accel_S00_AXI # ( 
+dtw_accel_S00_AXI # (
     .C_S_AXI_DATA_WIDTH (C_S00_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH (C_S00_AXI_ADDR_WIDTH)
 ) dtw_accel_S00_AXI_inst (
@@ -174,12 +177,13 @@ dtw_core #(
     .SQG_SIZE (SQG_SIZE)
 ) inst_dtw_core (
     // Main DTW signals
-    .clk            (s00_axi_aclk), // TODO: Is this a good clock?
+    .clk            (s00_axi_aclk),
     .rst            (s00_dtw_reset),
-    .start          (s00_dtw_start),
+    .running        (s00_dtw_running),
     .ref_len        (s00_dtw_ref_len),
     .op_mode        (s00_dtw_mode),
-    .running        (s00_dtw_running),
+    .busy           (s00_dtw_busy),
+    .load_done      (s00_dtw_load_done),
 
     // DTW FIFO signals -> to the inside world! (S00_AXIS)
     .src_fifo_rden  (s00_axis_fifo_rden),

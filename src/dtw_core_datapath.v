@@ -9,6 +9,7 @@ module dtw_core_datapath #(
     input [31:0] ref_len,
     output [width-1:0] minval,
     output [31:0] position,
+    output sq_load,
     output done
 );
 
@@ -31,6 +32,8 @@ reg [width-1:0] Minval;
 reg [31:0]      Minpos ;
 reg [width-1:0] DTW_lastrow;
 
+
+assign sq_load = !running_d[SQG_SIZE-1];
 
 /* ===============================
  * PE running status

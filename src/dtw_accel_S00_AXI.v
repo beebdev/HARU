@@ -326,20 +326,14 @@ end
 
 /* HARU control/status register logic */
 always @(posedge S_AXI_ACLK) begin
-	// Reset is done by dtw core itself
-	if (slv_reg0[0]) begin // start
-		dtw_cr <= {slv_reg0[31:1], 1'b1};
-		slv_reg0[0] <= 0;
-	end else begin
-		dtw_cr <= slv_reg0;
-	end
+	dtw_cr <= slv_reg0;         // control register
 	slv_reg1 <= dtw_sr;			// status register (dtw -> axi)
-	dtw_ref_len <= slv_reg2;		// reference length
-	slv_reg3 <= 0;
-	slv_reg4 <= 0;
-	slv_reg5 <= 0;
-	slv_reg6 <= 0;
-	slv_reg7 <= 0;
+	dtw_ref_len <= slv_reg2;    // reference length
+	slv_reg3 <= 0;              // reserve
+	slv_reg4 <= 0;              // reserve
+	slv_reg5 <= 0;              // reserve
+	slv_reg6 <= 0;              // reserve
+	slv_reg7 <= 0;              // reserve
 end
 
 endmodule
