@@ -13,13 +13,16 @@
 #define DTW_ACCEL_SR_OFFSET_BUSY            0x00
 #define DTW_ACCEL_SR_OFFSET_REF_LOAD_DONE   0x01
 
+#define DTW_ACCEL_MODE_QUERY                0x00
+#define DTW_ACCEL_MODE_REF_LOAD             0x01
+
 typedef struct {
     uint32_t v_baseaddr;    // Memory mapped virtual base address
     uint32_t p_baseaddr;    // Physical base address
     uint32_t size;          // Size of device
 } dtw_accel_t;
 
-int32_t dtw_accel_initialise(dtw_accel_t *device, uint32_t baseaddr, uint32_t size);
+int32_t dtw_accel_init(dtw_accel_t *device, uint32_t baseaddr, uint32_t size);
 int32_t dtw_accel_release(dtw_accel_t *device);
 
 void dtw_accel_reset(dtw_accel_t *device);

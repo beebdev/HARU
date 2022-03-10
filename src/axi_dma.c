@@ -226,6 +226,8 @@ void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t src_addr, uint32_t size) 
     dma_mm2s_ERR_IRQ_EN(device);
     dma_mm2s_run(device);
     dma_mm2s_set_length(device, size);
+
+    // TODO: wait for completion
 }
 
 void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) {
@@ -237,6 +239,8 @@ void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) 
     dma_s2mm_ERR_IRQ_EN(device);
     dma_s2mm_run(device);
     dma_s2mm_set_length(device, size);
+
+    // TODO: wait for completion
 }
 
 // Set register

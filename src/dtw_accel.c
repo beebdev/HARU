@@ -10,7 +10,7 @@ uint32_t _reg_get(uint32_t baseaddr, uint32_t offset);
 
 // Initialise the device, return 0 on success, non-0 on failure
 // This function will map the device into memory, and set the base address
-int32_t dtw_accel_initialise(dtw_accel_t *device, uint32_t baseaddr, uint32_t size) {
+int32_t dtw_accel_init(dtw_accel_t *device, uint32_t baseaddr, uint32_t size) {
     int dev_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (dev_fd < 0) {
         return -1;
