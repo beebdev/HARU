@@ -11,7 +11,8 @@ void haru_release(haru_t *haru) {
 }
 
 int32_t haru_load_reference(haru_t *haru, uint32_t addr, uint32_t size) {
-    dtw_accel_reset(&haru->dtw_accel);
+    dtw_accel_reset_EN(&haru->dtw_accel); // TODO: let hardware manage this
+    dtw_accel_reset_DIS(&haru->dtw_accel);
     dtw_accel_set_mode(&haru->dtw_accel, DTW_ACCEL_MODE_REF_LOAD);
     axi_dma_mm2s_transfer(&haru->axi_dma, addr, size);
     dtw_accel_run(&haru->dtw_accel);

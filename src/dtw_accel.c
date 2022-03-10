@@ -25,7 +25,8 @@ int32_t dtw_accel_init(dtw_accel_t *device, uint32_t baseaddr, uint32_t size) {
         return -1;
     }
 
-    dtw_accel_reset(device);
+    dtw_accel_reset_EN(device);
+    dtw_accel_reset_DIS(device);
     close(dev_fd);
     return 0;
 }
@@ -38,8 +39,12 @@ int32_t dtw_accel_release(dtw_accel_t *device) {
 
 // Reset the device
 // Sets CR to reset
-void dtw_accel_reset(dtw_accel_t *device) {
+void dtw_accel_reset_EN(dtw_accel_t *device) {
     _reg_set(device->v_baseaddr, DTW_ACCEL_CR_ADDR,  (1 << DTW_ACCEL_CR_OFFSET_RESET));
+}
+
+void dtw_accel_reset_DIS(dtw_accel_t *device) {
+    _reg_set(device->v_baseaddr, DTW_ACCEL_CR_ADDR,  (0 << DTW_ACCEL_CR_OFFSET_RESET));
 }
 
 // Start the device

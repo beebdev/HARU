@@ -25,7 +25,8 @@ typedef struct {
 int32_t dtw_accel_init(dtw_accel_t *device, uint32_t baseaddr, uint32_t size);
 int32_t dtw_accel_release(dtw_accel_t *device);
 
-void dtw_accel_reset(dtw_accel_t *device);
+void dtw_accel_reset_EN(dtw_accel_t *device);
+void dtw_accel_reset_DIS(dtw_accel_t *device);
 void dtw_accel_run(dtw_accel_t *device);
 void dtw_accel_stop(dtw_accel_t *device);
 void dtw_accel_set_mode(dtw_accel_t *device, uint8_t mode);
