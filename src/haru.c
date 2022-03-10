@@ -1,6 +1,4 @@
 #include "haru.h"
-#include "dtw_accel.h"
-#include "axi_dma.h"
 
 int32_t haru_init(haru_t *haru) {
     axi_dma_init(&haru->axi_dma, HARU_DTW_ACCEL_ADDR_BASE, HARU_DTW_ACCEL_SIZE);

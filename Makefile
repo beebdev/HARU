@@ -12,7 +12,9 @@ endif
 
 BINARY = haru
 OBJ = $(BUILD_DIR)/main.o \
-      $(BUILD_DIR)/haru.o \
+	  $(BUILD_DIR)/haru.o \
+	  $(BUILD_DIR)/axi_dma.o \
+      $(BUILD_DIR)/dtw_accel.o \
 
 PREFIX = /usr/local
 VERSION = `git describe --tags`
@@ -24,7 +26,19 @@ endif
 
 .PHONY: clean distclean test
 
-$(BUILD_DIR)/main.o: src/main.c
+$(BINARY): $(OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+$(BUILD_DIR)/main.o: src/main.c src/haru.h
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
+
+$(BUILD_DIR)/haru.o: src/haru.c src/axi_dma.h src/dtw_accel.h
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
+
+$(BUILD_DIR)/axi_dma.o: src/axi_dma.c src/axi_dma.h
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
+
+$(BUILD_DIR)/dtw_accel.o: src/dtw_accel.c src/dtw_accel.h
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
 
 clean:

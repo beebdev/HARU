@@ -1,6 +1,9 @@
 #ifndef HARU_H
 #define HARU_H
 
+#include "axi_dma.h"
+#include "dtw_accel.h"
+
 #include <stdint.h>
 
 #define HARU_DTW_ACCEL_ADDR_BASE  0xa0010000
