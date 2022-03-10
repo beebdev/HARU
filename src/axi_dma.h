@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 // AXI DMA device address
-#define AXI_DMA_BASE 0x43C00000 // TODO: update this
+#define AXI_DMA_BASE 0xa0000000 // TODO: update this
 #define AXI_DMA_SIZE 0xffff
 
 // AXI DMA register map (Direct Register Mode)
