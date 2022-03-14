@@ -1,13 +1,14 @@
 #include <stdio.h>
-#include <haru.h>
+#include <stdlib.h>
+#include "haru.h"
 
-uint32_t init_reference(uint32_t *ref, uint32_t ref_size, uint32_t pos, uint32_t *query, uint32_t query_size) {
+uint32_t init_reference(int32_t *ref, uint32_t ref_size, uint32_t pos, int32_t *query, uint32_t query_size) {
     if (query_size > ref_size || pos + query_size > ref_size) {
         return -1;
     }
 
     uint32_t i;
-    uint32_t signal[5] = {-2, -1, 0, 1, 2};
+    int32_t signal[5] = {-2, -1, 0, 1, 2};
     for (i = 0; i < ref_size; i++) {
         ref[i] = signal[i%5];
     }
@@ -19,9 +20,9 @@ uint32_t init_reference(uint32_t *ref, uint32_t ref_size, uint32_t pos, uint32_t
     return 0;
 }
 
-uint32_t init_query(uint32_t *query, uint32_t query_size) {
+uint32_t init_query(int32_t *query, uint32_t query_size) {
     uint32_t i;
-    uint32_t signal[5] = {-2, 1, -1, 1, -2};
+    int32_t signal[5] = {-2, 1, -1, 1, -2};
     for (i = 0; i < query_size; i++) {
         query[i] = signal[i%5];
     }
@@ -30,20 +31,23 @@ uint32_t init_query(uint32_t *query, uint32_t query_size) {
 }
 
 int main(int argc, char *argv[]) {
+    int32_t ret;
     haru_t haru;
-    uint32_t ref_buffer[0xffff] = {0};
-    uint32_t query_buffer[251] = {0};
-    search_result_t result[10] = {0};
+    int32_t ref_buffer[0xffff] = {0};
+    int32_t query_buffer[251] = {0};
 
     // Setup query and reference
     init_query(query_buffer+1, 250);
-    if (init_reference(ref_buffer, 0xffff, 0x0123, query_buffer+1, 250) {
+
+    ret = init_reference(ref_buffer, 0xffff, 0x1000, query_buffer+1, 250);
+    if (ret) {
         printf("Error: Failed to initialize reference\n");
         return -1;
     }
 
     // Initialize haru
-    if (haru_init(&haru)) {
+    ret = haru_init(&haru);
+    if (ret) {
         printf("Error: Failed to initialize haru\n");
         return -1;
     }

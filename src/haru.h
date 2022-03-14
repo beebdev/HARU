@@ -26,13 +26,11 @@ typedef struct {
     uint32_t score;
 } search_result_t;
 
-uint32_t haru_err = 0;
-
 int32_t haru_init(haru_t *haru);
 void haru_release(haru_t *haru);
 
-void haru_load_reference(haru_t *haru, uint32_t addr, uint32_t size);
-void haru_load_query(haru_t *haru, uint32_t addr, uint32_t size);
+void haru_load_reference(haru_t *haru, int32_t *addr, uint32_t size);
+void haru_load_query(haru_t *haru, int32_t *addr, uint32_t size);
 void haru_get_result(haru_t *haru, search_result_t *addr, uint32_t n_res);
 
 #endif // HARU_H

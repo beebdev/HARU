@@ -42,7 +42,7 @@
 
 /* AXI DMA type */
 typedef struct {
-    uint32_t v_baseaddr;    // Memory mapped virtual base address
+    uint32_t *v_baseaddr;    // Memory mapped virtual base address
     uint32_t p_baseaddr;    // Physical base address
     uint32_t size;          // Size of device
 } axi_dma_t;
@@ -51,31 +51,53 @@ uint32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t size);
 void axi_dma_release(axi_dma_t *device);
 
 void dma_mm2s_reset(axi_dma_t *device);
+void dma_s2mm_reset(axi_dma_t *device);
 void dma_mm2s_run(axi_dma_t *device);
 void dma_mm2s_stop(axi_dma_t *device);
-void dma_mm2s_busy(axi_dma_t *device);
-void dma_mm2s_IOC_IRQ_EN(axi_dma_t *device);
-void dma_mm2s_IOC_IRQ_DIS(axi_dma_t *device);
-void dma_mm2s_DLY_IRO_EN(axi_dma_t *device);
-void dma_mm2s_DLY_IRO_DIS(axi_dma_t *device);
-void dma_mm2s_ERR_IRQ_EN(axi_dma_t *device);
-void dma_mm2s_ERR_IRQ_DIS(axi_dma_t *device);
-void dma_mm2s_set_src_addr(axi_dma_t *device, uint32_t addr);
-void dma_mm2s_set_src_addr_msb(axi_dma_t *device, uint32_t addr);
-void dma_mm2s_set_length(axi_dma_t *device, uint32_t length);
-
-void dma_s2mm_reset(axi_dma_t *device);
 void dma_s2mm_run(axi_dma_t *device);
 void dma_s2mm_stop(axi_dma_t *device);
-void dma_s2mm_busy(axi_dma_t *device);
+void dma_mm2s_IOC_IRQ_EN(axi_dma_t *device);
+void dma_mm2s_IOC_IRQ_DIS(axi_dma_t *device);
 void dma_s2mm_IOC_IRQ_EN(axi_dma_t *device);
 void dma_s2mm_IOC_IRQ_DIS(axi_dma_t *device);
+void dma_mm2s_DLY_IRO_EN(axi_dma_t *device);
+void dma_mm2s_DLY_IRO_DIS(axi_dma_t *device);
 void dma_s2mm_DLY_IRO_EN(axi_dma_t *device);
 void dma_s2mm_DLY_IRO_DIS(axi_dma_t *device);
+void dma_mm2s_ERR_IRQ_EN(axi_dma_t *device);
+void dma_mm2s_ERR_IRQ_DIS(axi_dma_t *device);
 void dma_s2mm_ERR_IRQ_EN(axi_dma_t *device);
 void dma_s2mm_ERR_IRQ_DIS(axi_dma_t *device);
 
-void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t src_addr, uint32_t size);
-void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size);
+uint32_t dma_mms2_halted(axi_dma_t *device);
+uint32_t dma_s2mm_halted(axi_dma_t *device);
+uint32_t dma_mms2_idle(axi_dma_t *device);
+uint32_t dma_s2mm_idle(axi_dma_t *device);
+uint32_t dma_mm2s_busy(axi_dma_t *device);
+uint32_t dma_s2mm_busy(axi_dma_t *device);
+uint32_t dma_mm2s_sg_active(axi_dma_t *device);
+uint32_t dma_s2mm_sg_active(axi_dma_t *device);
+uint32_t dma_mm2s_dma_internal_error(axi_dma_t *device);
+uint32_t dma_s2mm_dma_internal_error(axi_dma_t *device);
+uint32_t dma_mm2s_dma_slave_error(axi_dma_t *device);
+uint32_t dma_s2mm_dma_slave_error(axi_dma_t *device);
+uint32_t dma_mm2s_dma_decode_error(axi_dma_t *device);
+uint32_t dma_s2mm_dma_decode_error(axi_dma_t *device);
+uint32_t dma_mm2s_IOC_IRQ(axi_dma_t *device);
+uint32_t dma_s2mm_IOC_IRQ(axi_dma_t *device);
+uint32_t dma_mm2s_DLY_IRQ(axi_dma_t *device);
+uint32_t dma_s2mm_DLY_IRQ(axi_dma_t *device);
+uint32_t dma_mm2s_ERR_IRQ(axi_dma_t *device);
+uint32_t dma_s2mm_ERR_IRQ(axi_dma_t *device);
+
+void dma_mm2s_set_src_addr(axi_dma_t *device, uint32_t addr);
+void dma_mm2s_set_src_addr_msb(axi_dma_t *device, uint32_t addr);
+void dma_mm2s_set_length(axi_dma_t *device, uint32_t length);
+void dma_s2mm_set_dst_addr(axi_dma_t *device, uint32_t addr);
+void dma_s2mm_set_dst_addr_msb(axi_dma_t *device, uint32_t addr);
+void dma_s2mm_set_length(axi_dma_t *device, uint32_t length);
+
+void axi_dma_mm2s_transfer(axi_dma_t *device, void *src_addr, uint32_t size);
+void axi_dma_s2mm_transfer(axi_dma_t *device, void *dst_addr, uint32_t size);
 
 #endif

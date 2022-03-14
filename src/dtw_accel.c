@@ -4,9 +4,17 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-void _reg_set(uint32_t baseaddr, uint32_t offset, uint32_t data);
-uint32_t _reg_get(uint32_t baseaddr, uint32_t offset);
+// Set register
+inline void _reg_set(uint32_t *baseaddr, int32_t offset, uint32_t data) {
+    // *(volatile uint32_t *)(baseaddr + offset) = data;
+    baseaddr[offset>>2] = data;
+}
 
+// Get register
+inline uint32_t _reg_get(uint32_t *baseaddr, int32_t offset) {
+    // return *(uint32_t *)(baseaddr + offset);
+    return baseaddr[offset>>2];
+}
 
 // Initialise the device, return 0 on success, non-0 on failure
 // This function will map the device into memory, and set the base address
@@ -18,7 +26,7 @@ int32_t dtw_accel_init(dtw_accel_t *device, uint32_t baseaddr, uint32_t size) {
 
     device->size = size;
     device->p_baseaddr = baseaddr;
-    device->v_baseaddr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
+    device->v_baseaddr = (uint32_t *) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
 
     if (device->v_baseaddr == MAP_FAILED) {
         close(dev_fd);
@@ -72,16 +80,4 @@ uint32_t dtw_accel_busy(dtw_accel_t *device) {
 // Get the done status of the device
 uint32_t dtw_accel_load_done(dtw_accel_t *device) {
     return _reg_get(device->v_baseaddr, DTW_ACCEL_SR_ADDR) & (1 << DTW_ACCEL_SR_OFFSET_REF_LOAD_DONE);
-}
-
-// Set register
-void _reg_set(uint32_t baseaddr, uint32_t offset, uint32_t data) {
-    // *(volatile uint32_t *)(baseaddr + offset) = data;
-    baseaddr[offset>>2] = data;
-}
-
-// Get register
-uint32_t _reg_get(uint32_t baseaddr, uint32_t offset) {
-    // return *(uint32_t *)(baseaddr + offset);
-    return baseaddr[offset>>2];
 }

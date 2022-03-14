@@ -10,7 +10,7 @@ ifeq ($(zstd),1)
 LDFLAGS		+= -lzstd
 endif
 
-BINARY = haru
+BINARY = haru_test
 OBJ = $(BUILD_DIR)/main.o \
 	  $(BUILD_DIR)/haru.o \
 	  $(BUILD_DIR)/axi_dma.o \
@@ -43,7 +43,6 @@ $(BUILD_DIR)/dtw_accel.o: src/dtw_accel.c src/dtw_accel.h
 
 clean:
 	rm -rf $(BINARY) $(BUILD_DIR)/*.o
-	make -C slow5lib clean
 
 # Delete all gitignored files (but not directories)
 distclean: clean

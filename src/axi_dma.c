@@ -5,9 +5,17 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-void _reg_set(uint32_t baseaddr, uint32_t offset, uint32_t data);
-uint32_t _reg_get(uint32_t baseaddr, uint32_t offset);
+// Set register
+inline void _reg_set(uint32_t *baseaddr, int32_t offset, uint32_t data) {
+    // *(volatile uint32_t *)(baseaddr + offset) = data;
+    baseaddr[offset>>2] = data;
+}
 
+// Get register
+inline uint32_t _reg_get(uint32_t *baseaddr, int32_t offset) {
+    // return *(uint32_t *)(baseaddr + offset);
+    return baseaddr[offset>>2];
+}
 uint32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t size) {
     int32_t dev_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (dev_fd < 0) {
@@ -16,13 +24,14 @@ uint32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t size) {
 
     device->size = size;
     device->p_baseaddr = baseaddr;
-    device->v_baseaddr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
+    device->v_baseaddr = (uint32_t *) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
     if (device->v_baseaddr == MAP_FAILED) {
         close(dev_fd);
         return -1;
     }
 
-    axi_dma_reset(device);
+    dma_mm2s_reset(device);
+    dma_s2mm_reset(device);
     close(dev_fd);
     return 0;
 }
@@ -227,10 +236,14 @@ void dma_s2mm_set_length(axi_dma_t *device, uint32_t length) {
     _reg_set(device->v_baseaddr, AXI_DMA_S2MM_LENGTH, length);
 }
 
-void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t src_addr, uint32_t size) {
+void axi_dma_mm2s_transfer(axi_dma_t *device, void *src_addr, uint32_t size) {
+    uint32_t src_addr_lsb = (uint32_t)((uint64_t) src_addr);
+    uint32_t src_addr_msb = (uint32_t)((uint64_t) src_addr >> 32);
+
     dma_mm2s_reset(device);
     dma_mm2s_stop(device);
-    dma_mm2s_set_src_addr(device, src_addr);
+    dma_mm2s_set_src_addr(device, src_addr_lsb); // set lsb byte of src addr
+    dma_mm2s_set_src_addr_msb(device, src_addr_msb); // set msb byte of src addr
     dma_mm2s_IOC_IRQ_EN(device);
     dma_mm2s_DLY_IRO_EN(device);
     dma_mm2s_ERR_IRQ_EN(device);
@@ -241,10 +254,14 @@ void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t src_addr, uint32_t size) 
     while (!dma_mm2s_busy(device));
 }
 
-void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) {
+void axi_dma_s2mm_transfer(axi_dma_t *device, void *dst_addr, uint32_t size) {
+    uint32_t dst_addr_lsb = (uint32_t)((uint64_t) dst_addr);
+    uint32_t dst_addr_msb = (uint32_t)((uint64_t) dst_addr >> 32);
+
     dma_s2mm_reset(device);
     dma_s2mm_stop(device);
-    dma_s2mm_set_dst_addr(device, dst_addr);
+    dma_s2mm_set_dst_addr(device, dst_addr_lsb);
+    dma_s2mm_set_dst_addr_msb(device, dst_addr_msb);
     dma_s2mm_IOC_IRQ_EN(device);
     dma_s2mm_DLY_IRO_EN(device);
     dma_s2mm_ERR_IRQ_EN(device);
@@ -253,16 +270,4 @@ void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) 
 
     // TODO: change this to a more efficient polling method
     while (!dma_s2mm_busy(device));
-}
-
-// Set register
-void _reg_set(uint32_t baseaddr, uint32_t offset, uint32_t data) {
-    // *(volatile uint32_t *)(baseaddr + offset) = data;
-    baseaddr[offset>>2] = data;
-}
-
-// Get register
-uint32_t _reg_get(uint32_t baseaddr, uint32_t offset) {
-    // return *(uint32_t *)(baseaddr + offset);
-    return baseaddr[offset>>2];
 }
