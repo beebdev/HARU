@@ -137,6 +137,16 @@ uint32_t dma_s2mm_idle(axi_dma_t *device) {
     return _reg_get(device->v_baseaddr, AXI_DMA_S2MM_SR) & (1 << AXI_DMA_SR_IDLE);
 }
 
+uint32_t dma_mm2s_busy(axi_dma_t *device) {
+    uint32_t sr = _reg_get(device->v_baseaddr, AXI_DMA_MM2S_SR);
+    return !(sr & (1 << AXI_DMA_SR_IOC_IRQ)) && !(sr & (1 << AXI_DMA_SR_IDLE));
+}
+
+uint32_t dma_s2mm_busy(axi_dma_t *device) {
+    uint32_t sr = _reg_get(device->v_baseaddr, AXI_DMA_S2MM_SR);
+    return !(sr & (1 << AXI_DMA_SR_IOC_IRQ)) && !(sr & (1 << AXI_DMA_SR_IDLE));
+}
+
 uint32_t dma_mm2s_sg_active(axi_dma_t *device) {
     return _reg_get(device->v_baseaddr, AXI_DMA_MM2S_SR) & (1 << AXI_DMA_SR_SG_ACT);
 }
@@ -227,7 +237,8 @@ void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t src_addr, uint32_t size) 
     dma_mm2s_run(device);
     dma_mm2s_set_length(device, size);
 
-    // TODO: wait for completion
+    // TODO: change this to a more efficient polling method
+    while (!dma_mm2s_busy(device));
 }
 
 void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) {
@@ -240,17 +251,18 @@ void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t dst_addr, uint32_t size) 
     dma_s2mm_run(device);
     dma_s2mm_set_length(device, size);
 
-    // TODO: wait for completion
+    // TODO: change this to a more efficient polling method
+    while (!dma_s2mm_busy(device));
 }
 
 // Set register
 void _reg_set(uint32_t baseaddr, uint32_t offset, uint32_t data) {
-    *(volatile uint32_t *)(baseaddr + offset) = data;
-    // baseaddr[offset>>2] = data;
+    // *(volatile uint32_t *)(baseaddr + offset) = data;
+    baseaddr[offset>>2] = data;
 }
 
 // Get register
 uint32_t _reg_get(uint32_t baseaddr, uint32_t offset) {
-    return *(uint32_t *)(baseaddr + offset);
-    // return baseaddr[offset>>2];
+    // return *(uint32_t *)(baseaddr + offset);
+    return baseaddr[offset>>2];
 }

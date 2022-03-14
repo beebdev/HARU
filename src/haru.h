@@ -12,6 +12,9 @@
 #define HARU_AXI_DMA_ADDR_BASE    0xa0000000
 #define HARU_AXI_DMA_SIZE         0xffff
 
+#define HARU_AXI_DMA_INIT_ERROR   0x01
+#define HARU_DTW_ACCEL_INIT_ERROR 0x02
+
 typedef struct {
     dtw_accel_t dtw_accel;
     axi_dma_t axi_dma;
@@ -23,11 +26,13 @@ typedef struct {
     uint32_t score;
 } search_result_t;
 
+uint32_t haru_err = 0;
+
 int32_t haru_init(haru_t *haru);
 void haru_release(haru_t *haru);
 
-int32_t haru_load_reference(haru_t *haru, uint32_t addr, uint32_t size);
-int32_t haru_load_query(haru_t *haru, uint32_t addr, uint32_t size);
-search_result_t *haru_get_result(haru_t *haru, uint32_t *addr, uint32_t n_res);
+void haru_load_reference(haru_t *haru, uint32_t addr, uint32_t size);
+void haru_load_query(haru_t *haru, uint32_t addr, uint32_t size);
+void haru_get_result(haru_t *haru, search_result_t *addr, uint32_t n_res);
 
 #endif // HARU_H
