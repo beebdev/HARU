@@ -48,7 +48,7 @@ dtw_core #(
 ) inst_dtw_core (
     .clk        (clk),
     .rst        (rst),
-    .running    (running),
+    .rs    (running),
     .ref_len    (ref_len),
     .op_mode    (op_mode),
     .busy       (busy),

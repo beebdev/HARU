@@ -12,9 +12,11 @@ module dtw_accel #(
     /* Parameters of Axi stream */
     parameter integer C_AXIS_TDATA_WIDTH = 32
 )(
+    /* Common ports */
+    input wire aclk,
+    input wire aresetn,
+
     /* S00_AXI ports */
-    input wire  s00_axi_aclk,
-    input wire  s00_axi_aresetn,
     input wire  [C_S00_AXI_ADDR_WIDTH-1 : 0] s00_axi_awaddr,
     input wire  [2 : 0] s00_axi_awprot,
     input wire  s00_axi_awvalid,
@@ -36,8 +38,6 @@ module dtw_accel #(
     input wire  s00_axi_rready,
 
     /* S00_AXIS ports */
-    input wire  s00_axis_aclk,
-    input wire  s00_axis_aresetn,
     output wire  s00_axis_tready,
     input wire [C_AXIS_TDATA_WIDTH-1 : 0] s00_axis_tdata,
     input wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
@@ -45,8 +45,6 @@ module dtw_accel #(
     input wire  s00_axis_tvalid,
 
     /* M00_AXIS ports */
-    input wire m00_axis_aclk,
-    input wire m00_axis_aresetn,
     output wire m00_axis_tvalid,
 	output wire [C_AXIS_TDATA_WIDTH-1 : 0] m00_axis_tdata,
 	output wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] m00_axis_tstrb,
@@ -62,8 +60,10 @@ module dtw_accel #(
 wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control register
 wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
 wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
+
+// Control wires
 wire s00_dtw_reset;
-wire s00_dtw_running;
+wire s00_dtw_rs;
 wire s00_dtw_mode;
 wire s00_dtw_busy;
 wire s00_dtw_load_done;
@@ -78,19 +78,24 @@ wire m00_axis_dtw_fifo_wren;
 wire [C_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
 wire m00_axis_dtw_fifo_full;
 
+// debug
+wire [31:0] w_dbg_addrW_ref;
+wire [31:0] w_dbg_ref_dout;
+wire [2:0] w_dbg_curr_state;
+
 /* =========================
  * IO assignments
  * ========================= */
  
 // DTW CR
 assign s00_dtw_reset = s00_dtw_cr[0];        // CR Offset 0: reset
-assign s00_dtw_running = s00_dtw_cr[1];      // CR Offset 1: start
-assign s00_dtw_mode = s00_dtw_cr[2];         // CR Offset 2: mode
+assign s00_dtw_rs = s00_dtw_cr[1];           // CR Offset 1: run/stop
+assign s00_dtw_mode = s00_dtw_cr[2];         // CR Offset 2: mode -> 0: q mode, 1: ref load
 
 // DTW SR
 // SR offset 0: busy
 // SR offset 1: reference loading done
-assign s00_dtw_sr = {29'b0, s00_dtw_load_done, s00_dtw_busy};
+assign s00_dtw_sr = {26'b0, w_dbg_curr_state, s00_dtw_load_done, s00_dtw_busy};
 
 /* =========================
  * Module instantiation
@@ -105,10 +110,12 @@ dtw_accel_S00_AXI # (
     .dtw_cr         (s00_dtw_cr),
     .dtw_sr         (s00_dtw_sr),
     .dtw_ref_len    (s00_dtw_ref_len),
+    .dtw_dbg_addrW_ref (w_dbg_addrW_ref),
+    .dtw_dbg_rd_ref_dout (w_dbg_ref_dout),
 
     // axi
-    .S_AXI_ACLK     (s00_axi_aclk),
-    .S_AXI_ARESETN  (s00_axi_aresetn),
+    .S_AXI_ACLK     (aclk),
+    .S_AXI_ARESETN  (aresetn),
     .S_AXI_AWADDR   (s00_axi_awaddr),
     .S_AXI_AWPROT   (s00_axi_awprot),
     .S_AXI_AWVALID  (s00_axi_awvalid),
@@ -130,7 +137,6 @@ dtw_accel_S00_AXI # (
     .S_AXI_RREADY   (s00_axi_rready)
 );
 
-
 // AXI Stream Bus S00_AXIS
 dtw_accel_S00_AXIS # ( 
    .C_S_AXIS_TDATA_WIDTH(C_AXIS_TDATA_WIDTH)
@@ -141,15 +147,14 @@ dtw_accel_S00_AXIS # (
     .dtw_fifo_empty (s00_axis_fifo_empty),
 
     // axis
-   .S_AXIS_ACLK     (s00_axis_aclk),
-   .S_AXIS_ARESETN  (s00_axis_aresetn),
+   .S_AXIS_ACLK     (aclk),
+   .S_AXIS_ARESETN  (aresetn),
    .S_AXIS_TREADY   (s00_axis_tready),
    .S_AXIS_TDATA    (s00_axis_tdata),
    .S_AXIS_TSTRB    (s00_axis_tstrb),
    .S_AXIS_TLAST    (s00_axis_tlast),
    .S_AXIS_TVALID   (s00_axis_tvalid)
 );
-
 
 // AXI Stream Bus M00_AXIS
 dtw_accel_M00_AXIS #(
@@ -161,8 +166,8 @@ dtw_accel_M00_AXIS #(
     .dtw_fifo_full  (m00_axis_dtw_fifo_full),
 
     // axis
-    .M_AXIS_ACLK    (m00_axis_aclk),
-    .M_AXIS_ARESETN (m00_axis_aresetn),
+    .M_AXIS_ACLK    (aclk),
+    .M_AXIS_ARESETN (aresetn),
     .M_AXIS_TVALID  (m00_axis_tvalid),
     .M_AXIS_TDATA   (m00_axis_tdata),
     .M_AXIS_TSTRB   (m00_axis_tstrb),
@@ -172,14 +177,14 @@ dtw_accel_M00_AXIS #(
 
 // DTW core
 dtw_core #(
-    .width (width),
+    .dtw_dwidth (width),
     .axi_dwidth (C_AXIS_TDATA_WIDTH),
     .SQG_SIZE (SQG_SIZE)
 ) inst_dtw_core (
     // Main DTW signals
     .clk            (s00_axi_aclk),
     .rst            (s00_dtw_reset),
-    .running        (s00_dtw_running),
+    .rs             (s00_dtw_rs),
     .ref_len        (s00_dtw_ref_len),
     .op_mode        (s00_dtw_mode),
     .busy           (s00_dtw_busy),
@@ -187,13 +192,18 @@ dtw_core #(
 
     // DTW FIFO signals -> to the inside world! (S00_AXIS)
     .src_fifo_rden  (s00_axis_fifo_rden),
-    .src_fifo_empty (s00_axis_fifo_dout),
-    .src_fifo_data  (s00_axis_fifo_empty),
+    .src_fifo_empty (s00_axis_fifo_empty),
+    .src_fifo_data  (s00_axis_fifo_dout),
 
     // DTW FIFO signals -> to the outside world! (M00_AXIS)
     .sink_fifo_wren (m00_axis_dtw_fifo_wren),
     .sink_fifo_full (m00_axis_dtw_fifo_full),
-    .sink_fifo_data (m00_axis_dtw_fifo_din)
+    .sink_fifo_data (m00_axis_dtw_fifo_din),
+    
+    // Debug
+    .dbg_addrW_ref (w_dbg_addrW_ref),
+    .dbg_ref_dout   (w_dbg_ref_dout),
+    .dbg_curr_state (w_dbg_curr_state)
 );
 
 endmodule

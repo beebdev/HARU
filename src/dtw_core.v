@@ -1,4 +1,3 @@
-
 `timescale 1 ns / 1 ps
 
 module dtw_core #(
@@ -8,7 +7,7 @@ module dtw_core #(
     parameter init_ref = 1
 )(
     // Main DTW signals
-    input wire clk, rst, running,
+    input wire clk, rst, rs,
     input wire [axi_dwidth-1 : 0] ref_len,
     input wire op_mode,              // Mode 0: Reference, 1: Query
     output reg busy,                 // Idle: 0, else: 1
@@ -22,7 +21,12 @@ module dtw_core #(
     // sink FIFO signals
     output reg sink_fifo_wren,                  // Sink FIFO Write enable
     input wire sink_fifo_full,                   // Sink FIFO Full
-    output reg [31:0] sink_fifo_data             // Src FIFO Data
+    output reg [31:0] sink_fifo_data,             // Src FIFO Data
+    
+    // Debug
+    output wire [31:0] dbg_addrW_ref,
+    output reg [31:0] dbg_ref_dout,
+    output wire [2:0] dbg_curr_state
 );
 
 /* ===============================
@@ -35,6 +39,7 @@ reg [14:0] addrR_ref;                   // Read address for refmem
 reg [14:0] addrW_ref;                   // Write address for refmem
 reg wren_ref;                           // Write enable for refmem
 wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
+wire [dtw_dwidth-1:0] w_dbg_ref_dout;
 
 // DTW datapath signals
 reg dp_rst;                             // Reset for core
@@ -65,6 +70,19 @@ reg [1:0] stall_counter;
 
 assign load_done = r_load_done;
 
+// debug
+assign dbg_curr_state = r_state;
+assign dbg_addrW_ref = {19'b0, addrW_ref};
+
+always @(posedge clk) begin
+    if (addrR_ref == 0) begin
+        dbg_ref_dout <= {19'b0, dataout_ref};
+    end else begin
+        dbg_ref_dout <= 32'hcafe;
+    end
+end
+
+
 /* ===============================
  * Core FSM
  * =============================== */
@@ -77,10 +95,10 @@ always @(posedge clk) begin
     end else begin
         case (r_state)
             IDLE: begin // 0
-                if (running) begin
-                    if (op_mode == MODE_NORMAL && r_load_done == 0) begin
+                if (rs) begin
+                    if (op_mode == MODE_NORMAL && r_load_done == 1) begin
                         r_state <= DTW_Q_INIT;
-                    end else if (op_mode == MODE_LOAD_REF) begin
+                    end else if (op_mode == MODE_LOAD_REF && r_load_done == 0) begin
                         r_state <= REF_STALL;
                     end else begin
                         r_state <= IDLE;

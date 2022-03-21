@@ -2,14 +2,12 @@
 `timescale 1 ns / 1 ps
 
 module dtw_accel_S00_AXIS #(
-	/* HARU parameters */
-
 	/* AXI4Stream sink: Data Width */
 	parameter integer C_S_AXIS_TDATA_WIDTH	= 32
 )(
 	/* HARU ports */
 	input wire dtw_fifo_rden,
-	output reg [(C_S_AXIS_TDATA_WIDTH/4)-1:0] dtw_fifo_dout,
+	output reg [C_S_AXIS_TDATA_WIDTH-1:0] dtw_fifo_dout,
 	output wire dtw_fifo_empty,
 
 	/* AXI stream ports */
@@ -22,6 +20,10 @@ module dtw_accel_S00_AXIS #(
 	input wire S_AXIS_TVALID									// Data is in valid
 );
 
+/* =========================
+ * Functions
+ * ========================= */
+ 
 // Returns an integer which has the value of the ceiling of the log base 2.
 function integer clogb2 (input integer bit_depth);
 begin
@@ -31,6 +33,10 @@ begin
 end
 endfunction
 
+/* =========================
+ * Parameters
+ * ========================= */
+ 
 // Total number of input data.
 localparam NUMBER_OF_INPUT_WORDS = 8;
 // bit_num gives the minimum number of bits needed to address 'NUMBER_OF_INPUT_WORDS' size of FIFO.
@@ -47,15 +53,16 @@ reg mst_exec_state;					// State variable
 genvar byte_index;     				// FIFO implementation signals
 
 /* FIFO */
-reg [(C_S_AXIS_TDATA_WIDTH/4)-1:0] fifo_data [0 : NUMBER_OF_INPUT_WORDS-1];
+reg [C_S_AXIS_TDATA_WIDTH-1:0] fifo_data [0 : NUMBER_OF_INPUT_WORDS-1];
 wire fifo_wren;						// FIFO write enable
 wire fifo_rden;						// FIFO read enable
 reg [bit_num-1:0] fifo_data_count;				// FIFO data count
-reg fifo_full_flag;					// FIFO full flag
-reg fifo_empty_flag;				// FIFO empty flag
+wire fifo_full_flag;					// FIFO full flag
+wire fifo_empty_flag;				// FIFO empty flag
 reg [bit_num-1:0] write_pointer;	// FIFO write pointer
 reg [bit_num-1:0] read_pointer;		// FIFO read pointer
 reg writes_done;					// sink has accepted all the streaming data and stored in FIFO
+reg [bit_num-1:0] wr_burst_count;
 
 // I/O Connections assignments
 assign S_AXIS_TREADY = axis_tready;
@@ -88,43 +95,13 @@ always @(posedge S_AXIS_ACLK) begin
 	end
 end
 
-// AXI Streaming Sink 
-// 
-// The example design sink is always ready to accept the S_AXIS_TDATA  until
-// the FIFO is not filled with NUMBER_OF_INPUT_WORDS number of input words.
-assign axis_tready = ((mst_exec_state == WRITE_FIFO) && !fifo_full_flag);
-
-always@(posedge S_AXIS_ACLK) begin
-	if(!S_AXIS_ARESETN) begin
-		write_pointer <= 0;
-		writes_done <= 1'b0;
-	end else begin
-		if (write_pointer <= NUMBER_OF_INPUT_WORDS-1) begin
-			if (fifo_wren) begin
-				// write pointer is incremented after every write to the FIFO
-				// when FIFO write signal is enabled.
-				write_pointer <= write_pointer + 1;
-				writes_done <= 1'b0;
-			end if ((write_pointer == NUMBER_OF_INPUT_WORDS - 1) || S_AXIS_TLAST) begin
-				// reads_done is asserted when NUMBER_OF_INPUT_WORDS numbers of streaming data 
-				// has been written to the FIFO which is also marked by S_AXIS_TLAST(kept for optional usage).
-				writes_done <= 1'b1;
-			end
-		end
-	end
-end
-
 /* FIFO */
 
 // port assignment
+assign axis_tready = ((mst_exec_state == WRITE_FIFO) && !fifo_full_flag);
 assign dtw_fifo_empty = fifo_empty_flag;
-
-// inner assignment
-always @(fifo_data_count) begin
-    fifo_full_flag = (fifo_data_count == NUMBER_OF_INPUT_WORDS);
-    fifo_empty_flag = (fifo_data_count == 0);
-end
- 
+assign fifo_full_flag = (fifo_data_count == NUMBER_OF_INPUT_WORDS);
+assign fifo_empty_flag = (fifo_data_count == 0);
 assign fifo_wren = S_AXIS_TVALID && axis_tready;			// src -> axis
 assign fifo_rden = dtw_fifo_rden  && !fifo_empty_flag;		// sink -> dtw
 
@@ -133,6 +110,7 @@ always @(posedge S_AXIS_ACLK) begin
 		fifo_data_count <= 0;
 		write_pointer <= 0;
 		read_pointer <= 0;
+		writes_done <= 1'b0;
 	end else begin
 		// Manage fifo data count
 		if (fifo_wren && !fifo_rden) begin
@@ -143,14 +121,21 @@ always @(posedge S_AXIS_ACLK) begin
 
 		// Write index
 		if (fifo_wren) begin
-			fifo_data[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
+		    writes_done <= 1'b0;
+		    wr_burst_count <= wr_burst_count + 1;
+			fifo_data[write_pointer] <= S_AXIS_TDATA;
 			if (write_pointer == NUMBER_OF_INPUT_WORDS - 1) begin
 				write_pointer <= 0;
 			end else begin
 				write_pointer <= write_pointer + 1;
 			end
 		end
-
+		
+		// TODO: Does burst write count need to be limited?
+		if ((wr_burst_count == NUMBER_OF_INPUT_WORDS) || S_AXIS_TLAST) begin
+		    writes_done <= 1'b1;
+		end
+		
 		// Read index
 		if (fifo_rden) begin
             dtw_fifo_dout = fifo_data[read_pointer];

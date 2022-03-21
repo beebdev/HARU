@@ -1,16 +1,15 @@
 `timescale 1 ns / 1 ps
 
 module dtw_accel_S00_AXI #(
-	/* DTW param in S_AXI */
-
-	/* S_AXI Bus paramters */
 	parameter integer C_S_AXI_DATA_WIDTH = 32,		// S_AXI data bus width
 	parameter integer C_S_AXI_ADDR_WIDTH = 5		// S_AXI address bus width
 )(
 	/* DTW core ports to pass data over */
 	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_cr,			// DTW Core control register
 	input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_sr,			// DTW Core status register
-	output reg  [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
+	output reg [C_S_AXI_DATA_WIDTH-1:0] dtw_ref_len,	// Length of reference
+    input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_dbg_addrW_ref, // debug
+    input wire [C_S_AXI_DATA_WIDTH-1:0] dtw_dbg_rd_ref_dout, // debug
 	
 	/* S_AXI ports */
 	// Global Clock Signal
@@ -75,7 +74,9 @@ module dtw_accel_S00_AXI #(
 	input wire  S_AXI_RREADY
 );
 
-/* AXI4LITE signals */
+/* ===============================
+ * AXI4LITE signals
+ * =============================== */
 reg [C_S_AXI_ADDR_WIDTH-1 : 0] axi_awaddr;
 reg axi_awready;
 reg axi_wready;
@@ -87,7 +88,9 @@ reg [C_S_AXI_DATA_WIDTH-1 : 0] axi_rdata;
 reg [1 : 0] axi_rresp;
 reg axi_rvalid;
 
-// Example-specific design signals
+/* ===============================
+ * Example-specific design signals
+ * =============================== */
 // local parameter for addressing 32 bit / 64 bit C_S_AXI_DATA_WIDTH
 // ADDR_LSB is used for addressing 32/64 bit registers/memories
 // ADDR_LSB = 2 for 32 bits (n downto 2)
@@ -95,15 +98,15 @@ reg axi_rvalid;
 localparam integer ADDR_LSB = (C_S_AXI_DATA_WIDTH / 32) + 1;
 localparam integer OPT_MEM_ADDR_BITS = 2;
 
-//------------------------------------------------
-//-- Signals for user logic register space example
-//------------------------------------------------
+/* ===============================
+ * Signals for user logic register space example
+ * =============================== */
 //-- Number of Slave Registers 8
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg0;	// DTW Core Control Register
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg1;	// DTW Core Status Register
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg2;	// DTW Core ref len
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg3;	// reserved
-reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg4;	// reserved
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg3;	// Debug: 0xdead
+reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg4;	// Debug: 0xbeaf
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg5;	// reserved
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg6;	// reserved
 reg [C_S_AXI_DATA_WIDTH-1:0] slv_reg7;  // reserved
@@ -113,7 +116,9 @@ reg [C_S_AXI_DATA_WIDTH-1:0] reg_data_out;
 integer byte_index;
 reg aw_en;
 
-// I/O Connections assignments
+/* ===============================
+ * I/O Connections assignments
+ * =============================== */
 assign S_AXI_AWREADY = axi_awready;
 assign S_AXI_WREADY	= axi_wready;
 assign S_AXI_BRESP	= axi_bresp;
@@ -123,8 +128,9 @@ assign S_AXI_RDATA	= axi_rdata;
 assign S_AXI_RRESP	= axi_rresp;
 assign S_AXI_RVALID	= axi_rvalid;
 
-
-// Implement axi_awready generation
+/* ===============================
+ * Implement axi_awready generation
+ * =============================== */
 // axi_awready is asserted for one S_AXI_ACLK clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
 // de-asserted when reset is low.
@@ -132,8 +138,8 @@ always @( posedge S_AXI_ACLK ) begin
 	if ( S_AXI_ARESETN == 1'b0 ) begin
 		axi_awready <= 1'b0;
 		aw_en <= 1'b1;
-	end else begin    
-		if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en) begin
+	end else begin
+        if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en) begin
 			// slave is ready to accept write address when 
 			// there is a valid write address and write data
 			// on the write address and data bus. This design 
@@ -141,15 +147,17 @@ always @( posedge S_AXI_ACLK ) begin
 			axi_awready <= 1'b1;
 			aw_en <= 1'b0;
 		end else if (S_AXI_BREADY && axi_bvalid) begin
-				aw_en <= 1'b1;
-				axi_awready <= 1'b0;
+            aw_en <= 1'b1;
+            axi_awready <= 1'b0;
 		end	else begin
 			axi_awready <= 1'b0;
 		end
 	end 
 end       
 
-// Implement axi_awaddr latching
+/* ===============================
+ * Implement axi_awaddr latching
+ * =============================== */
 // This process is used to latch the address when both 
 // S_AXI_AWVALID and S_AXI_WVALID are valid. 
 always @( posedge S_AXI_ACLK ) begin
@@ -163,7 +171,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end 
 end       
 
-// Implement axi_wready generation
+/* ===============================
+ * Implement axi_wready generation
+ * =============================== */
 // axi_wready is asserted for one S_AXI_ACLK clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_wready is 
 // de-asserted when reset is low. 
@@ -183,7 +193,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end 
 end       
 
-// Implement memory mapped register select and write logic generation
+/* ===============================
+ * Implement memory mapped register select and write logic generation
+ * =============================== */
 // The write data is accepted and written to memory mapped registers when
 // axi_awready, S_AXI_WVALID, axi_wready and S_AXI_WVALID are asserted. Write strobes are used to
 // select byte enables of slave registers while writing.
@@ -192,7 +204,7 @@ end
 // and the slave is ready to accept the write address and write data.
 assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
 always @( posedge S_AXI_ACLK ) begin
-	if ( S_AXI_ARESETN == 1'b0 ) begin
+	if ( S_AXI_ARESETN == 1'b0 || slv_reg0[0]) begin // AXI reset or CR.reset both resets config
 		slv_reg0 <= 0;	// This is output so it is cleared
 		slv_reg2 <= 29898;	// Default to 29898
 	end else begin
@@ -201,16 +213,15 @@ always @( posedge S_AXI_ACLK ) begin
 				3'h0: // Control reg
 				for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 					if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-					// Respective byte enables are asserted as per write strobes 
-					// Slave register 0
-					slv_reg0[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+                        // Respective byte enables are asserted as per write strobes 
+                        // Slave register 0
+                        slv_reg0[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 					end
 				3'h2: // Ref len
 				for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 					if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-					// Respective byte enables are asserted as per write strobes 
-					// Slave register 4
-					slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+                        // Respective byte enables are asserted as per write strobes
+                        slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 					end
 				default : begin
 					slv_reg0 <= slv_reg0;
@@ -221,7 +232,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end
 end    
 
-// Implement write response logic generation
+/* ===============================
+ * Implement write response logic generation
+ * =============================== */
 // The write response and response valid signals are asserted by the slave 
 // when axi_wready, S_AXI_WVALID, axi_wready and S_AXI_WVALID are asserted.  
 // This marks the acceptance of address and indicates the status of 
@@ -245,7 +258,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end
 end   
 
-// Implement axi_arready generation
+/* ===============================
+ * Implement axi_arready generation
+ * =============================== */
 // axi_arready is asserted for one S_AXI_ACLK clock cycle when
 // S_AXI_ARVALID is asserted. axi_awready is 
 // de-asserted when reset (active low) is asserted. 
@@ -267,7 +282,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end 
 end
 
-// Implement axi_arvalid generation
+/* ===============================
+ * Implement axi_arvalid generation
+ * =============================== */
 // axi_rvalid is asserted for one S_AXI_ACLK clock cycle when both 
 // S_AXI_ARVALID and axi_arready are asserted. The slave registers 
 // data are available on the axi_rdata bus at this instance. The 
@@ -291,7 +308,9 @@ always @( posedge S_AXI_ACLK ) begin
 	end
 end    
 
-// Implement memory mapped register select and read logic generation
+/* ===============================
+ * Implement memory mapped register select and read logic generation
+ * =============================== */
 // Slave register read enable is asserted when valid address is available
 // and the slave is ready to accept the read address.
 assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
@@ -310,7 +329,9 @@ always @(*) begin
 		endcase
 end
 
-// Output register or memory read data
+/* ===============================
+ * Output register or memory read data
+ * =============================== */
 always @( posedge S_AXI_ACLK ) begin
 	if ( S_AXI_ARESETN == 1'b0 ) begin
 		axi_rdata  <= 0;
@@ -324,16 +345,18 @@ always @( posedge S_AXI_ACLK ) begin
 	end
 end    
 
-/* HARU control/status register logic */
+/* ===============================
+ * HARU control/status register logic
+ * =============================== */
 always @(posedge S_AXI_ACLK) begin
 	dtw_cr <= slv_reg0;         // control register
 	slv_reg1 <= dtw_sr;			// status register (dtw -> axi)
 	dtw_ref_len <= slv_reg2;    // reference length
-	slv_reg3 <= 0;              // reserve
-	slv_reg4 <= 0;              // reserve
-	slv_reg5 <= 0;              // reserve
-	slv_reg6 <= 0;              // reserve
-	slv_reg7 <= 0;              // reserve
+    slv_reg3 <= 32'h0ca7;
+    slv_reg4 <= 32'hcafe;
+    slv_reg5 <= dtw_dbg_addrW_ref;  // reserve
+	slv_reg6 <= dtw_dbg_rd_ref_dout;              // reserve
+	slv_reg7 <= 0;             // reserve
 end
 
 endmodule

@@ -1,13 +1,7 @@
 `timescale 1 ns / 1 ps
 
 module dtw_accel_M00_AXIS #(
-	/* ===============================
-	* HARU parameters
-	* =============================== */
-
-	/* ===============================
-	* M AXIs paramters
-	* =============================== */
+	/* M AXIs paramters */
 	// Width of S_AXIS address bus. The slave accepts the read and write addresses of width C_M_AXIS_TDATA_WIDTH.
 	parameter integer C_M_AXIS_TDATA_WIDTH = 32,
 	// Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
@@ -208,7 +202,7 @@ always @(posedge M_AXIS_ACLK) begin
 			stream_data_out <= fifo_data[read_pointer];
 			if (read_pointer == NUMBER_OF_OUTPUT_WORDS - 1) begin
 				read_pointer <= 0;
-				tx_done <= 1'b1;
+				tx_done <= 1'b1; // TODO: Does burst length need to be limited?
 			end else begin
 				read_pointer <= read_pointer + 1;
 				tx_done <= 1'b0;
