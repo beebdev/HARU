@@ -18,7 +18,7 @@ reg [depth-1:0] i;
 
 initial begin
     if (initalize) begin
-        $readmemb("D:/UNSW/Thesis/dtw_core/bram_init/reference.txt", MEM);
+        $readmemb("data/reference.txt", MEM);
     end else begin
         for (i=0; i<depth; i=i+1) begin
             MEM[i] = 0;

@@ -15,6 +15,11 @@ pip3 install cocotb
 pip3 install cocotbext-axi
 ```
 
+For icarus verilog, on mac:
+```
+brew install icarus-verilog
+```
+
 # Running tests
 ```
 source venv/bin/activate
