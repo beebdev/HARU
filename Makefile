@@ -17,6 +17,7 @@ VERILOG_SOURCES += $(PWD)/src/dtw_accel.v \
 				   $(PWD)/src/axis_2_fifo.v \
 				   $(PWD)/src/fifo.v \
 				   $(PWD)/src/fifo_2_axis.v \
+				   $(PWD)/src/axi_defines.v \
 
 #Test Bench
 VERILOG_SOURCES += $(PWD)/src/sim/tb_dtw_accel.v

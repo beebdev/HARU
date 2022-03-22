@@ -14,21 +14,23 @@ from cocotb.result import ReturnValue
 from cocotb_bus.drivers.amba import AXI4LiteMaster
 from cocotb.triggers import Timer
 
-REG_CONTROL             = 0  << 2
-REG_VERSION             = 1  << 2
-
-
+# Addres map
+REG_CONTROL = 0 << 2;
+REG_STATUS  = 1 << 2;
+REG_REF_LEN = 2 << 2;
+REG_VERSION = 3 << 2;
+REG_KEY     = 4 << 2;
 
 #Set/Clear a bit
-BIT_CTRL_TEST           = 0
+BIT_CTRL_TEST = 0
 
 #Set/Get a range of bits
-BIT_CTRL_TR_HIGH        = 15
-BIT_CTRL_TR_LOW         = 8
+BIT_CTRL_TR_HIGH    = 15
+BIT_CTRL_TR_LOW     = 8
 
-class DemoAXIStreamsDriver (Driver):
+class DtwAccelDriver (Driver):
     def __init__(self, dut, name, clock, reset, debug = False):
-        super(DemoAXIStreamsDriver, self).__init__(dut, name, clock, reset, debug=debug)
+        super(DtwAccelDriver, self).__init__(dut, name, clock, reset, debug=debug)
 
     def __del__(self):
         pass
@@ -37,14 +39,45 @@ class DemoAXIStreamsDriver (Driver):
         data = await self.read_register(REG_VERSION)
         return data
 
-    # Set an entire Register
+    ## CR
+    # Set an entire CR
     async def set_control(self, data):
         await self.write_register(REG_CONTROL, data)
 
-    # Get Entire Register
+    # Get Entire CR
     async def get_control(self):
         data = await self.read_register(REG_CONTROL)
         return data
+
+    ## SR
+    # Get Entire SR
+    async def get_status(self):
+        data = await self.read_register(REG_STATUS)
+        return data
+
+    ## REF_LEN
+    # Set an entire CR
+    async def set_ref_len(self, data):
+        await self.write_register(REG_REF_LEN, data)
+
+    # Get Entire CR
+    async def get_ref_len(self):
+        data = await self.read_register(REG_REF_LEN)
+        return data
+
+    ## Version
+    # Get Entire CR
+    async def get_version(self):
+        data = await self.read_register(REG_VERSION)
+        return data
+
+    ## Key
+    # Get key
+    async def get_key(self):
+        data = await self.read_register(REG_KEY)
+        return data
+
+    ## others
 
     # Set a bit within a register
     async def enable_test_mode(self, enable):

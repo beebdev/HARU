@@ -229,12 +229,15 @@ assign w_version[`MAJOR_RANGE]        = `MAJOR_VERSION;
 assign w_version[`MINOR_RANGE]        = `MINOR_VERSION;
 assign w_version[`REVISION_RANGE]     = `REVISION;
 assign w_version[`VERSION_PAD_RANGE]  = 0;
-assign w_key                          = DATA_WIDTH'hca7cafe;
-
+assign w_key                          = 32'hca7cafe;
 
 /* ===============================
  * synchronous logic
  * =============================== */
+always @ (posedge i_axi_clk) begin
+    r_status <= r_control;
+end
+
 always @ (posedge i_axi_clk) begin
     // De-assert Strobes
     r_reg_in_ack_stb    <=  0;
