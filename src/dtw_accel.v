@@ -13,8 +13,12 @@ module dtw_accel #(
     parameter integer C_AXIS_TDATA_WIDTH = 32
 )(
     /* Common ports */
-    input wire aclk,
+    input wire clk,
     input wire aresetn,
+
+    /* AXI stream */
+    input wire axis_clk,
+    input wire axis_aresetn,
 
     /* S00_AXI ports */
     input wire  [C_S00_AXI_ADDR_WIDTH-1 : 0] s00_axi_awaddr,
@@ -114,7 +118,7 @@ dtw_accel_S00_AXI # (
     .dtw_dbg_rd_ref_dout (w_dbg_ref_dout),
 
     // axi
-    .S_AXI_ACLK     (aclk),
+    .S_AXI_ACLK     (clk),
     .S_AXI_ARESETN  (aresetn),
     .S_AXI_AWADDR   (s00_axi_awaddr),
     .S_AXI_AWPROT   (s00_axi_awprot),
@@ -147,8 +151,8 @@ dtw_accel_S00_AXIS # (
     .dtw_fifo_empty (s00_axis_fifo_empty),
 
     // axis
-   .S_AXIS_ACLK     (aclk),
-   .S_AXIS_ARESETN  (aresetn),
+   .S_AXIS_ACLK     (axis_clk),
+   .S_AXIS_ARESETN  (axis_aresetn),
    .S_AXIS_TREADY   (s00_axis_tready),
    .S_AXIS_TDATA    (s00_axis_tdata),
    .S_AXIS_TSTRB    (s00_axis_tstrb),
@@ -166,8 +170,8 @@ dtw_accel_M00_AXIS #(
     .dtw_fifo_full  (m00_axis_dtw_fifo_full),
 
     // axis
-    .M_AXIS_ACLK    (aclk),
-    .M_AXIS_ARESETN (aresetn),
+    .M_AXIS_ACLK    (axis_clk),
+    .M_AXIS_ARESETN (axis_aresetn),
     .M_AXIS_TVALID  (m00_axis_tvalid),
     .M_AXIS_TDATA   (m00_axis_tdata),
     .M_AXIS_TSTRB   (m00_axis_tstrb),
@@ -182,7 +186,7 @@ dtw_core #(
     .SQG_SIZE (SQG_SIZE)
 ) inst_dtw_core (
     // Main DTW signals
-    .clk            (s00_axi_aclk),
+    .clk            (axis_clk),
     .rst            (s00_dtw_reset),
     .rs             (s00_dtw_rs),
     .ref_len        (s00_dtw_ref_len),
