@@ -1,213 +1,302 @@
-`timescale 1 ns / 1 ps
+`timescale 1ps / 1ps
+
+`define MAJOR_VERSION             1
+`define MINOR_VERSION             0
+`define REVISION                  0
+
+`define MAJOR_RANGE               31:28
+`define MINOR_RANGE               27:20
+`define REVISION_RANGE            19:16
+`define VERSION_PAD_RANGE         15:0
 
 module dtw_accel #(
-    /* HARU-PL parameters */
-    parameter width = 16,
-    parameter SQG_SIZE = 250,
+    parameter ADDR_WIDTH            = 16,
+    parameter DATA_WIDTH            = 32,
 
-    /* Parameters of Axi Slave Bus Interface S00_AXI */
-    parameter integer C_S00_AXI_DATA_WIDTH	= 32,
-    parameter integer C_S00_AXI_ADDR_WIDTH	= 5,
-
-    /* Parameters of Axi stream */
-    parameter integer C_AXIS_TDATA_WIDTH = 32
+    parameter AXIS_DATA_WIDTH       = 32,
+    parameter AXIS_KEEP_WIDTH       = (AXIS_DATA_WIDTH / 8),
+    parameter AXIS_DATA_USER_WIDTH  = 0,
+    parameter FIFO_DATA_WIDTH       = AXIS_DATA_WIDTH + 1 + 1,
+    //XXX Must be a power of 2
+    parameter FIFO_DEPTH            = 4,
+    //parameter FIFO_DEPTH          = 8,
+    //parameter FIFO_DEPTH          = 16,
+    parameter INVERT_AXI_RESET      = 1,
+    parameter INVERT_AXIS_RESET     = 1
 )(
-    /* Common ports */
-    input wire clk,
-    input wire aresetn,
+    input  wire                             i_axi_clk,
+    input  wire                             i_axi_rst,
 
-    /* AXI stream */
-    input wire axis_clk,
-    input wire axis_aresetn,
+    // Write Address Channel
+    input  wire                             i_awvalid,
+    input  wire [ADDR_WIDTH - 1: 0]         i_awaddr,
+    output wire                             o_awready,
 
-    /* S00_AXI ports */
-    input wire  [C_S00_AXI_ADDR_WIDTH-1 : 0] s00_axi_awaddr,
-    input wire  [2 : 0] s00_axi_awprot,
-    input wire  s00_axi_awvalid,
-    output wire s00_axi_awready,
-    input wire  [C_S00_AXI_DATA_WIDTH-1 : 0] s00_axi_wdata,
-    input wire  [(C_S00_AXI_DATA_WIDTH/8)-1 : 0] s00_axi_wstrb,
-    input wire  s00_axi_wvalid,
-    output wire s00_axi_wready,
-    output wire [1 : 0] s00_axi_bresp,
-    output wire s00_axi_bvalid,
-    input wire  s00_axi_bready,
-    input wire  [C_S00_AXI_ADDR_WIDTH-1 : 0] s00_axi_araddr,
-    input wire  [2 : 0] s00_axi_arprot,
-    input wire  s00_axi_arvalid,
-    output wire s00_axi_arready,
-    output wire [C_S00_AXI_DATA_WIDTH-1 : 0] s00_axi_rdata,
-    output wire [1 : 0] s00_axi_rresp,
-    output wire s00_axi_rvalid,
-    input wire  s00_axi_rready,
+    // Write Data Channel
+    input  wire                             i_wvalid,
+    output wire                             o_wready,
+    input  wire [DATA_WIDTH - 1: 0]         i_wdata,
 
-    /* S00_AXIS ports */
-    output wire  s00_axis_tready,
-    input wire [C_AXIS_TDATA_WIDTH-1 : 0] s00_axis_tdata,
-    input wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] s00_axis_tstrb,
-    input wire  s00_axis_tlast,
-    input wire  s00_axis_tvalid,
+    // Write Response Channel
+    output wire                             o_bvalid,
+    input  wire                             i_bready,
+    output wire [1:0]                       o_bresp,
 
-    /* M00_AXIS ports */
-    output wire m00_axis_tvalid,
-	output wire [C_AXIS_TDATA_WIDTH-1 : 0] m00_axis_tdata,
-	output wire [(C_AXIS_TDATA_WIDTH/8)-1 : 0] m00_axis_tstrb,
-	output wire  m00_axis_tlast,
-    input wire m00_axis_tready
+    // Read Address Channel
+    input  wire                             i_arvalid,
+    output wire                             o_arready,
+    input  wire [ADDR_WIDTH - 1: 0]         i_araddr,
+
+    // Read Data Channel
+    output wire                             o_rvalid,
+    input  wire                             i_rready,
+    output wire [1:0]                       o_rresp,
+    output wire [DATA_WIDTH - 1: 0]         o_rdata,
+
+
+    // AXI Stream
+    input  wire                             i_axis_clk,
+    input  wire                             i_axis_rst,
+
+    // Input AXI Stream
+    input  wire                             i_axis_in_tuser,
+    input  wire                             i_axis_in_tvalid,
+    output wire                             o_axis_in_tready,
+    input  wire                             i_axis_in_tlast,
+    input  wire   [AXIS_DATA_WIDTH - 1:0]   i_axis_in_tdata,
+
+
+    // Output AXI Stream
+    output wire                             o_axis_out_tuser,
+    output wire                             o_axis_out_tvalid,
+    input  wire                             i_axis_out_tready,
+    output wire                             o_axis_out_tlast,
+    output wire    [AXIS_DATA_WIDTH - 1:0]  o_axis_out_tdata
 );
 
-/* =========================
- * Signal declaration
- * ========================= */
+/* ===============================
+ * local parameters
+ * =============================== */
 
-// DTW signals within S AXI
-wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_cr;             // DTW Core control register
-wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_sr;             // DTW Core status register
-wire [C_AXIS_TDATA_WIDTH-1:0] s00_dtw_ref_len;        // DTW Core reference length
+// Address Map
+localparam  REG_CONTROL      = 0 << 2;
+localparam  REG_STATUS       = 1 << 2;
+localparam  REG_REF_LEN      = 2 << 2;
+localparam  REG_VERSION      = 3 << 2;
+localparam  REG_KEY          = 4 << 2;
 
-// Control wires
-wire s00_dtw_reset;
-wire s00_dtw_rs;
-wire s00_dtw_mode;
-wire s00_dtw_busy;
-wire s00_dtw_load_done;
+localparam  MAX_ADDR = REG_KEY;
 
-// Src AXIS FIFO signals
-wire s00_axis_fifo_rden;
-wire [C_AXIS_TDATA_WIDTH-1:0] s00_axis_fifo_dout;
-wire s00_axis_fifo_empty;
+/* ===============================
+ * registers/wires
+ * =============================== */
+// User Interface
+wire                            w_axi_rst;
+wire                            w_axis_rst;
+wire  [ADDR_WIDTH - 1 : 0]      w_reg_address;
+reg                             r_reg_invalid_addr;
 
-// Sink AXIS FIFO signals
-wire m00_axis_dtw_fifo_wren;
-wire [C_AXIS_TDATA_WIDTH-1:0] m00_axis_dtw_fifo_din;
-wire m00_axis_dtw_fifo_full;
+wire                            w_reg_in_rdy;
+reg                             r_reg_in_ack_stb;
+wire  [DATA_WIDTH - 1 : 0]      w_reg_in_data;
 
-// debug
-wire [31:0] w_dbg_addrW_ref;
-wire [31:0] w_dbg_ref_dout;
-wire [2:0] w_dbg_curr_state;
+wire                            w_reg_out_req;
+reg                             r_reg_out_rdy_stb;
+reg   [DATA_WIDTH - 1 : 0]      r_reg_out_data;
 
-/* =========================
- * IO assignments
- * ========================= */
- 
-// DTW CR
-assign s00_dtw_reset = s00_dtw_cr[0];        // CR Offset 0: reset
-assign s00_dtw_rs = s00_dtw_cr[1];           // CR Offset 1: run/stop
-assign s00_dtw_mode = s00_dtw_cr[2];         // CR Offset 2: mode -> 0: q mode, 1: ref load
+// DTW accel
+reg   [DATA_WIDTH - 1 : 0]      r_control;
+reg   [DATA_WIDTH - 1 : 0]      r_status;
+reg   [DATA_WIDTH - 1 : 0]      r_ref_len;
+wire  [DATA_WIDTH - 1 : 0]      w_version;
 
-// DTW SR
-// SR offset 0: busy
-// SR offset 1: reference loading done
-assign s00_dtw_sr = {26'b0, w_dbg_curr_state, s00_dtw_load_done, s00_dtw_busy};
+// FIFO
+wire  [FIFO_DATA_WIDTH - 1:0]   w_fifo_w_data;
+wire                            w_fifo_w_stb;
+wire                            w_fifo_full;
+wire                            w_fifo_not_full;
 
-/* =========================
- * Module instantiation
- * ========================= */
+wire  [FIFO_DATA_WIDTH - 1:0]   w_fifo_r_data;
+wire                            w_fifo_r_stb;
+wire                            w_fifo_empty;
+wire                            w_fifo_not_empty;
 
-// AXI Bus S00_AXI
-dtw_accel_S00_AXI # (
-    .C_S_AXI_DATA_WIDTH (C_S00_AXI_DATA_WIDTH),
-    .C_S_AXI_ADDR_WIDTH (C_S00_AXI_ADDR_WIDTH)
-) dtw_accel_S00_AXI_inst (
-    // dtw
-    .dtw_cr         (s00_dtw_cr),
-    .dtw_sr         (s00_dtw_sr),
-    .dtw_ref_len    (s00_dtw_ref_len),
-    .dtw_dbg_addrW_ref (w_dbg_addrW_ref),
-    .dtw_dbg_rd_ref_dout (w_dbg_ref_dout),
+/* ===============================
+ * submodules
+ * =============================== */
+// Convert AXI Slave bus to a simple register/address strobe
+axi_lite_slave #(
+    .ADDR_WIDTH         (ADDR_WIDTH),
+    .DATA_WIDTH         (DATA_WIDTH)
+) axi_lite_reg_interface (
+    .clk                (i_axi_clk),
+    .rst                (w_axi_rst),
 
-    // axi
-    .S_AXI_ACLK     (clk),
-    .S_AXI_ARESETN  (aresetn),
-    .S_AXI_AWADDR   (s00_axi_awaddr),
-    .S_AXI_AWPROT   (s00_axi_awprot),
-    .S_AXI_AWVALID  (s00_axi_awvalid),
-    .S_AXI_AWREADY  (s00_axi_awready),
-    .S_AXI_WDATA    (s00_axi_wdata),
-    .S_AXI_WSTRB    (s00_axi_wstrb),
-    .S_AXI_WVALID   (s00_axi_wvalid),
-    .S_AXI_WREADY   (s00_axi_wready),
-    .S_AXI_BRESP    (s00_axi_bresp),
-    .S_AXI_BVALID   (s00_axi_bvalid),
-    .S_AXI_BREADY   (s00_axi_bready),
-    .S_AXI_ARADDR   (s00_axi_araddr),
-    .S_AXI_ARPROT   (s00_axi_arprot),
-    .S_AXI_ARVALID  (s00_axi_arvalid),
-    .S_AXI_ARREADY  (s00_axi_arready),
-    .S_AXI_RDATA    (s00_axi_rdata),
-    .S_AXI_RRESP    (s00_axi_rresp),
-    .S_AXI_RVALID   (s00_axi_rvalid),
-    .S_AXI_RREADY   (s00_axi_rready)
+    .i_awvalid          (i_awvalid),
+    .i_awaddr           (i_awaddr),
+    .o_awready          (o_awready),
+
+    .i_wvalid           (i_wvalid),
+    .o_wready           (o_wready),
+    .i_wdata            (i_wdata),
+
+    .o_bvalid           (o_bvalid),
+    .i_bready           (i_bready),
+    .o_bresp            (o_bresp),
+
+    .i_arvalid          (i_arvalid),
+    .o_arready          (o_arready),
+    .i_araddr           (i_araddr),
+
+    .o_rvalid           (o_rvalid),
+    .i_rready           (i_rready),
+    .o_rresp            (o_rresp),
+    .o_rdata            (o_rdata),
+
+
+    // Simple Register Interface
+    .o_reg_address      (w_reg_address),
+    .i_reg_invalid_addr (r_reg_invalid_addr),
+
+    // Ingress Path (From Master)
+    .o_reg_in_rdy       (w_reg_in_rdy),
+    .i_reg_in_ack_stb   (r_reg_in_ack_stb),
+    .o_reg_in_data      (w_reg_in_data),
+
+    // Egress Path (To Master)
+    .o_reg_out_req      (w_reg_out_req),
+    .i_reg_out_rdy_stb  (r_reg_out_rdy_stb),
+    .i_reg_out_data     (r_reg_out_data)
 );
 
-// AXI Stream Bus S00_AXIS
-dtw_accel_S00_AXIS # ( 
-   .C_S_AXIS_TDATA_WIDTH(C_AXIS_TDATA_WIDTH)
-) dtw_accel_S00_AXIS_inst (
-    // dtw
-    .dtw_fifo_rden  (s00_axis_fifo_rden),
-    .dtw_fifo_dout  (s00_axis_fifo_dout),
-    .dtw_fifo_empty (s00_axis_fifo_empty),
 
-    // axis
-   .S_AXIS_ACLK     (axis_clk),
-   .S_AXIS_ARESETN  (axis_aresetn),
-   .S_AXIS_TREADY   (s00_axis_tready),
-   .S_AXIS_TDATA    (s00_axis_tdata),
-   .S_AXIS_TSTRB    (s00_axis_tstrb),
-   .S_AXIS_TLAST    (s00_axis_tlast),
-   .S_AXIS_TVALID   (s00_axis_tvalid)
+// AXIS src -> FIFO
+axis_2_fifo_adapter #(
+    .AXIS_DATA_WIDTH    (AXIS_DATA_WIDTH)
+) a2fa (
+    .i_axis_tuser       (i_axis_in_tuser),
+    .i_axis_tvalid      (i_axis_in_tvalid),
+    .o_axis_tready      (o_axis_in_tready),
+    .i_axis_tlast       (i_axis_in_tlast),
+    .i_axis_tdata       (i_axis_in_tdata),
+
+    .o_fifo_data        (w_fifo_w_data),
+    .o_fifo_w_stb       (w_fifo_w_stb),
+    .i_fifo_not_full    (w_fifo_not_full)
 );
 
-// AXI Stream Bus M00_AXIS
-dtw_accel_M00_AXIS #(
-    .C_M_AXIS_TDATA_WIDTH (C_AXIS_TDATA_WIDTH)
-) dtw_accel_M00_AXIS_inst (
-    // dtw
-    .dtw_fifo_wren  (m00_axis_dtw_fifo_wren),
-    .dtw_fifo_din   (m00_axis_dtw_fifo_din),
-    .dtw_fifo_full  (m00_axis_dtw_fifo_full),
+fifo #(
+    .DEPTH              (FIFO_DEPTH),
+    .WIDTH              (FIFO_DATA_WIDTH)
+) axis_fifo (
+    .clk                (i_axis_clk),
+    .rst                (w_axis_rst),
 
-    // axis
-    .M_AXIS_ACLK    (axis_clk),
-    .M_AXIS_ARESETN (axis_aresetn),
-    .M_AXIS_TVALID  (m00_axis_tvalid),
-    .M_AXIS_TDATA   (m00_axis_tdata),
-    .M_AXIS_TSTRB   (m00_axis_tstrb),
-    .M_AXIS_TLAST   (m00_axis_tlast),
-    .M_AXIS_TREADY  (m00_axis_tready)
+    .i_fifo_w_stb       (w_fifo_w_stb),
+    .i_fifo_w_data      (w_fifo_w_data),
+    .o_fifo_full        (w_fifo_full),
+    .o_fifo_not_full    (w_fifo_not_full),
+
+
+    .i_fifo_r_stb       (w_fifo_r_stb),
+    .o_fifo_r_data      (w_fifo_r_data),
+    .o_fifo_empty       (w_fifo_empty),
+    .o_fifo_not_empty   (w_fifo_not_empty)
 );
 
-// DTW core
-dtw_core #(
-    .dtw_dwidth (width),
-    .axi_dwidth (C_AXIS_TDATA_WIDTH),
-    .SQG_SIZE (SQG_SIZE)
-) inst_dtw_core (
-    // Main DTW signals
-    .clk            (axis_clk),
-    .rst            (s00_dtw_reset),
-    .rs             (s00_dtw_rs),
-    .ref_len        (s00_dtw_ref_len),
-    .op_mode        (s00_dtw_mode),
-    .busy           (s00_dtw_busy),
-    .load_done      (s00_dtw_load_done),
+// FIFO -> AXIS sink
+fifo_2_axis_adapter #(
+    .AXIS_DATA_WIDTH    (AXIS_DATA_WIDTH)
+)f2aa(
+    .o_fifo_r_stb       (w_fifo_r_stb),
+    .i_fifo_data        (w_fifo_r_data),
+    .i_fifo_not_empty   (w_fifo_not_empty),
 
-    // DTW FIFO signals -> to the inside world! (S00_AXIS)
-    .src_fifo_rden  (s00_axis_fifo_rden),
-    .src_fifo_empty (s00_axis_fifo_empty),
-    .src_fifo_data  (s00_axis_fifo_dout),
-
-    // DTW FIFO signals -> to the outside world! (M00_AXIS)
-    .sink_fifo_wren (m00_axis_dtw_fifo_wren),
-    .sink_fifo_full (m00_axis_dtw_fifo_full),
-    .sink_fifo_data (m00_axis_dtw_fifo_din),
-    
-    // Debug
-    .dbg_addrW_ref (w_dbg_addrW_ref),
-    .dbg_ref_dout   (w_dbg_ref_dout),
-    .dbg_curr_state (w_dbg_curr_state)
+    .o_axis_tuser       (o_axis_out_tuser),
+    .o_axis_tdata       (o_axis_out_tdata),
+    .o_axis_tvalid      (o_axis_out_tvalid),
+    .i_axis_tready      (i_axis_out_tready),
+    .o_axis_tlast       (o_axis_out_tlast)
 );
+
+
+/* ===============================
+ * asynchronous logic
+ * =============================== */
+assign w_axi_rst                      = INVERT_AXI_RESET  ? ~i_axi_rst    : i_axi_rst;
+assign w_axis_rst                     = INVERT_AXIS_RESET ? ~i_axis_rst   : i_axis_rst;
+assign w_version[`MAJOR_RANGE]        = `MAJOR_VERSION;
+assign w_version[`MINOR_RANGE]        = `MINOR_VERSION;
+assign w_version[`REVISION_RANGE]     = `REVISION;
+assign w_version[`VERSION_PAD_RANGE]  = 0;
+assign w_key                          = DATA_WIDTH'hca7cafe;
+
+
+/* ===============================
+ * synchronous logic
+ * =============================== */
+always @ (posedge i_axi_clk) begin
+    // De-assert Strobes
+    r_reg_in_ack_stb    <=  0;
+    r_reg_out_rdy_stb   <=  0;
+    r_reg_invalid_addr  <=  0;
+
+    if (w_axi_rst) begin
+        r_reg_out_data  <=  0;
+
+        // Reset registers
+        r_control       <=  0;
+        r_ref_len       <=  0;
+    end else begin
+        if (w_reg_in_rdy) begin
+            // M_AXI to here
+            case (w_reg_address)
+                REG_CONTROL: begin
+                    r_control <= w_reg_in_data;
+                end
+                REG_STATUS: begin
+                    // this reg stores status
+                end
+                REG_REF_LEN: begin
+                    r_ref_len <= w_reg_in_data;
+                end
+                REG_VERSION: begin
+                    // this reg stores version
+                end
+                REG_KEY: begin
+                    // this reg stores ca7cafe
+                end
+                default: begin // unknown address
+                    $display ("Unknown address: 0x%h", w_reg_address);
+                    r_reg_invalid_addr <= 1;
+                end
+            endcase
+            r_reg_in_ack_stb <= 1; // Tell AXI Slave we are done with the data
+        end else if (w_reg_out_req) begin
+            // Here to M_AXI
+            case (w_reg_address)
+                REG_CONTROL: begin
+                    r_reg_out_data <= r_control;
+                end
+                REG_STATUS: begin
+                    r_reg_out_data <= r_status;
+                end
+                REG_REF_LEN: begin
+                    r_reg_out_data <= r_ref_len;
+                end
+                REG_VERSION: begin
+                    r_reg_out_data <= w_version;
+                end
+                REG_KEY: begin
+                    r_reg_out_data <= w_key;
+                default: begin // Unknown address
+                    r_reg_out_data      <= 32'h0;
+                    r_reg_invalid_addr  <= 1;
+                end
+            endcase
+            r_reg_out_rdy_stb <= 1; // Tell AXI Slave to send back this packet
+        end
+    end
+end
 
 endmodule
