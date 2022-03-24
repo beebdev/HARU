@@ -1,62 +1,41 @@
 `timescale 1 ns / 1 ps
 
 module dtw_core #(
-    parameter dtw_dwidth = 16,  // Data width
-    parameter axi_dwidth = 32,  // AXI data width
-    parameter SQG_SIZE = 250,   // Squiggle size
-    parameter init_ref = 1
+    parameter WIDTH         = 16,   // Data width
+    parameter AXIS_WIDTH    = 32,   // AXI data width
+    parameter SQG_SIZE      = 250,  // Squiggle size
+    parameter REF_INIT      = 0
 )(
     // Main DTW signals
-    input wire clk, rst, rs,
-    input wire [axi_dwidth-1 : 0] ref_len,
-    input wire op_mode,              // Mode 0: Reference, 1: Query
-    output reg busy,                 // Idle: 0, else: 1
-    output wire load_done,
+    input   wire                    clk,
+    input   wire                    rst,
+    input   wire                    rs,
+
+    input   wire [AXIS_WIDTH-1 : 0] ref_len,
+    input   wire                    op_mode,            // Mode 0: Reference, 1: Query
+    output  reg                     busy,               // Idle: 0, else: 1
+    output  wire                    load_done,
 
     // src FIFO signals
-    output reg src_fifo_rden,                   // Src FIFO Read enable
-    input wire src_fifo_empty,                   // Src FIFO Empty
-    input wire [31:0] src_fifo_data,             // Src FIFO Data
+    output  reg                     src_fifo_rden,      // Src FIFO Read enable
+    input   wire                    src_fifo_empty,     // Src FIFO Empty
+    input   wire [31:0]             src_fifo_data,      // Src FIFO Data
 
     // sink FIFO signals
-    output reg sink_fifo_wren,                  // Sink FIFO Write enable
-    input wire sink_fifo_full,                   // Sink FIFO Full
-    output reg [31:0] sink_fifo_data,             // Src FIFO Data
-    
-    // Debug
-    output wire [31:0] dbg_addrW_ref,
-    output reg [31:0] dbg_ref_dout,
-    output wire [2:0] dbg_curr_state
+    output  reg                     sink_fifo_wren,     // Sink FIFO Write enable
+    input   wire                    sink_fifo_full,     // Sink FIFO Full
+    output  reg [31:0]              sink_fifo_data     // Src FIFO Data
 );
 
 /* ===============================
- * Signal declarations
+ * local parameters
  * =============================== */
-reg r_load_done;
-
-// Ref mem signals
-reg [14:0] addrR_ref;                   // Read address for refmem 
-reg [14:0] addrW_ref;                   // Write address for refmem
-reg wren_ref;                           // Write enable for refmem
-wire [dtw_dwidth-1:0] dataout_ref;      // Reference data
-wire [dtw_dwidth-1:0] w_dbg_ref_dout;
-
-// DTW datapath signals
-reg dp_rst;                             // Reset for core
-reg dp_running;                         // Run enable for core
-wire dp_done;                            // Core done
-reg [31:0] curr_qid;                    // Current query id
-wire [dtw_dwidth-1:0] curr_minval;      // Current minimum value
-wire [31:0] curr_position;              // Current best position
-
 // Operation mode
-localparam // operation mode
+localparam
     MODE_NORMAL = 1'b0,
     MODE_LOAD_REF = 1'b1;
 
-// State variables
-reg [2:0] r_state;
-//reg [2:0] r_next_state;
+// State machine states
 localparam [2:0] // n states
     IDLE = 0,
     REF_STALL = 1,
@@ -65,29 +44,74 @@ localparam [2:0] // n states
     DTW_Q_RUN = 4,
     DTW_Q_DONE = 5;
 
+/* ===============================
+ * registers/wires
+ * =============================== */
+reg r_load_done;
+
+// Ref mem signals
+reg  [14:0]         addrR_ref;                   // Read address for refmem 
+reg  [14:0]         addrW_ref;                   // Write address for refmem
+reg                 wren_ref;                           // Write enable for refmem
+wire [WIDTH-1:0]    dataout_ref;      // Reference data
+wire [WIDTH-1:0]    w_dbg_ref_dout;
+
+// DTW datapath signals
+reg                 dp_rst;                             // Reset for core
+reg                 dp_running;                         // Run enable for core
+wire                dp_done;                            // Core done
+reg  [31:0]         curr_qid;                    // Current query id
+wire [WIDTH-1:0]    curr_minval;      // Current minimum value
+wire [31:0]         curr_position;              // Current best position
+
+// State machine variables
+reg [2:0] r_state;
+
 // Others
 reg [1:0] stall_counter;
 
-assign load_done = r_load_done;
+/* ===============================
+ * submodules
+ * =============================== */
+// Reference memory
+dtw_core_ref_mem #(
+    .width (WIDTH),
+    .initalize (REF_INIT)
+) inst_dtw_core_ref_mem (
+    .clk        (clk),
+    .addrR      (addrR_ref),
+    .addrW      (addrW_ref),
+    .wren       (wren_ref),
+    .datain     (src_fifo_data[15:0]),
+    .dataout    (dataout_ref)
+);
 
-// debug
-assign dbg_curr_state = r_state;
-assign dbg_addrW_ref = {19'b0, addrW_ref};
-
-always @(posedge clk) begin
-    if (addrR_ref == 0) begin
-        dbg_ref_dout <= {19'b0, dataout_ref};
-    end else begin
-        dbg_ref_dout <= 32'hcafe;
-    end
-end
-
+// DTW datapath
+dtw_core_datapath #(
+    .width(WIDTH),
+    .SQG_SIZE(SQG_SIZE)
+) inst_dtw_core_datapath (
+    .clk            (clk),
+    .rst            (dp_rst),
+    .running        (dp_running),
+    .Input_squiggle (src_fifo_data[15:0]),
+    .Rword          (dataout_ref),
+    .ref_len        (ref_len),
+    .minval         (curr_minval),
+    .position       (curr_position),
+    .sq_load        (sq_load),
+    .done           (dp_done)
+);
 
 /* ===============================
- * Core FSM
+ * asynchronous logic
  * =============================== */
+assign load_done = r_load_done;
 
-// State change
+/* ===============================
+ * synchronous logic
+ * =============================== */
+// FSM State change
 always @(posedge clk) begin
     if (rst) begin
         r_state <= IDLE;
@@ -149,59 +173,61 @@ always @(posedge clk) begin
     end
 end
 
-// state machine output
+// FSM output
 always @(posedge clk) begin
     case (r_state)
         IDLE: begin
-            busy <= 0;
-            src_fifo_rden <= 0;
-            sink_fifo_wren <= 0;
-            addrR_ref <= 0;
-            addrW_ref <= 0;
-            dp_rst <= 1;
-            dp_running <= 0;
-            stall_counter <= 0;
-            wren_ref <= 0;
+            busy            <= 0;
+            src_fifo_rden   <= 0;
+            sink_fifo_wren  <= 0;
+            addrR_ref       <= 0;
+            addrW_ref       <= 0;
+            dp_rst          <= 1;
+            dp_running      <= 0;
+            stall_counter   <= 0;
+            wren_ref        <= 0;
         end
         REF_STALL: begin
-            busy <= 1;
-            src_fifo_rden <= 1;
-            sink_fifo_wren <= 0;
-            dp_rst <= 1;
-            dp_running <= 0;
-            stall_counter <= 0;
-            wren_ref <= 1;
+            busy            <= 1;
+            src_fifo_rden   <= 1;
+            sink_fifo_wren  <= 0;
+            dp_rst          <= 1;
+            dp_running      <= 0;
+            stall_counter   <= 0;
+            wren_ref        <= 1;
         end
         REF_LOAD: begin
-            busy <= 1;
-            src_fifo_rden <= 1; // Read reference
-            sink_fifo_wren <= 0;
-            dp_rst <= 1;
-            dp_running <= 0;
-            stall_counter <= 0;
+            busy            <= 1;
+            src_fifo_rden   <= 1; // Read reference
+            sink_fifo_wren  <= 0;
+            dp_rst          <= 1;
+            dp_running      <= 0;
+            stall_counter   <= 0;
+
             if (!src_fifo_empty && src_fifo_rden) begin
-                addrW_ref <= addrW_ref + 1; // Increment write pointer
-                wren_ref <= 1;              // FIFO not full -> write enable
+                addrW_ref   <= addrW_ref + 1; // Increment write pointer
+                wren_ref    <= 1;              // FIFO not full -> write enable
             end else begin
-                wren_ref <= 0;              // FIFO full -> don't write
+                wren_ref    <= 0;              // FIFO full -> don't write
             end
         end
         DTW_Q_INIT: begin
-            busy <= 1;
-            src_fifo_rden <= 1; // Read enable -> read id
-            sink_fifo_wren <= 0;
-            dp_rst <= 0;
-            dp_running <= 1;
-            stall_counter <= 0;
+            busy            <= 1;
+            src_fifo_rden   <= 1; // Read enable -> read id
+            sink_fifo_wren  <= 0;
+            dp_rst          <= 0;
+            dp_running      <= 1;
+            stall_counter   <= 0;
+
             if (!src_fifo_empty) begin
-                curr_qid <= src_fifo_data;
+                curr_qid    <= src_fifo_data;
             end
         end
         DTW_Q_RUN: begin
-            busy <= 1;
-            sink_fifo_wren <= 0;
-            dp_rst <= 0;
-            stall_counter <= 0;
+            busy            <= 1;
+            sink_fifo_wren  <= 0;
+            dp_rst          <= 0;
+            stall_counter   <= 0;
                 
             if (!src_fifo_empty) begin
                 if (addrR_ref < SQG_SIZE) begin
@@ -209,20 +235,21 @@ always @(posedge clk) begin
                 end else begin
                     src_fifo_rden <= 0;
                 end
-                dp_running <= 1;
-                addrR_ref <= addrR_ref + 1;
+                dp_running  <= 1;
+                addrR_ref   <= addrR_ref + 1;
             end else begin
-                dp_running <= 0;
+                dp_running  <= 0;
             end
         end
         DTW_Q_DONE: begin
-            busy <= 1;
-            src_fifo_rden <= 0; // Don't read enable
-            dp_rst <= 0;
-            dp_running <= 0;
+            busy            <= 1;
+            src_fifo_rden   <= 0; // Don't read enable
+            dp_rst          <= 0;
+            dp_running      <= 0;
 
             // Serialise output
-            sink_fifo_wren <= 1;
+            sink_fifo_wren  <= 1;
+
             if (!sink_fifo_full) begin
                 stall_counter <= stall_counter + 1;
                 if (stall_counter == 0) begin
@@ -236,39 +263,5 @@ always @(posedge clk) begin
         end
     endcase
 end
-
-/* ===============================
- * Module instantiation
- * =============================== */
-
-/* Reference memory */
-dtw_core_ref_mem #(
-    .width (dtw_dwidth),
-    .initalize (init_ref)
-) inst_dtw_core_ref_mem (
-    .clk        (clk),
-    .addrR      (addrR_ref),
-    .addrW      (addrW_ref),
-    .wren       (wren_ref),
-    .datain     (src_fifo_data[15:0]),
-    .dataout    (dataout_ref)
-);
-
-/* DTW datapath */
-dtw_core_datapath #(
-    .width(dtw_dwidth),
-    .SQG_SIZE(SQG_SIZE)
-) inst_dtw_core_datapath (
-    .clk            (clk),
-    .rst            (dp_rst),
-    .running        (dp_running),
-    .Input_squiggle (src_fifo_data[15:0]),
-    .Rword          (dataout_ref),
-    .ref_len        (ref_len),
-    .minval         (curr_minval),
-    .position       (curr_position),
-    .sq_load        (sq_load),
-    .done           (dp_done)
-);
 
 endmodule

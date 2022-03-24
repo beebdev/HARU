@@ -33,10 +33,10 @@ class AXISSource:
         self.rst.setimmediatevalue(0)
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
-        self.rst <= 1
+        self.rst.value = 1
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
-        self.rst <= 0
+        self.rst.value = 0
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
 
@@ -83,10 +83,10 @@ class AXISSink:
         self.rst.setimmediatevalue(0)
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
-        self.rst <= 1
+        self.rst.value = 1
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
-        self.rst <= 0
+        self.rst.value = 0
         await RisingEdge(self.clk)
         await RisingEdge(self.clk)
 

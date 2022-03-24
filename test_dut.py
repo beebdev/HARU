@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 import cocotb
 import logging
 from cocotb.result import TestFailure
@@ -27,11 +28,11 @@ def setup_dut(dut):
 
 @cocotb.coroutine
 def reset_dut(dut):
-    dut.rst <= 1
-    dut.axis_rst <= 1
+    dut.rst.value = 1
+    dut.axis_rst.value = 1
     yield Timer(CLK_PERIOD * AXIS_CLK_PERIOD * 2)
-    dut.rst <= 0
-    dut.axis_rst <= 0
+    dut.rst.value = 0
+    dut.axis_rst.value = 0
     yield Timer(CLK_PERIOD * AXIS_CLK_PERIOD * 2)
 
 @cocotb.test(skip = False)
@@ -46,7 +47,7 @@ def test_read_version(dut):
         Read from the version register
     """
     dut._log.setLevel(logging.WARNING)
-    dut.test_id <= 0
+    dut.test_id.value = 0
     setup_dut(dut)
     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
     yield reset_dut(dut)
@@ -72,19 +73,21 @@ def test_write_control(dut):
     Expected Results:
         Read from the version register
     """
+    ## Init
     dut._log.setLevel(logging.WARNING)
-    dut.test_id <= 1
+    dut.test_id.value = 1
     setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
     yield reset_dut(dut)
 
+    ## Body
     my_control = 0x01234567
-    yield demo_axi_streams.set_control(my_control)
-    dut_control = dut.dut.r_control.value
-    dut._log.debug ("Control: 0x%08X" % dut.dut.r_control.value)
+    yield tester.set_control(my_control)
+    assert dut.dut.r_control.value == my_control
+
+    ## Cleanup
     yield Timer(CLK_PERIOD * 20)
     dut._log.debug("Done")
-    assert dut_control == my_control
 
 @cocotb.test(skip = False)
 def test_read_control(dut):
@@ -97,45 +100,160 @@ def test_read_control(dut):
     Expected Results:
         Read from the version register
     """
+    ## Init
     dut._log.setLevel(logging.WARNING)
-    dut.test_id <= 2
+    dut.test_id.value = 2
     setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
     yield reset_dut(dut)
 
+    ## body
     my_control = 0xFEDCBA98
     dut.dut.r_control.value = my_control
-    control = yield demo_axi_streams.get_control()
-    dut._log.info ("Control: 0x%08X" % control)
+    control = yield tester.get_control()
+    assert control == my_control
+    
+    ## cleanup
     yield Timer(CLK_PERIOD * 20)
     dut._log.info("Done")
-    assert control == my_control
 
 @cocotb.test(skip = False)
-def test_axis_write(dut):
+def test_ref_len(dut):
     """
     Description:
-        Read the entire control register
-
+        Set the ref_len register and readt the register
+    
     Test ID: 3
 
     Expected Results:
-        Read from the version register
+        Write value equals to the read value
     """
+    ## Init
     dut._log.setLevel(logging.WARNING)
-    dut.test_id <= 3
+    dut.test_id.value = 3
     setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    axis_source = AXISSource(dut, "axis_in", dut.axis_clk, dut.axis_rst)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
     yield reset_dut(dut)
 
-    yield axis_source.reset()
-    yield RisingEdge(dut.clk)
-    #yield reset_dut(dut)
-    data = [range(16)]
-    yield axis_source.send_raw_data(data)
+    ## Body
+    my_ref_len = 0x12345678
+    yield tester.set_ref_len(my_ref_len)
+    assert dut.dut.r_ref_len.value == my_ref_len
+    read_ref_len = yield tester.get_ref_len()
+    assert read_ref_len == my_ref_len
 
+    ## cleanup
+    yield Timer(CLK_PERIOD * 20)
+    dut._log.debug("Done")
+
+@cocotb.test(skip = False)
+def test_get_key(dut):
+    """
+    Description:
+        Get the key register
+    
+    Test ID: 4
+
+    Expected Results:
+        key register == 0x0ca7cafe
+    """
+    ## Init
+    dut._log.setLevel(logging.WARNING)
+    dut.test_id.value = 4
+    setup_dut(dut)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    yield reset_dut(dut)
+
+    ## Body
+    my_key = 0x0ca7cafe
+    read_key = yield tester.get_key()
+    assert read_key == my_key
+
+    ## cleanup
+    yield Timer(CLK_PERIOD * 20)
+    dut._log.debug("Done")
+
+@cocotb.test(skip = False)
+def test_load_ref(dut):
+    """
+    Description:
+        Test the reference loading functionality
+
+    Test ID: 5
+
+    Expected Results:
+        After reset ref mem should be all zeros.
+        After loading, the reference should be loaded with
+        whatever is loaded into dtw-core.
+    """
+    ## Init
+    dut._log.setLevel(logging.WARNING)
+    dut.test_id.value = 5
+    setup_dut(dut)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    axis_source = AXISSource(dut, "axis_in", dut.axis_clk, dut.axis_rst)
+    yield reset_dut(dut)
+    yield axis_source.reset()
+
+    ## Body
+    # Check first few cells of ref mem
+    t0_ref_mem_0 = dut.dut.dc.inst_dtw_core_ref_mem.MEM[0].value
+    assert t0_ref_mem_0 == 0 # before loading it should be zero
+    
+    # Set opmode
+    yield tester.set_opmode(1) # load ref mode
+    cr = yield tester.get_control()
+    assert dut.dut.w_dtw_core_mode.value == 1
+    assert cr == (1 << 2)
+
+    ## Set ref_len
+    my_ref_len = 200
+    yield tester.set_ref_len(my_ref_len)
+    assert dut.dut.r_ref_len.value == my_ref_len
+    dut_ref_len = yield tester.get_ref_len()
+    assert my_ref_len == dut_ref_len
+
+    ## set run
+    yield tester.set_rs(1)
+    assert dut.dut.w_dtw_core_rs.value == 1
+    assert dut.dut.w_src_fifo_empty == 1
+
+    sdata = [0, 1, 2, 3, 4] * 40
+    yield axis_source.send_raw_data(sdata)
     yield Timer(CLK_PERIOD * 100)
+
+    for i in range(10):
+        print("mem[{}]= {}".format(i, dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value))
+
+    t1_ref_mem_0 = dut.dut.dc.inst_dtw_core_ref_mem.MEM[0].value
+    assert t1_ref_mem_0 == sdata[0]
+
+
+# @cocotb.test(skip = False)
+# def test_axis_write(dut):
+#     """
+#     Description:
+#         Read the entire control register
+
+#     Test ID: 5
+
+#     Expected Results:
+#         Read from the version register
+#     """
+#     dut._log.setLevel(logging.WARNING)
+#     dut.test_id.value = 5
+#     setup_dut(dut)
+#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+#     axis_source = AXISSource(dut, "axis_in", dut.axis_clk, dut.axis_rst)
+#     yield reset_dut(dut)
+
+#     yield axis_source.reset()
+#     yield RisingEdge(dut.clk)
+#     #yield reset_dut(dut)
+#     data = [range(16)]
+#     yield axis_source.send_raw_data(data)
+
+#     yield Timer(CLK_PERIOD * 100)
 
 
 '''
@@ -149,188 +267,188 @@ is 10 elements long and then you used a timer to delay the start by
 10th CLOCK cycle but will happen on the 6th cycle of the data transaction
 '''
 
-@cocotb.test(skip = False)
-def test_axis_write_and_read(dut):
-    """
-    Description:
-        Read the entire control register
+# @cocotb.test(skip = False)
+# def test_axis_write_and_read(dut):
+#     """
+#     Description:
+#         Read the entire control register
 
-    Test ID: 4
+#     Test ID: 6
 
-    Expected Results:
-        Read from the version register
-    """
-    dut._log.setLevel(logging.WARNING)
-    #dut._log.setLevel(logging.INFO)
-    DATA_COUNT = 16
-    dut.test_id <= 4
-    setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-    axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-    yield reset_dut(dut)
-    #yield axis_source.reset()
-    #yield axis_sink.reset()
-    sdata = [list(range(DATA_COUNT))]
+#     Expected Results:
+#         Read from the version register
+#     """
+#     dut._log.setLevel(logging.WARNING)
+#     #dut._log.setLevel(logging.INFO)
+#     DATA_COUNT = 16
+#     dut.test_id.value = 6
+#     setup_dut(dut)
+#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
+#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
+#     yield reset_dut(dut)
+#     #yield axis_source.reset()
+#     #yield axis_sink.reset()
+#     sdata = [list(range(DATA_COUNT))]
 
-    cocotb.fork(axis_sink.receive())
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    yield axis_source.send_raw_data(sdata)
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    rdata = axis_sink.read_data()
-    assert len(rdata) == len(sdata)
-    for i in range(len(rdata)):
-        assert len(rdata[i]) == len(sdata[i])
+#     cocotb.fork(axis_sink.receive())
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     yield axis_source.send_raw_data(sdata)
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     rdata = axis_sink.read_data()
+#     assert len(rdata) == len(sdata)
+#     for i in range(len(rdata)):
+#         assert len(rdata[i]) == len(sdata[i])
 
-    for i in range(len(rdata)):
-        for j in rdata[i]:
-            assert rdata[i][j] == sdata[i][j]
-
-
-@cocotb.test(skip = False)
-def test_axis_write_and_read_with_source_idle(dut):
-    """
-    Description:
-        Read the entire control register
-
-    Test ID: 5
-
-    Expected Results:
-        Read from the version register
-    """
-    dut._log.setLevel(logging.WARNING)
-    #dut._log.setLevel(logging.INFO)
-    DATA_COUNT = 16
-    dut.test_id <= 5
-    setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-    axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-    yield reset_dut(dut)
-    #yield axis_source.reset()
-    #yield axis_sink.reset()
-    sdata = [list(range(DATA_COUNT))]
-    idle_list = [0] * DATA_COUNT
-    idle_list[1] = 1
-    idle_list[2] = 1
-    idle_list[4] = 1
-    idle_list[9] = 1
-
-    axis_source.insert_idle_list(idle_list)
-
-    cocotb.fork(axis_sink.receive())
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    yield axis_source.send_raw_data(sdata)
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    rdata = axis_sink.read_data()
-    assert len(rdata) == len(sdata)
-    for i in range(len(rdata)):
-        assert len(rdata[i]) == len(sdata[i])
-
-    for i in range(len(rdata)):
-        for j in rdata[i]:
-            assert rdata[i][j] == sdata[i][j]
+#     for i in range(len(rdata)):
+#         for j in rdata[i]:
+#             assert rdata[i][j] == sdata[i][j]
 
 
-@cocotb.test(skip = False)
-def test_axis_write_and_read_with_sink_back_preassure(dut):
-    """
-    Description:
-        Read the entire control register
+# @cocotb.test(skip = False)
+# def test_axis_write_and_read_with_source_idle(dut):
+#     """
+#     Description:
+#         Read the entire control register
 
-    Test ID: 6
+#     Test ID: 7
 
-    Expected Results:
-        Read from the version register
-    """
-    dut._log.setLevel(logging.WARNING)
-    #dut._log.setLevel(logging.INFO)
-    DATA_COUNT = 16
-    dut.test_id <= 6
-    setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-    axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-    yield reset_dut(dut)
-    #yield axis_source.reset()
-    #yield axis_sink.reset()
+#     Expected Results:
+#         Read from the version register
+#     """
+#     dut._log.setLevel(logging.WARNING)
+#     #dut._log.setLevel(logging.INFO)
+#     DATA_COUNT = 16
+#     dut.test_id.value = 7
+#     setup_dut(dut)
+#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
+#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
+#     yield reset_dut(dut)
+#     #yield axis_source.reset()
+#     #yield axis_sink.reset()
+#     sdata = [list(range(DATA_COUNT))]
+#     idle_list = [0] * DATA_COUNT
+#     idle_list[1] = 1
+#     idle_list[2] = 1
+#     idle_list[4] = 1
+#     idle_list[9] = 1
 
-    sdata = [list(range(DATA_COUNT))]
+#     axis_source.insert_idle_list(idle_list)
 
-    # Adjust sink back pressure here
-    bp_list = [0] * DATA_COUNT
+#     cocotb.fork(axis_sink.receive())
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     yield axis_source.send_raw_data(sdata)
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     rdata = axis_sink.read_data()
+#     assert len(rdata) == len(sdata)
+#     for i in range(len(rdata)):
+#         assert len(rdata[i]) == len(sdata[i])
 
-    bp_list[DATA_COUNT - 1] = 1
-    # Apply back pressure after the 2nd value is read
-    bp_list[2] = 1
-    axis_sink.insert_backpreassure_list(bp_list)
-
-    cocotb.fork(axis_sink.receive())
-    yield RisingEdge(dut.clk)
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    yield axis_source.send_raw_data(sdata)
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    rdata = axis_sink.read_data()
-    assert len(rdata) == len(sdata)
-    for i in range(len(rdata)):
-        assert len(rdata[i]) == len(sdata[i])
-
-    for i in range(len(rdata)):
-        for j in rdata[i]:
-            assert rdata[i][j] == sdata[i][j]
-
-@cocotb.test(skip = False)
-def test_axis_write_and_read_with_sink_idle_and_back_preassure(dut):
-    """
-    Description:
-        Read the entire control register
-
-    Test ID: 7
-
-    Expected Results:
-        Read from the version register
-    """
-    dut._log.setLevel(logging.WARNING)
-    #dut._log.setLevel(logging.INFO)
-    DATA_COUNT = 16
-    dut.test_id <= 7
-    setup_dut(dut)
-    demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-    axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-    yield reset_dut(dut)
-
-    sdata = [list(range(DATA_COUNT))]
-
-    # Adjust sink back pressure here
-    bp_list = [0] * DATA_COUNT
-
-    bp_list[DATA_COUNT - 1] = 1
-    # Apply back pressure after the 2nd value is read
-    bp_list[2] = 1
-    # Apply back pressure after the 4th value is read
-    #bp_list[4] = 1
+#     for i in range(len(rdata)):
+#         for j in rdata[i]:
+#             assert rdata[i][j] == sdata[i][j]
 
 
-    # Adjust source idle here
-    idle_list = [0] * DATA_COUNT
-    # Insert an IDLE at clock 1
-    idle_list[1] = 1
+# @cocotb.test(skip = False)
+# def test_axis_write_and_read_with_sink_back_preassure(dut):
+#     """
+#     Description:
+#         Read the entire control register
 
-    axis_sink.insert_backpreassure_list(bp_list)
-    axis_source.insert_idle_list(idle_list)
+#     Test ID: 8
 
-    cocotb.fork(axis_sink.receive())
+#     Expected Results:
+#         Read from the version register
+#     """
+#     dut._log.setLevel(logging.WARNING)
+#     #dut._log.setLevel(logging.INFO)
+#     DATA_COUNT = 16
+#     dut.test_id.value = 8
+    # setup_dut(dut)
+    # demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    # axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
+    # axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
+    # yield reset_dut(dut)
+    # #yield axis_source.reset()
+    # #yield axis_sink.reset()
 
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    yield axis_source.send_raw_data(sdata)
-    yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    rdata = axis_sink.read_data()
-    assert len(rdata) == len(sdata)
-    for i in range(len(rdata)):
-        assert len(rdata[i]) == len(sdata[i])
+    # sdata = [list(range(DATA_COUNT))]
 
-    for i in range(len(rdata)):
-        for j in rdata[i]:
-            assert rdata[i][j] == sdata[i][j]
+    # # Adjust sink back pressure here
+    # bp_list = [0] * DATA_COUNT
+
+    # bp_list[DATA_COUNT - 1] = 1
+    # # Apply back pressure after the 2nd value is read
+    # bp_list[2] = 1
+    # axis_sink.insert_backpreassure_list(bp_list)
+
+    # cocotb.fork(axis_sink.receive())
+    # yield RisingEdge(dut.clk)
+    # yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+    # yield axis_source.send_raw_data(sdata)
+    # yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+    # rdata = axis_sink.read_data()
+    # assert len(rdata) == len(sdata)
+    # for i in range(len(rdata)):
+    #     assert len(rdata[i]) == len(sdata[i])
+
+    # for i in range(len(rdata)):
+    #     for j in rdata[i]:
+    #         assert rdata[i][j] == sdata[i][j]
+
+# @cocotb.test(skip = False)
+# def test_axis_write_and_read_with_sink_idle_and_back_preassure(dut):
+#     """
+#     Description:
+#         Read the entire control register
+
+#     Test ID: 9
+
+#     Expected Results:
+#         Read from the version register
+#     """
+#     dut._log.setLevel(logging.WARNING)
+#     #dut._log.setLevel(logging.INFO)
+#     DATA_COUNT = 16
+#     dut.test_id.value = 9
+#     setup_dut(dut)
+#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
+#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
+#     yield reset_dut(dut)
+
+#     sdata = [list(range(DATA_COUNT))]
+
+#     # Adjust sink back pressure here
+#     bp_list = [0] * DATA_COUNT
+
+#     bp_list[DATA_COUNT - 1] = 1
+#     # Apply back pressure after the 2nd value is read
+#     bp_list[2] = 1
+#     # Apply back pressure after the 4th value is read
+#     #bp_list[4] = 1
+
+
+#     # Adjust source idle here
+#     idle_list = [0] * DATA_COUNT
+#     # Insert an IDLE at clock 1
+#     idle_list[1] = 1
+
+#     axis_sink.insert_backpreassure_list(bp_list)
+#     axis_source.insert_idle_list(idle_list)
+
+#     cocotb.fork(axis_sink.receive())
+
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     yield axis_source.send_raw_data(sdata)
+#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
+#     rdata = axis_sink.read_data()
+#     assert len(rdata) == len(sdata)
+#     for i in range(len(rdata)):
+#         assert len(rdata[i]) == len(sdata[i])
+
+#     for i in range(len(rdata)):
+#         for j in rdata[i]:
+#             assert rdata[i][j] == sdata[i][j]
 

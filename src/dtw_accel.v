@@ -16,11 +16,8 @@ module dtw_accel #(
     parameter AXIS_DATA_WIDTH       = 32,
     parameter AXIS_KEEP_WIDTH       = (AXIS_DATA_WIDTH / 8),
     parameter AXIS_DATA_USER_WIDTH  = 0,
-    parameter FIFO_DATA_WIDTH       = AXIS_DATA_WIDTH + 1 + 1,
-    //XXX Must be a power of 2
-    parameter FIFO_DEPTH            = 4,
-    //parameter FIFO_DEPTH          = 8,
-    //parameter FIFO_DEPTH          = 16,
+    parameter FIFO_DATA_WIDTH       = AXIS_DATA_WIDTH, // No + 2
+    parameter FIFO_DEPTH            = 4, // 8, 16 // Has to be power of 2
     parameter INVERT_AXI_RESET      = 1,
     parameter INVERT_AXIS_RESET     = 1
 )(
@@ -53,7 +50,6 @@ module dtw_accel #(
     output wire [1:0]                       o_rresp,
     output wire [DATA_WIDTH - 1: 0]         o_rdata,
 
-
     // AXI Stream
     input  wire                             i_axis_clk,
     input  wire                             i_axis_rst,
@@ -63,21 +59,19 @@ module dtw_accel #(
     input  wire                             i_axis_in_tvalid,
     output wire                             o_axis_in_tready,
     input  wire                             i_axis_in_tlast,
-    input  wire   [AXIS_DATA_WIDTH - 1:0]   i_axis_in_tdata,
-
+    input  wire [AXIS_DATA_WIDTH - 1:0]     i_axis_in_tdata,
 
     // Output AXI Stream
     output wire                             o_axis_out_tuser,
     output wire                             o_axis_out_tvalid,
     input  wire                             i_axis_out_tready,
     output wire                             o_axis_out_tlast,
-    output wire    [AXIS_DATA_WIDTH - 1:0]  o_axis_out_tdata
+    output wire [AXIS_DATA_WIDTH - 1:0]     o_axis_out_tdata
 );
 
 /* ===============================
  * local parameters
  * =============================== */
-
 // Address Map
 localparam  REG_CONTROL      = 0 << 2;
 localparam  REG_STATUS       = 1 << 2;
@@ -109,17 +103,38 @@ reg   [DATA_WIDTH - 1 : 0]      r_control;
 reg   [DATA_WIDTH - 1 : 0]      r_status;
 reg   [DATA_WIDTH - 1 : 0]      r_ref_len;
 wire  [DATA_WIDTH - 1 : 0]      w_version;
+wire  [DATA_WIDTH - 1 : 0]      w_key;
 
-// FIFO
-wire  [FIFO_DATA_WIDTH - 1:0]   w_fifo_w_data;
-wire                            w_fifo_w_stb;
-wire                            w_fifo_full;
-wire                            w_fifo_not_full;
+// Control Register bits
+wire                            w_dtw_core_rst;
+wire                            w_dtw_core_rs;
+wire                            w_dtw_core_mode;
 
-wire  [FIFO_DATA_WIDTH - 1:0]   w_fifo_r_data;
-wire                            w_fifo_r_stb;
-wire                            w_fifo_empty;
-wire                            w_fifo_not_empty;
+// Status Register bits
+wire                            w_dtw_core_busy;
+wire                            w_dtw_core_load_done;
+
+// Src FIFO
+wire  [FIFO_DATA_WIDTH - 1:0]   w_src_fifo_w_data;
+wire                            w_src_fifo_w_stb;
+wire                            w_src_fifo_full;
+wire                            w_src_fifo_not_full;
+
+wire  [FIFO_DATA_WIDTH - 1:0]   w_src_fifo_r_data;
+wire                            w_src_fifo_r_stb;
+wire                            w_src_fifo_empty;
+wire                            w_src_fifo_not_empty;
+
+// Sink FIFO
+wire  [FIFO_DATA_WIDTH - 1:0]   w_sink_fifo_w_data;
+wire                            w_sink_fifo_w_stb;
+wire                            w_sink_fifo_full;
+wire                            w_sink_fifo_not_full;
+
+wire  [FIFO_DATA_WIDTH - 1:0]   w_sink_fifo_r_data;
+wire                            w_sink_fifo_r_stb;
+wire                            w_sink_fifo_empty;
+wire                            w_sink_fifo_not_empty;
 
 /* ===============================
  * submodules
@@ -170,7 +185,7 @@ axi_lite_slave #(
 );
 
 
-// AXIS src -> FIFO
+// AXIS src -> src FIFO
 axis_2_fifo_adapter #(
     .AXIS_DATA_WIDTH    (AXIS_DATA_WIDTH)
 ) a2fa (
@@ -180,37 +195,78 @@ axis_2_fifo_adapter #(
     .i_axis_tlast       (i_axis_in_tlast),
     .i_axis_tdata       (i_axis_in_tdata),
 
-    .o_fifo_data        (w_fifo_w_data),
-    .o_fifo_w_stb       (w_fifo_w_stb),
-    .i_fifo_not_full    (w_fifo_not_full)
+    .o_fifo_data        (w_src_fifo_w_data),
+    .o_fifo_w_stb       (w_src_fifo_w_stb),
+    .i_fifo_not_full    (w_src_fifo_not_full)
 );
 
 fifo #(
     .DEPTH              (FIFO_DEPTH),
     .WIDTH              (FIFO_DATA_WIDTH)
-) axis_fifo (
+) src_fifo (
     .clk                (i_axis_clk),
     .rst                (w_axis_rst),
 
-    .i_fifo_w_stb       (w_fifo_w_stb),
-    .i_fifo_w_data      (w_fifo_w_data),
-    .o_fifo_full        (w_fifo_full),
-    .o_fifo_not_full    (w_fifo_not_full),
+    .i_fifo_w_stb       (w_src_fifo_w_stb),
+    .i_fifo_w_data      (w_src_fifo_w_data),
+    .o_fifo_full        (w_src_fifo_full),
+    .o_fifo_not_full    (w_src_fifo_not_full),
 
-
-    .i_fifo_r_stb       (w_fifo_r_stb),
-    .o_fifo_r_data      (w_fifo_r_data),
-    .o_fifo_empty       (w_fifo_empty),
-    .o_fifo_not_empty   (w_fifo_not_empty)
+    .i_fifo_r_stb       (w_src_fifo_r_stb),
+    .o_fifo_r_data      (w_src_fifo_r_data),
+    .o_fifo_empty       (w_src_fifo_empty),
+    .o_fifo_not_empty   (w_src_fifo_not_empty)
 );
 
-// FIFO -> AXIS sink
+// DTW core
+dtw_core #(
+    .WIDTH              (16),
+    .AXIS_WIDTH         (AXIS_DATA_WIDTH),
+    .REF_INIT           (0)
+) dc (
+    .clk                (i_axi_clk),
+    .rst                (w_dtw_core_rst),
+    .rs                 (w_dtw_core_rs),
+
+    .ref_len            (r_ref_len),
+    .op_mode            (w_dtw_core_mode),
+    .busy               (w_dtw_core_busy),
+    .load_done          (w_dtw_core_load_done),
+
+    .src_fifo_rden      (w_src_fifo_r_stb),
+    .src_fifo_empty     (w_src_fifo_empty),
+    .src_fifo_data      (w_src_fifo_r_data),
+
+    .sink_fifo_wren     (w_sink_fifo_w_stb),
+    .sink_fifo_full     (w_sink_fifo_full),
+    .sink_fifo_data     (w_sink_fifo_w_data)
+);
+
+fifo #(
+    .DEPTH              (FIFO_DEPTH),
+    .WIDTH              (FIFO_DATA_WIDTH)
+) sink_fifo (
+    .clk                (i_axis_clk),
+    .rst                (w_axis_rst),
+
+    .i_fifo_w_stb       (w_sink_fifo_w_stb),
+    .i_fifo_w_data      (w_sink_fifo_w_data),
+    .o_fifo_full        (w_sink_fifo_full),
+    .o_fifo_not_full    (w_sink_fifo_not_full),
+
+    .i_fifo_r_stb       (w_sink_fifo_r_stb),
+    .o_fifo_r_data      (w_sink_fifo_r_data),
+    .o_fifo_empty       (w_sink_fifo_empty),
+    .o_fifo_not_empty   (w_sink_fifo_not_empty)
+);
+
+// sink FIFO -> AXIS sink
 fifo_2_axis_adapter #(
     .AXIS_DATA_WIDTH    (AXIS_DATA_WIDTH)
 )f2aa(
-    .o_fifo_r_stb       (w_fifo_r_stb),
-    .i_fifo_data        (w_fifo_r_data),
-    .i_fifo_not_empty   (w_fifo_not_empty),
+    .o_fifo_r_stb       (w_sink_fifo_r_stb),
+    .i_fifo_data        (w_sink_fifo_r_data),
+    .i_fifo_not_empty   (w_sink_fifo_not_empty),
 
     .o_axis_tuser       (o_axis_out_tuser),
     .o_axis_tdata       (o_axis_out_tdata),
@@ -219,25 +275,24 @@ fifo_2_axis_adapter #(
     .o_axis_tlast       (o_axis_out_tlast)
 );
 
-
 /* ===============================
  * asynchronous logic
  * =============================== */
-assign w_axi_rst                      = INVERT_AXI_RESET  ? ~i_axi_rst    : i_axi_rst;
-assign w_axis_rst                     = INVERT_AXIS_RESET ? ~i_axis_rst   : i_axis_rst;
-assign w_version[`MAJOR_RANGE]        = `MAJOR_VERSION;
-assign w_version[`MINOR_RANGE]        = `MINOR_VERSION;
-assign w_version[`REVISION_RANGE]     = `REVISION;
-assign w_version[`VERSION_PAD_RANGE]  = 0;
-assign w_key                          = 32'hca7cafe;
+assign w_axi_rst                        = INVERT_AXI_RESET  ? ~i_axi_rst    : i_axi_rst;
+assign w_axis_rst                       = INVERT_AXIS_RESET ? ~i_axis_rst   : i_axis_rst;
+assign w_version[`MAJOR_RANGE]          = `MAJOR_VERSION;
+assign w_version[`MINOR_RANGE]          = `MINOR_VERSION;
+assign w_version[`REVISION_RANGE]       = `REVISION;
+assign w_version[`VERSION_PAD_RANGE]    = 0;
+assign w_key                            = 32'h0ca7cafe;
+
+assign w_dtw_core_rst                   = r_control[0];
+assign w_dtw_core_rs                    = r_control[1];
+assign w_dtw_core_mode                  = r_control[2];
 
 /* ===============================
  * synchronous logic
  * =============================== */
-always @ (posedge i_axi_clk) begin
-    r_status <= r_control;
-end
-
 always @ (posedge i_axi_clk) begin
     // De-assert Strobes
     r_reg_in_ack_stb    <=  0;
@@ -292,8 +347,9 @@ always @ (posedge i_axi_clk) begin
                 end
                 REG_KEY: begin
                     r_reg_out_data <= w_key;
+                end
                 default: begin // Unknown address
-                    r_reg_out_data      <= 32'h0;
+                    r_reg_out_data      <= 32'h00;
                     r_reg_invalid_addr  <= 1;
                 end
             endcase

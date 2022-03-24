@@ -21,6 +21,11 @@ REG_REF_LEN = 2 << 2;
 REG_VERSION = 3 << 2;
 REG_KEY     = 4 << 2;
 
+# CR bits
+CR_RESET    = 0;
+CR_RS       = 1;
+CR_OPMODE   = 2;
+
 #Set/Clear a bit
 BIT_CTRL_TEST = 0
 
@@ -35,45 +40,64 @@ class DtwAccelDriver (Driver):
     def __del__(self):
         pass
 
-    async def get_version(self):
-        data = await self.read_register(REG_VERSION)
-        return data
-
-    ## CR
-    # Set an entire CR
+    ## Control Register
     async def set_control(self, data):
+        """
+        Set the control register
+        """
         await self.write_register(REG_CONTROL, data)
 
-    # Get Entire CR
+    # Get CR
     async def get_control(self):
+        """
+        Get the control register
+        """
         data = await self.read_register(REG_CONTROL)
         return data
 
-    ## SR
-    # Get Entire SR
+    # Set RS
+    async def set_rs(self, enable):
+        await self.enable_register_bit(REG_CONTROL, CR_RS, enable)
+
+    # Set opmode
+    async def set_opmode(self, opmode):
+        await self.enable_register_bit(REG_CONTROL, CR_OPMODE, opmode)
+
+    ## Status Register
     async def get_status(self):
+        """
+        Get the status register
+        """
         data = await self.read_register(REG_STATUS)
         return data
 
     ## REF_LEN
-    # Set an entire CR
     async def set_ref_len(self, data):
+        """
+        Set the ref_len register
+        """
         await self.write_register(REG_REF_LEN, data)
 
-    # Get Entire CR
     async def get_ref_len(self):
+        """
+        Get the ref_len register
+        """
         data = await self.read_register(REG_REF_LEN)
         return data
 
     ## Version
-    # Get Entire CR
     async def get_version(self):
+        """
+        Get the version register
+        """
         data = await self.read_register(REG_VERSION)
         return data
 
     ## Key
-    # Get key
     async def get_key(self):
+        """
+        Get the key register
+        """
         data = await self.read_register(REG_KEY)
         return data
 

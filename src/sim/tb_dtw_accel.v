@@ -142,11 +142,5 @@ dtw_accel #(
 /* ===============================
  * synchronous logic
  * =============================== */
-`ifndef VERILATOR // traced differently
-    initial begin
-        $dumpfile ("design.vcd");
-        $dumpvars(0, tb_axi_lite_slave);
-    end
-`endif
 
 endmodule
