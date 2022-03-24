@@ -38,11 +38,10 @@ localparam
 // State machine states
 localparam [2:0] // n states
     IDLE = 0,
-    REF_STALL = 1,
-    REF_LOAD = 2,
-    DTW_Q_INIT = 3,
-    DTW_Q_RUN = 4,
-    DTW_Q_DONE = 5;
+    REF_LOAD = 1,
+    DTW_Q_INIT = 2,
+    DTW_Q_RUN = 3,
+    DTW_Q_DONE = 4;
 
 /* ===============================
  * registers/wires
@@ -123,19 +122,12 @@ always @(posedge clk) begin
                     if (op_mode == MODE_NORMAL && r_load_done == 1) begin
                         r_state <= DTW_Q_INIT;
                     end else if (op_mode == MODE_LOAD_REF && r_load_done == 0) begin
-                        r_state <= REF_STALL;
+                        r_state <= REF_LOAD;
                     end else begin
                         r_state <= IDLE;
                     end
                 end else begin
                     r_state <= IDLE;
-                end
-            end
-            REF_STALL: begin // 1
-                if (!src_fifo_empty) begin
-                    r_state <= REF_LOAD;
-                end else begin
-                    r_state <= REF_STALL;
                 end
             end
             REF_LOAD: begin // 2
@@ -186,15 +178,6 @@ always @(posedge clk) begin
             dp_running      <= 0;
             stall_counter   <= 0;
             wren_ref        <= 0;
-        end
-        REF_STALL: begin
-            busy            <= 1;
-            src_fifo_rden   <= 1;
-            sink_fifo_wren  <= 0;
-            dp_rst          <= 1;
-            dp_running      <= 0;
-            stall_counter   <= 0;
-            wren_ref        <= 1;
         end
         REF_LOAD: begin
             busy            <= 1;
