@@ -264,9 +264,7 @@ def test_load_query(dut):
     yield Timer(CLK_PERIOD * 10)
 
     ## Body
-    t0_query_mem_0 = dut.dut.dc.inst_dtw_core_query_mem.MEM[0].value
-    assert t0_query_mem_0 == 0
-
+    
 
 # @cocotb.test(skip = False)
 # def test_axis_write(dut):
