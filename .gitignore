@@ -3,3 +3,4 @@ results.xml
 sim_build
 venv
 ref_dbg.txt
+query_dbg.txt
