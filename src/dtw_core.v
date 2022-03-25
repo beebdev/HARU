@@ -17,6 +17,7 @@ module dtw_core #(
     output  wire                    load_done,
 
     // src FIFO signals
+    output  wire                    src_fifo_clear,
     output  reg                     src_fifo_rden,      // Src FIFO Read enable
     input   wire                    src_fifo_empty,     // Src FIFO Empty
     input   wire [31:0]             src_fifo_data,      // Src FIFO Data
@@ -47,6 +48,7 @@ localparam [2:0] // n states
  * registers/wires
  * =============================== */
 reg r_load_done;
+reg r_src_fifo_clear;
 
 // Ref mem signals
 reg  [14:0]         addrR_ref;                   // Read address for refmem 
@@ -56,12 +58,12 @@ wire [WIDTH-1:0]    dataout_ref;      // Reference data
 wire [WIDTH-1:0]    w_dbg_ref_dout;
 
 // DTW datapath signals
-reg                 dp_rst;                             // Reset for core
-reg                 dp_running;                         // Run enable for core
-wire                dp_done;                            // Core done
-reg  [31:0]         curr_qid;                    // Current query id
-wire [WIDTH-1:0]    curr_minval;      // Current minimum value
-wire [31:0]         curr_position;              // Current best position
+reg                 dp_rst;             // Reset for core
+reg                 dp_running;         // Run enable for core
+wire                dp_done;            // Core done
+reg  [31:0]         curr_qid;           // Current query id
+wire [WIDTH-1:0]    curr_minval;        // Current minimum value
+wire [31:0]         curr_position;      // Current best position
 
 // State machine variables
 reg [2:0] r_state;
@@ -77,12 +79,12 @@ dtw_core_ref_mem #(
     .width (WIDTH),
     .initalize (REF_INIT)
 ) inst_dtw_core_ref_mem (
-    .clk        (clk),
-    .addrR      (addrR_ref),
-    .addrW      (addrW_ref),
-    .wren       (wren_ref),
-    .datain     (src_fifo_data[15:0]),
-    .dataout    (dataout_ref)
+    .clk            (clk),
+    .addrR          (addrR_ref),
+    .addrW          (addrW_ref),
+    .wren           (wren_ref),
+    .datain         (src_fifo_data[15:0]),
+    .dataout        (dataout_ref)
 );
 
 // DTW datapath
@@ -106,6 +108,7 @@ dtw_core_datapath #(
  * asynchronous logic
  * =============================== */
 assign load_done = r_load_done;
+assign src_fifo_clear = r_src_fifo_clear;
 
 /* ===============================
  * synchronous logic
@@ -178,6 +181,7 @@ always @(posedge clk) begin
             dp_running      <= 0;
             stall_counter   <= 0;
             wren_ref        <= 0;
+            r_src_fifo_clear <= 1;
         end
         REF_LOAD: begin
             busy            <= 1;
@@ -186,6 +190,7 @@ always @(posedge clk) begin
             dp_rst          <= 1;
             dp_running      <= 0;
             stall_counter   <= 0;
+            r_src_fifo_clear <= 0;
 
             if (!src_fifo_empty && src_fifo_rden) begin
                 addrW_ref   <= addrW_ref + 1; // Increment write pointer
@@ -199,11 +204,15 @@ always @(posedge clk) begin
             src_fifo_rden   <= 1; // Read enable -> read id
             sink_fifo_wren  <= 0;
             dp_rst          <= 0;
-            dp_running      <= 1;
+            dp_running      <= 0;
             stall_counter   <= 0;
+            r_src_fifo_clear <= 0;
 
             if (!src_fifo_empty) begin
                 curr_qid    <= src_fifo_data;
+                dp_running  <= 1;
+            end else begin
+                dp_running  <= 0;
             end
         end
         DTW_Q_RUN: begin
@@ -211,6 +220,7 @@ always @(posedge clk) begin
             sink_fifo_wren  <= 0;
             dp_rst          <= 0;
             stall_counter   <= 0;
+            r_src_fifo_clear <= 0;
                 
             if (!src_fifo_empty) begin
                 if (addrR_ref < SQG_SIZE) begin
@@ -220,8 +230,6 @@ always @(posedge clk) begin
                 end
                 dp_running  <= 1;
                 addrR_ref   <= addrR_ref + 1;
-            end else begin
-                dp_running  <= 0;
             end
         end
         DTW_Q_DONE: begin

@@ -20,7 +20,7 @@ initial begin
     if (initalize) begin
         $readmemb("data/reference.txt", MEM);
     end else begin
-        for (i=0; i<depth; i=i+1) begin
+        for (i = 0; i < depth; i = i + 1) begin
             MEM[i] = 0;
         end
     end

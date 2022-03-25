@@ -54,6 +54,11 @@ class DtwAccelDriver (Driver):
         """
         data = await self.read_register(REG_CONTROL)
         return data
+    
+    # reset
+    async def core_reset(self):
+        await self.enable_register_bit(REG_CONTROL, CR_RESET, 1)
+        await self.enable_register_bit(REG_CONTROL, CR_RESET, 0)
 
     # Set RS
     async def set_rs(self, enable):

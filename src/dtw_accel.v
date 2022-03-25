@@ -115,6 +115,7 @@ wire                            w_dtw_core_busy;
 wire                            w_dtw_core_load_done;
 
 // Src FIFO
+wire                            w_src_fifo_clear;
 wire  [FIFO_DATA_WIDTH - 1:0]   w_src_fifo_w_data;
 wire                            w_src_fifo_w_stb;
 wire                            w_src_fifo_full;
@@ -205,7 +206,7 @@ fifo #(
     .WIDTH              (FIFO_DATA_WIDTH)
 ) src_fifo (
     .clk                (i_axis_clk),
-    .rst                (w_axis_rst),
+    .rst                (w_axis_rst | w_src_fifo_clear),
 
     .i_fifo_w_stb       (w_src_fifo_w_stb),
     .i_fifo_w_data      (w_src_fifo_w_data),
@@ -233,6 +234,7 @@ dtw_core #(
     .busy               (w_dtw_core_busy),
     .load_done          (w_dtw_core_load_done),
 
+    .src_fifo_clear     (w_src_fifo_clear),
     .src_fifo_rden      (w_src_fifo_r_stb),
     .src_fifo_empty     (w_src_fifo_empty),
     .src_fifo_data      (w_src_fifo_r_data),
