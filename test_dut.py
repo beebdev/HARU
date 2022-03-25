@@ -346,7 +346,7 @@ def test_load_query(dut):
     # Start loading query
     qdata[0][0] = 99
     yield axis_source.send_raw_data(qdata)
-    yield Timer(CLK_PERIOD * 256)
+    yield Timer(CLK_PERIOD * 255)
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("src_fifo_empty: {}".format(dut.dut.w_src_fifo_empty.value))
     print("curr_qid: {}".format(dut.dut.dc.curr_qid.value))

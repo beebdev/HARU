@@ -1,16 +1,19 @@
 `timescale 1ns / 1ps
 
 module dtw_core_datapath #(
-    parameter width = 16,
-    parameter SQG_SIZE = 250
+    parameter width     = 16,
+    parameter SQG_SIZE  = 250
 )(
-    input clk, rst, running,
-    input [width-1:0] Input_squiggle, Rword,
-    input [31:0] ref_len,
-    output [width-1:0] minval,
-    output [31:0] position,
-    output sq_load,
-    output done
+    input               clk,
+    input               rst,
+    input               running,
+    input   [width-1:0] Input_squiggle,
+    input   [width-1:0] Rword,
+    input   [31:0]      ref_len,
+    output  [width-1:0] minval,
+    output  [31:0]      position,
+    output              sq_load,
+    output              done
 );
 
 integer k;
