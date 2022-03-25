@@ -229,7 +229,11 @@ always @(posedge clk) begin
                     src_fifo_rden <= 0;
                 end
                 dp_running  <= 1;
-                addrR_ref   <= addrR_ref + 1;
+                // addrR_ref   <= addrR_ref + 1;
+            end
+
+            if (addrR_ref >= SQG_SIZE || !src_fifo_empty) begin
+                addrR_ref <= addrR_ref + 1;
             end
         end
         DTW_Q_DONE: begin

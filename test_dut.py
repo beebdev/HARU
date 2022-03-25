@@ -319,12 +319,12 @@ def test_load_query(dut):
     assert dut.dut.w_dtw_core_rs.value == 1
     assert dut.dut.w_src_fifo_empty == 1
 
-    # with open("ref_dbg.txt", "w") as f:
-    #     for i in range(my_ref_len):
-    #         f.write("mem[{}]= {}\n".format(i, sdata[0][i]))
-    # with open("query_dbg.txt", "w") as f:
-    #     for i in range(len(qdata[0])):
-    #         f.write("mem[{}]= {}\n".format(i, qdata[0][i]))
+    with open("ref_dbg.txt", "w") as f:
+        for i in range(len(ref[0])):
+            f.write("mem[{}]= {}\n".format(i, ref[0][i]))
+    with open("query_dbg.txt", "w") as f:
+        for i in range(len(query[0])):
+            f.write("mem[{}]= {}\n".format(i, query[0][i]))
 
     # send data
     yield axis_source.send_raw_data(ref)
@@ -359,7 +359,7 @@ def test_load_query(dut):
     # Start loading query
     yield axis_source.send_raw_data(query)
     # yield Timer(CLK_PERIOD * 7)
-    yield Timer(CLK_PERIOD * (len(ref[0])+255))
+    yield Timer(CLK_PERIOD * (255 + len(ref[0]))) # This takes time!
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("src_fifo_empty: {}".format(dut.dut.w_src_fifo_empty.value))
     print("curr_qid: {}".format(dut.dut.dc.curr_qid.value.integer))
@@ -369,6 +369,24 @@ def test_load_query(dut):
     print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value.integer))
     print("squiggle_buffer[249]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[249].value.integer))
     print("squiggle_buffer[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[250].value.integer))
+    print("pe1.x: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.x.value.integer))
+    print("pe1.y: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.y.value.integer))
+    print("pe1.N: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.N.value.integer))
+    print("pe1.W: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.W.value.integer))
+    print("pe1.NW: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.NW.value.integer))
+    print("pe1.DTWc: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.DTWc.value.integer))
+    print("pe1.diff: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.diff.value.integer))
+    print("pe1.cost: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.cost.value.integer))
+    print("dtw_curr[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[1].value.integer))
+    print("dtw_curr[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[2].value.integer))
+    print("dtw_curr[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[3].value.integer))
+    print("dtw_curr[4]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[4].value.integer))
+    print("dtw_curr[5]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[5].value.integer))
+    print("dtw_curr[6]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[6].value.integer))
+    print("dtw_curr[7]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[7].value.integer))
+    print("dtw_curr[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[250].value.integer))
+
+
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("running: {}".format(dut.dut.dc.inst_dtw_core_datapath.running.value))
     print("running_d[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d[250].value))
