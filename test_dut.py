@@ -1,3 +1,4 @@
+from email.mime import base
 import os
 import sys
 import random
@@ -293,11 +294,24 @@ def test_load_query(dut):
     cr = yield tester.get_control()
     assert dut.dut.w_dtw_core_mode.value == 1
     assert cr == (1 << 2)
-    
+
+    # Setup ref and query
+    ref = [[]]
+    query = [[]]
+    with open("data/reference.txt", "r") as f:
+        for line in f:
+            ref[0].append(int(line, base=2))
+    with open("data/query_with_id.txt", "r") as f:
+        for i, line in enumerate(f):
+            query[0].append(int(line, base=2))
+            if i == 250:
+                break
+    query[0].insert(1, 0)
+    print("Ref len: {}".format(len(ref[0])))
+
     # Set ref_len
-    my_ref_len = 4000
-    yield tester.set_ref_len(my_ref_len)
-    assert dut.dut.r_ref_len.value == my_ref_len
+    yield tester.set_ref_len(len(ref[0]))
+    assert dut.dut.r_ref_len.value == len(ref[0])
     assert dut.dut.dc.r_state.value.integer == 0 # Shouldn't have started
 
     # Set run
@@ -305,26 +319,25 @@ def test_load_query(dut):
     assert dut.dut.w_dtw_core_rs.value == 1
     assert dut.dut.w_src_fifo_empty == 1
 
+    # with open("ref_dbg.txt", "w") as f:
+    #     for i in range(my_ref_len):
+    #         f.write("mem[{}]= {}\n".format(i, sdata[0][i]))
+    # with open("query_dbg.txt", "w") as f:
+    #     for i in range(len(qdata[0])):
+    #         f.write("mem[{}]= {}\n".format(i, qdata[0][i]))
+
     # send data
-    sdata = [[1, 2, 3, 4, 5] * (my_ref_len//5)]
-    qdata = [[i-2 for i in range(252)]] # Known problem, after ID is loaded one cycle will be skipped, i.e. one value to be padded between id and query
-    for i in range(1500, 1750):
-        sdata[0][i] = qdata[0][i%250+2]
-
-    with open("ref_dbg.txt", "w") as f:
-        for i in range(my_ref_len):
-            f.write("mem[{}]= {}\n".format(i, sdata[0][i]))
-    with open("query_dbg.txt", "w") as f:
-        for i in range(len(qdata[0])):
-            f.write("mem[{}]= {}\n".format(i, qdata[0][i]))
-
-    yield axis_source.send_raw_data(sdata)
-    yield Timer(CLK_PERIOD * my_ref_len+100)
+    yield axis_source.send_raw_data(ref)
+    yield Timer(CLK_PERIOD * (5+len(ref[0]))) # This takes time!
 
     # Check first few cells of ref mem
-    assert dut.dut.dc.inst_dtw_core_ref_mem.MEM[20].value.integer == sdata[0][20]
-    assert dut.dut.dc.inst_dtw_core_ref_mem.MEM[21].value.integer == sdata[0][21]
-    assert dut.dut.dc.r_load_done.value.integer == 1
+    with open("dbg.txt", "w") as f:
+        for i in range(len(ref[0])):
+            f.write("mem[{}]= {}; {}\n".format(i, dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer, ref[0][i]))
+
+    # print("addrW_red: {}".format(dut.dut.dc.addrW_ref.value.integer))
+    # print("State: {}".format(dut.dut.dc.r_state.value.integer))
+    # assert dut.dut.dc.r_load_done.value.integer == 1
     assert dut.dut.dc.r_state.value.integer == 0
     assert dut.dut.w_src_fifo_empty == 1
     # Set opmode
@@ -332,36 +345,30 @@ def test_load_query(dut):
     cr = yield tester.get_control()
     assert dut.dut.w_dtw_core_mode.value == 0
     assert dut.dut.w_src_fifo_empty == 1
-    print("state: {}".format(dut.dut.dc.r_state.value.integer))
-    print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
-    print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value))
-    print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value))
-    print("squiggle_buffer[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[3].value))
-    print("Minval: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minval.value.integer))
-    print("Minpos: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minpos.value.integer))
-    print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
+    # print("state: {}".format(dut.dut.dc.r_state.value.integer))
+    # print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
+    # print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value))
+    # print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value))
+    # print("squiggle_buffer[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[3].value))
+    # print("Minval: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minval.value.integer))
+    # print("Minpos: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minpos.value.integer))
+    # print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
 
 
-
+    print("=====")
     # Start loading query
-    qdata[0][0] = 99
-    yield axis_source.send_raw_data(qdata)
-    yield Timer(CLK_PERIOD * 255)
+    yield axis_source.send_raw_data(query)
+    # yield Timer(CLK_PERIOD * 7)
+    yield Timer(CLK_PERIOD * (len(ref[0])+255))
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("src_fifo_empty: {}".format(dut.dut.w_src_fifo_empty.value))
-    print("curr_qid: {}".format(dut.dut.dc.curr_qid.value))
-    print("addrR_ref: {}".format(dut.dut.dc.addrR_ref.value))
+    print("curr_qid: {}".format(dut.dut.dc.curr_qid.value.integer))
+    print("addrR_ref: {}".format(dut.dut.dc.addrR_ref.value.integer))
     print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
-    print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value))
-    print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value))
-    print("squiggle_buffer[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[3].value))
-    print("squiggle_buffer[4]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[4].value))
-    print("squiggle_buffer[5]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[5].value))
-    print("squiggle_buffer[6]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[6].value))
-    print("squiggle_buffer[7]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[7].value))
-    print("squiggle_buffer[8]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[8].value))
-    print("squiggle_buffer[9]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[9].value))
-    print("squiggle_buffer[10]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[10].value))
+    print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value.integer))
+    print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value.integer))
+    print("squiggle_buffer[249]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[249].value.integer))
+    print("squiggle_buffer[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[250].value.integer))
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("running: {}".format(dut.dut.dc.inst_dtw_core_datapath.running.value))
     print("running_d[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d[250].value))
@@ -371,228 +378,4 @@ def test_load_query(dut):
     print("Minpos: {}".format(dut.dut.dc.curr_position.value.integer))
     print("Minval: {}".format(dut.dut.dc.curr_minval.value.integer))
     print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
-
-
-# @cocotb.test(skip = False)
-# def test_axis_write(dut):
-#     """
-#     Description:
-#         Read the entire control register
-
-#     Test ID: 5
-
-#     Expected Results:
-#         Read from the version register
-#     """
-#     dut._log.setLevel(logging.WARNING)
-#     dut.test_id.value = 5
-#     setup_dut(dut)
-#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-#     axis_source = AXISSource(dut, "axis_in", dut.axis_clk, dut.axis_rst)
-#     yield reset_dut(dut)
-
-#     yield axis_source.reset()
-#     yield RisingEdge(dut.clk)
-#     #yield reset_dut(dut)
-#     data = [range(16)]
-#     yield axis_source.send_raw_data(data)
-
-#     yield Timer(CLK_PERIOD * 100)
-
-
-'''
-A note about source idles and sink back pressure.
-
-When generating the source and sink idle the values inserted do not always
-match up with the data, instead the values will repeat, for example
-if you were to insert a source idle at 0th clock cycle in a list that
-is 10 elements long and then you used a timer to delay the start by
-5 clock cycles before starting a transaction the idle will happen on the
-10th CLOCK cycle but will happen on the 6th cycle of the data transaction
-'''
-
-# @cocotb.test(skip = False)
-# def test_axis_write_and_read(dut):
-#     """
-#     Description:
-#         Read the entire control register
-
-#     Test ID: 6
-
-#     Expected Results:
-#         Read from the version register
-#     """
-#     dut._log.setLevel(logging.WARNING)
-#     #dut._log.setLevel(logging.INFO)
-#     DATA_COUNT = 16
-#     dut.test_id.value = 6
-#     setup_dut(dut)
-#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-#     yield reset_dut(dut)
-#     #yield axis_source.reset()
-#     #yield axis_sink.reset()
-#     sdata = [list(range(DATA_COUNT))]
-
-#     cocotb.fork(axis_sink.receive())
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     yield axis_source.send_raw_data(sdata)
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     rdata = axis_sink.read_data()
-#     assert len(rdata) == len(sdata)
-#     for i in range(len(rdata)):
-#         assert len(rdata[i]) == len(sdata[i])
-
-#     for i in range(len(rdata)):
-#         for j in rdata[i]:
-#             assert rdata[i][j] == sdata[i][j]
-
-
-# @cocotb.test(skip = False)
-# def test_axis_write_and_read_with_source_idle(dut):
-#     """
-#     Description:
-#         Read the entire control register
-
-#     Test ID: 7
-
-#     Expected Results:
-#         Read from the version register
-#     """
-#     dut._log.setLevel(logging.WARNING)
-#     #dut._log.setLevel(logging.INFO)
-#     DATA_COUNT = 16
-#     dut.test_id.value = 7
-#     setup_dut(dut)
-#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-#     yield reset_dut(dut)
-#     #yield axis_source.reset()
-#     #yield axis_sink.reset()
-#     sdata = [list(range(DATA_COUNT))]
-#     idle_list = [0] * DATA_COUNT
-#     idle_list[1] = 1
-#     idle_list[2] = 1
-#     idle_list[4] = 1
-#     idle_list[9] = 1
-
-#     axis_source.insert_idle_list(idle_list)
-
-#     cocotb.fork(axis_sink.receive())
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     yield axis_source.send_raw_data(sdata)
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     rdata = axis_sink.read_data()
-#     assert len(rdata) == len(sdata)
-#     for i in range(len(rdata)):
-#         assert len(rdata[i]) == len(sdata[i])
-
-#     for i in range(len(rdata)):
-#         for j in rdata[i]:
-#             assert rdata[i][j] == sdata[i][j]
-
-
-# @cocotb.test(skip = False)
-# def test_axis_write_and_read_with_sink_back_preassure(dut):
-#     """
-#     Description:
-#         Read the entire control register
-
-#     Test ID: 8
-
-#     Expected Results:
-#         Read from the version register
-#     """
-#     dut._log.setLevel(logging.WARNING)
-#     #dut._log.setLevel(logging.INFO)
-#     DATA_COUNT = 16
-#     dut.test_id.value = 8
-    # setup_dut(dut)
-    # demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-    # axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-    # axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-    # yield reset_dut(dut)
-    # #yield axis_source.reset()
-    # #yield axis_sink.reset()
-
-    # sdata = [list(range(DATA_COUNT))]
-
-    # # Adjust sink back pressure here
-    # bp_list = [0] * DATA_COUNT
-
-    # bp_list[DATA_COUNT - 1] = 1
-    # # Apply back pressure after the 2nd value is read
-    # bp_list[2] = 1
-    # axis_sink.insert_backpreassure_list(bp_list)
-
-    # cocotb.fork(axis_sink.receive())
-    # yield RisingEdge(dut.clk)
-    # yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    # yield axis_source.send_raw_data(sdata)
-    # yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-    # rdata = axis_sink.read_data()
-    # assert len(rdata) == len(sdata)
-    # for i in range(len(rdata)):
-    #     assert len(rdata[i]) == len(sdata[i])
-
-    # for i in range(len(rdata)):
-    #     for j in rdata[i]:
-    #         assert rdata[i][j] == sdata[i][j]
-
-# @cocotb.test(skip = False)
-# def test_axis_write_and_read_with_sink_idle_and_back_preassure(dut):
-#     """
-#     Description:
-#         Read the entire control register
-
-#     Test ID: 9
-
-#     Expected Results:
-#         Read from the version register
-#     """
-#     dut._log.setLevel(logging.WARNING)
-#     #dut._log.setLevel(logging.INFO)
-#     DATA_COUNT = 16
-#     dut.test_id.value = 9
-#     setup_dut(dut)
-#     demo_axi_streams = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
-#     axis_source = AXISSource(dut, "axis_in",  dut.axis_clk, dut.axis_rst)
-#     axis_sink   = AXISSink  (dut, "axis_out", dut.axis_clk, dut.axis_rst)
-#     yield reset_dut(dut)
-
-#     sdata = [list(range(DATA_COUNT))]
-
-#     # Adjust sink back pressure here
-#     bp_list = [0] * DATA_COUNT
-
-#     bp_list[DATA_COUNT - 1] = 1
-#     # Apply back pressure after the 2nd value is read
-#     bp_list[2] = 1
-#     # Apply back pressure after the 4th value is read
-#     #bp_list[4] = 1
-
-
-#     # Adjust source idle here
-#     idle_list = [0] * DATA_COUNT
-#     # Insert an IDLE at clock 1
-#     idle_list[1] = 1
-
-#     axis_sink.insert_backpreassure_list(bp_list)
-#     axis_source.insert_idle_list(idle_list)
-
-#     cocotb.fork(axis_sink.receive())
-
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     yield axis_source.send_raw_data(sdata)
-#     yield Timer(AXIS_CLK_PERIOD * CLK_PERIOD * 20)
-#     rdata = axis_sink.read_data()
-#     assert len(rdata) == len(sdata)
-#     for i in range(len(rdata)):
-#         assert len(rdata[i]) == len(sdata[i])
-
-#     for i in range(len(rdata)):
-#         for j in rdata[i]:
-#             assert rdata[i][j] == sdata[i][j]
 
