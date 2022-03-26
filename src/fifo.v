@@ -85,12 +85,12 @@ always @ ( posedge clk ) begin
         read_ptr        <=  0;
         r_read_ptr      <=  (DEPTH - 1);
     end else begin
-        // Read pointer
+        // Write pointer
         if (i_fifo_w_stb && o_fifo_not_full) begin
             write_ptr   <= write_ptr + 1;
         end
 
-        // Write pointer
+        // Read pointer
         if (i_fifo_r_stb && o_fifo_not_empty) begin
             r_read_ptr  <= read_ptr;
             read_ptr    <= read_ptr + 1;

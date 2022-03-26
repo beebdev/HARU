@@ -242,19 +242,23 @@ always @(posedge clk) begin
             dp_rst          <= 0;
             dp_running      <= 0;
 
-            // Serialise output
-            sink_fifo_wren  <= 1;
-
+            // Serialize output
             if (!sink_fifo_full) begin
                 stall_counter <= stall_counter + 1;
                 if (stall_counter == 0) begin
+                    sink_fifo_wren  <= 1;
                     sink_fifo_data <= curr_qid;
                 end else if (stall_counter == 1) begin
+                    sink_fifo_wren  <= 1;
                     sink_fifo_data <= curr_position;
                 end else if (stall_counter == 2) begin
+                    sink_fifo_wren  <= 1;
                     sink_fifo_data <= {16'b0, curr_minval};
+                end else begin
+                    sink_fifo_wren  <= 0;
+                    sink_fifo_data <= 0;
                 end
-            end
+            end 
         end
     endcase
 end
