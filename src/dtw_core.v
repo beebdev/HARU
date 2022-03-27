@@ -25,7 +25,8 @@ module dtw_core #(
     // sink FIFO signals
     output  reg                     sink_fifo_wren,     // Sink FIFO Write enable
     input   wire                    sink_fifo_full,     // Sink FIFO Full
-    output  reg [31:0]              sink_fifo_data     // Src FIFO Data
+    output  reg [31:0]              sink_fifo_data,     // Src FIFO Data
+    output  reg                     sink_fifo_last
 );
 
 /* ===============================
@@ -182,6 +183,7 @@ always @(posedge clk) begin
             stall_counter   <= 0;
             wren_ref        <= 0;
             r_src_fifo_clear <= 1;
+            sink_fifo_last  <= 0;
         end
         REF_LOAD: begin
             busy            <= 1;
@@ -246,15 +248,19 @@ always @(posedge clk) begin
             if (!sink_fifo_full) begin
                 stall_counter <= stall_counter + 1;
                 if (stall_counter == 0) begin
+                    sink_fifo_last <= 0;
                     sink_fifo_wren  <= 1;
                     sink_fifo_data <= curr_qid;
                 end else if (stall_counter == 1) begin
+                    sink_fifo_last <= 0;
                     sink_fifo_wren  <= 1;
                     sink_fifo_data <= curr_position;
                 end else if (stall_counter == 2) begin
+                    sink_fifo_last <= 0;
                     sink_fifo_wren  <= 1;
                     sink_fifo_data <= {16'b0, curr_minval};
                 end else begin
+                    sink_fifo_last <= 1;
                     sink_fifo_wren  <= 0;
                     sink_fifo_data <= 0;
                 end

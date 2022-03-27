@@ -131,6 +131,7 @@ wire  [FIFO_DATA_WIDTH - 1:0]   w_sink_fifo_w_data;
 wire                            w_sink_fifo_w_stb;
 wire                            w_sink_fifo_full;
 wire                            w_sink_fifo_not_full;
+wire                            w_sink_fifo_r_last;
 
 wire  [FIFO_DATA_WIDTH - 1:0]   w_sink_fifo_r_data;
 wire                            w_sink_fifo_r_stb;
@@ -241,7 +242,8 @@ dtw_core #(
 
     .sink_fifo_wren     (w_sink_fifo_w_stb),
     .sink_fifo_full     (w_sink_fifo_full),
-    .sink_fifo_data     (w_sink_fifo_w_data)
+    .sink_fifo_data     (w_sink_fifo_w_data),
+    .sink_fifo_last     (w_sink_fifo_r_last)
 );
 
 fifo #(
@@ -269,6 +271,7 @@ fifo_2_axis_adapter #(
     .o_fifo_r_stb       (w_sink_fifo_r_stb),
     .i_fifo_data        (w_sink_fifo_r_data),
     .i_fifo_not_empty   (w_sink_fifo_not_empty),
+    .i_fifo_last        (w_sink_fifo_r_last),
 
     .o_axis_tuser       (o_axis_out_tuser),
     .o_axis_tdata       (o_axis_out_tdata),

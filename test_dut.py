@@ -357,13 +357,14 @@ def test_load_query(dut):
 
     print("=====")
     # Start loading query
+    cocotb.fork(axis_sink.receive())
     yield axis_source.send_raw_data(query)
-    yield Timer(CLK_PERIOD * (262 + len(ref[0]))) # This takes time!
-    yield axis_source.send_raw_data(query)
-    yield Timer(CLK_PERIOD * (257 + len(ref[0]))) # This takes time!
-    # cocotb.fork(axis_sink.receive())
+    yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
+    # yield axis_source.send_raw_data(query)
+    # yield Timer(CLK_PERIOD * (257 + len(ref[0]))) # This takes time!
     # yield Timer(CLK_PERIOD * 7)
-    # rdata = axis_sink.read_data()
+    rdata = axis_sink.read_data()
+    print("rdata: {}".format(rdata))
     print("sink_fifo[0]: {}".format(dut.dut.sink_fifo.MEM[0].value))
     print("sink_fifo[1]: {}".format(dut.dut.sink_fifo.MEM[1].value))
     print("sink_fifo[2]: {}".format(dut.dut.sink_fifo.MEM[2].value))
@@ -376,10 +377,12 @@ def test_load_query(dut):
     print("sink_fifo_pr_rd_ptr: {}".format(dut.dut.sink_fifo.r_read_ptr.value))
     print("sink_fifo_rd_ptr: {}".format(dut.dut.sink_fifo.read_ptr.value))
     print("sink_fifo_wr_ptr: {}".format(dut.dut.sink_fifo.write_ptr.value))
+    print("i_axis_tready: {}".format(dut.dut.f2aa.i_axis_tready.value))
+    print("o_axis_tvalid: {}".format(dut.dut.f2aa.o_axis_tvalid.value))
 
     print("curr_qid: {}".format(dut.dut.dc.curr_qid.value.integer))
     print("addrR_ref: {}".format(dut.dut.dc.addrR_ref.value.integer))
-    print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
+    # print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
     print("stall_counter: {}".format(dut.dut.dc.stall_counter.value.integer))
     print("sink_fifo_data: {}".format(dut.dut.dc.sink_fifo_data.value))
     print("sink_fifo_wren: {}".format(dut.dut.dc.sink_fifo_wren.value))
