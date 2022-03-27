@@ -358,10 +358,11 @@ def test_load_query(dut):
     print("=====")
     # Start loading query
     cocotb.fork(axis_sink.receive())
+    cocotb.fork(axis_sink.receive())
     yield axis_source.send_raw_data(query)
     yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
-    # yield axis_source.send_raw_data(query)
-    # yield Timer(CLK_PERIOD * (257 + len(ref[0]))) # This takes time!
+    yield axis_source.send_raw_data(query)
+    yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
     # yield Timer(CLK_PERIOD * 7)
     rdata = axis_sink.read_data()
     print("rdata: {}".format(rdata))
