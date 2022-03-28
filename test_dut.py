@@ -39,7 +39,7 @@ def reset_dut(dut):
 ###############################################################################
 ## Test read version
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_read_version(dut):
     """
     Description:
@@ -69,7 +69,7 @@ def test_read_version(dut):
 ###############################################################################
 ## Test write control
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_write_control(dut):
     """
     Description:
@@ -99,7 +99,7 @@ def test_write_control(dut):
 ###############################################################################
 ## Test read control
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_read_control(dut):
     """
     Description:
@@ -130,7 +130,7 @@ def test_read_control(dut):
 ###############################################################################
 ## Test setting and reading ref len
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_ref_len(dut):
     """
     Description:
@@ -162,7 +162,7 @@ def test_ref_len(dut):
 ###############################################################################
 ## Test get key
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_get_key(dut):
     """
     Description:
@@ -233,7 +233,6 @@ def test_load_ref(dut):
     assert dut.dut.r_ref_len.value == my_ref_len
     dut_ref_len = yield tester.get_ref_len()
     assert my_ref_len == dut_ref_len
-    # print("Pre-run state: {}".format(dut.dut.dc.r_state.value.integer))
 
     ## set run
     yield tester.set_rs(1)
@@ -244,19 +243,11 @@ def test_load_ref(dut):
     yield axis_source.send_raw_data(sdata)
     yield Timer(CLK_PERIOD * 250)
 
-    # with open("ref_dbg.txt", "w") as f:
-    #     for i in range(250):
-    #         f.write("mem[{}]= {}\n".format(i, dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer))
     for i in range(1, 200):
-        # Known issue: the first cell of ref mem is always zero
+        # Known issue: the first cell (index=0) of ref mem is always zero
         assert dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer == sdata[0][i]
     assert dut.dut.dc.r_load_done.value.integer == 1
     assert dut.dut.dc.r_state.value.integer == 0
-
-    # print("Ref len: {}".format(dut.dut.dc.ref_len.value.integer))
-    # print("w ref: {}".format(dut.dut.dc.addrW_ref.value.integer))
-    # print("State: {}".format(dut.dut.dc.r_state.value.integer))
-    # print("type: {}".format(type(dut.dut.dc.r_state.value)))
 
 
 ###############################################################################
@@ -307,7 +298,14 @@ def test_load_query(dut):
             if i == 250:
                 break
     query[0].insert(1, 0)
-    print("Ref len: {}".format(len(ref[0])))
+    # print("Ref len: {}".format(len(ref[0])))
+
+    # with open("ref_dbg.txt", "w") as f:
+    #     for i in range(len(ref[0])):
+    #         f.write("mem[{}]= {}\n".format(i, ref[0][i]))
+    # with open("query_dbg.txt", "w") as f:
+    #     for i in range(len(query[0])):
+    #         f.write("mem[{}]= {}\n".format(i, query[0][i]))
 
     # Set ref_len
     yield tester.set_ref_len(len(ref[0]))
@@ -319,43 +317,103 @@ def test_load_query(dut):
     assert dut.dut.w_dtw_core_rs.value == 1
     assert dut.dut.w_src_fifo_empty == 1
 
-    with open("ref_dbg.txt", "w") as f:
-        for i in range(len(ref[0])):
-            f.write("mem[{}]= {}\n".format(i, ref[0][i]))
-    with open("query_dbg.txt", "w") as f:
-        for i in range(len(query[0])):
-            f.write("mem[{}]= {}\n".format(i, query[0][i]))
-
     # send data
     yield axis_source.send_raw_data(ref)
     yield Timer(CLK_PERIOD * (5+len(ref[0]))) # This takes time!
-
-    # Check first few cells of ref mem
-    with open("dbg.txt", "w") as f:
-        for i in range(len(ref[0])):
-            f.write("mem[{}]= {}; {}\n".format(i, dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer, ref[0][i]))
-
-    # print("addrW_red: {}".format(dut.dut.dc.addrW_ref.value.integer))
-    # print("State: {}".format(dut.dut.dc.r_state.value.integer))
-    # assert dut.dut.dc.r_load_done.value.integer == 1
     assert dut.dut.dc.r_state.value.integer == 0
     assert dut.dut.w_src_fifo_empty == 1
+
     # Set opmode
     yield tester.set_opmode(0) # load query mode
     cr = yield tester.get_control()
     assert dut.dut.w_dtw_core_mode.value == 0
     assert dut.dut.w_src_fifo_empty == 1
-    # print("state: {}".format(dut.dut.dc.r_state.value.integer))
-    # print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
-    # print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value))
-    # print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value))
-    # print("squiggle_buffer[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[3].value))
-    # print("Minval: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minval.value.integer))
-    # print("Minpos: {}".format(dut.dut.dc.inst_dtw_core_datapath.Minpos.value.integer))
-    # print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
+
+    # Start loading query
+    cocotb.fork(axis_sink.receive())
+    yield axis_source.send_raw_data(query)
+    yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
+
+    rdata = axis_sink.read_data()
+    assert len(rdata) == 1
+    assert len(rdata[0]) == 3
+    assert rdata[0][0] == 3
+    assert rdata[0][1] == 24466
+    assert rdata[0][2] == 2639
 
 
-    print("=====")
+###############################################################################
+## Test query processing
+###############################################################################
+@cocotb.test(skip = False)
+def test_load_query_multiple(dut):
+    """
+    Description:
+        Test the query loading functionality
+
+    Test ID: 6
+
+    Expected Results:
+        After reset query mem should be all zeros.
+        After loading, the query should be loaded with
+        whatever is loaded into dtw-core.
+    """
+    ## Init
+    dut._log.setLevel(logging.WARNING)
+    dut.test_id.value = 6
+    setup_dut(dut)
+    tester = DtwAccelDriver(dut, "aximl", dut.clk, dut.rst, debug = False)
+    axis_source = AXISSource(dut, "axis_in", dut.axis_clk, dut.axis_rst)
+    axis_sink = AXISSink(dut, "axis_out", dut.axis_clk, dut.axis_rst)
+    yield reset_dut(dut)
+    yield tester.core_reset()
+    yield axis_source.reset()
+    yield axis_sink.reset()
+    yield Timer(CLK_PERIOD * 10)
+
+    ## Load a larger reference first
+    # Set opmode
+    yield tester.set_opmode(1) # load ref mode
+    cr = yield tester.get_control()
+    assert dut.dut.w_dtw_core_mode.value == 1
+    assert cr == (1 << 2)
+
+    # Setup ref and query
+    ref = [[]]
+    query = [[]]
+    with open("data/reference.txt", "r") as f:
+        for line in f:
+            ref[0].append(int(line, base=2))
+    with open("data/query_with_id.txt", "r") as f:
+        for i, line in enumerate(f):
+            query[0].append(int(line, base=2))
+            if i == 250:
+                break
+    query[0].insert(1, 0)
+    # print("Ref len: {}".format(len(ref[0])))
+
+    # Set ref_len
+    yield tester.set_ref_len(len(ref[0]))
+    assert dut.dut.r_ref_len.value == len(ref[0])
+    assert dut.dut.dc.r_state.value.integer == 0 # Shouldn't have started
+
+    # Set run
+    yield tester.set_rs(1)
+    assert dut.dut.w_dtw_core_rs.value == 1
+    assert dut.dut.w_src_fifo_empty == 1
+
+    # send data
+    yield axis_source.send_raw_data(ref)
+    yield Timer(CLK_PERIOD * (5+len(ref[0]))) # This takes time!
+    assert dut.dut.dc.r_state.value.integer == 0
+    assert dut.dut.w_src_fifo_empty == 1
+
+    # Set opmode
+    yield tester.set_opmode(0) # load query mode
+    cr = yield tester.get_control()
+    assert dut.dut.w_dtw_core_mode.value == 0
+    assert dut.dut.w_src_fifo_empty == 1
+
     # Start loading query
     cocotb.fork(axis_sink.receive())
     cocotb.fork(axis_sink.receive())
@@ -365,57 +423,12 @@ def test_load_query(dut):
     yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
     # yield Timer(CLK_PERIOD * 7)
     rdata = axis_sink.read_data()
-    print("rdata: {}".format(rdata))
-    print("sink_fifo[0]: {}".format(dut.dut.sink_fifo.MEM[0].value))
-    print("sink_fifo[1]: {}".format(dut.dut.sink_fifo.MEM[1].value))
-    print("sink_fifo[2]: {}".format(dut.dut.sink_fifo.MEM[2].value))
-    print("sink_fifo[3]: {}".format(dut.dut.sink_fifo.MEM[3].value))
-    # print("rdata: {}".format(rdata))
-    print("state: {}".format(dut.dut.dc.r_state.value.integer))
-    print("dp_rst: {}".format(dut.dut.dc.dp_rst.value))
-    print("src_fifo_empty: {}".format(dut.dut.w_src_fifo_empty.value))
-    print("sink_fifo_full: {}".format(dut.dut.dc.sink_fifo_full.value))
-    print("sink_fifo_pr_rd_ptr: {}".format(dut.dut.sink_fifo.r_read_ptr.value))
-    print("sink_fifo_rd_ptr: {}".format(dut.dut.sink_fifo.read_ptr.value))
-    print("sink_fifo_wr_ptr: {}".format(dut.dut.sink_fifo.write_ptr.value))
-    print("i_axis_tready: {}".format(dut.dut.f2aa.i_axis_tready.value))
-    print("o_axis_tvalid: {}".format(dut.dut.f2aa.o_axis_tvalid.value))
-
-    print("curr_qid: {}".format(dut.dut.dc.curr_qid.value.integer))
-    print("addrR_ref: {}".format(dut.dut.dc.addrR_ref.value.integer))
-    # print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
-    print("stall_counter: {}".format(dut.dut.dc.stall_counter.value.integer))
-    print("sink_fifo_data: {}".format(dut.dut.dc.sink_fifo_data.value))
-    print("sink_fifo_wren: {}".format(dut.dut.dc.sink_fifo_wren.value))
-    # print("squiggle_buffer[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[1].value.integer))
-    # print("squiggle_buffer[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[2].value.integer))
-    # print("squiggle_buffer[249]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[249].value.integer))
-    # print("squiggle_buffer[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.Squiggle_Buffer[250].value.integer))
-    # print("pe1.x: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.x.value.integer))
-    # print("pe1.y: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.y.value.integer))
-    # print("pe1.N: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.N.value.integer))
-    # print("pe1.W: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.W.value.integer))
-    # print("pe1.NW: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.NW.value.integer))
-    # print("pe1.DTWc: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.DTWc.value.integer))
-    # print("pe1.diff: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.diff.value.integer))
-    # print("pe1.cost: {}".format(dut.dut.dc.inst_dtw_core_datapath.inst_dtw_core_pe_001.cost.value.integer))
-    # print("dtw_curr[1]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[1].value.integer))
-    # print("dtw_curr[2]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[2].value.integer))
-    # print("dtw_curr[3]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[3].value.integer))
-    # print("dtw_curr[4]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[4].value.integer))
-    # print("dtw_curr[5]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[5].value.integer))
-    # print("dtw_curr[6]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[6].value.integer))
-    # print("dtw_curr[7]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[7].value.integer))
-    # print("dtw_curr[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_curr[250].value.integer))
-
-
-    print("state: {}".format(dut.dut.dc.r_state.value.integer))
-    print("running: {}".format(dut.dut.dc.inst_dtw_core_datapath.running.value))
-    print("running_d[250]: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d[250].value))
-    print("cycle_counter: {}".format(dut.dut.dc.inst_dtw_core_datapath.cycle_counter.value.integer))
-    print("ref_len: {}".format(dut.dut.dc.inst_dtw_core_datapath.ref_len.value.integer))
-    print("done: {}".format(dut.dut.dc.inst_dtw_core_datapath.done.value))
-    print("Minpos: {}".format(dut.dut.dc.curr_position.value.integer))
-    print("Minval: {}".format(dut.dut.dc.curr_minval.value.integer))
-    print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
-
+    assert len(rdata) == 2
+    assert len(rdata[0]) == 3
+    assert len(rdata[1]) == 3
+    assert rdata[0][0] == 3
+    assert rdata[0][1] == 24466
+    assert rdata[0][2] == 2639
+    assert rdata[1][0] == 3
+    assert rdata[1][1] == 24466
+    assert rdata[1][2] == 2639
