@@ -5,7 +5,7 @@ __author__ = "<your@email.here>"
 import sys
 import os
 import time
-from axi_driver import Driver
+from tb.axi_driver import Driver
 
 from array import array as Array
 

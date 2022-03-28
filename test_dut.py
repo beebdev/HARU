@@ -12,10 +12,10 @@ from cocotb.triggers import Timer
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import FallingEdge
 
-from axis_driver import AXISSource
-from axis_driver import AXISSink
+from tb.axis_driver import AXISSource
+from tb.axis_driver import AXISSink
 from cocotb_bus.drivers.amba import AXI4LiteMaster
-from dtw_accel_driver import DtwAccelDriver
+from tb.dtw_accel_driver import DtwAccelDriver
 
 CLK_PERIOD = 2
 AXIS_CLK_PERIOD = 2
