@@ -49,7 +49,6 @@ module axi_lite_slave #(
 
 );
 
-
 /* ===============================
  * local parameters
  * =============================== */
@@ -66,17 +65,8 @@ localparam SEND_READ_DATA      = 4'h5;
 reg   [3:0]                           state = IDLE;
 
 /* ===============================
- * submodules
- * =============================== */
-/* ===============================
- * asynchronous logic
- * =============================== */
-
-/* ===============================
  * synchronous logic
  * =============================== */
-
-
 always @ (posedge clk) begin
     //Deassert Strobes
     if (rst) begin

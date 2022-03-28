@@ -3,25 +3,43 @@
 module dtw_core_pe #(
     parameter width = 16  // data width
 )(
-    input clk, rst, running,
-    input [width-1:0] x ,y, N, W, NW,
-    output [width-1:0] DTWc,
-    output reg [width-1:0] yp
+    input   wire                clk,
+    input   wire                rst,
+    input   wire                running,    // PE run enable
+
+    input   wire [width-1:0]    x,          // squiggle sample
+    input   wire [width-1:0]    y,          // reference sample
+    input   wire [width-1:0]    N,          // north dependancy
+    input   wire [width-1:0]    W,          // west dependancy
+    input   wire [width-1:0]    NW,         // northwest dependancy
+    output  wire [width-1:0]    DTWc,       // DTW cost
+    output  reg [width-1:0]     yp          // previous y sample
 );
 
-wire [width-1:0] diff = (x - y);                        // distance of two sequences
-wire [width-1:0] cost = diff[width - 1] ? -diff : diff; // absolute value of distance
+/* ===============================
+ * registes/wires
+ * =============================== */
+// Sample distances
+wire [width-1:0] diff = (x - y);
+wire [width-1:0] cost = diff[width - 1] ? -diff : diff;
 
-wire [width-1:0] min2 = (N > W) ? W : N;                // minimum of two
-wire [width-1:0] min3 = (min2 > NW)? NW : min2;         // minimam of three
+// min
+wire [width-1:0] min2 = (N > W) ? W : N;
+wire [width-1:0] min3 = (min2 > NW)? NW : min2;
 
-assign DTWc = cost + min3;                              // PE cell accumulated cost
+/* ===============================
+ * asynchronous logic
+ * =============================== */
+assign DTWc = cost + min3;
 
+/* ===============================
+ * synchronous logic
+ * =============================== */
 always@(posedge clk) begin
     if(rst) begin
         yp <= 0;
     end else if (running) begin
-        yp <= y;    // pass on previous y
+        yp <= y;
     end
 end
 

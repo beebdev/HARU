@@ -1,13 +1,13 @@
 `timescale 1ps / 1ps
 
-`define MAJOR_VERSION             1
-`define MINOR_VERSION             0
-`define REVISION                  0
+`define MAJOR_VERSION       1
+`define MINOR_VERSION       0
+`define REVISION            0
 
-`define MAJOR_RANGE               31:28
-`define MINOR_RANGE               27:20
-`define REVISION_RANGE            19:16
-`define VERSION_PAD_RANGE         15:0
+`define MAJOR_RANGE         31:28
+`define MINOR_RANGE         27:20
+`define REVISION_RANGE      19:16
+`define VERSION_PAD_RANGE   15:0
 
 module dtw_accel #(
     parameter ADDR_WIDTH            = 16,
@@ -16,7 +16,7 @@ module dtw_accel #(
     parameter AXIS_DATA_WIDTH       = 32,
     parameter AXIS_KEEP_WIDTH       = (AXIS_DATA_WIDTH / 8),
     parameter AXIS_DATA_USER_WIDTH  = 0,
-    parameter FIFO_DATA_WIDTH       = AXIS_DATA_WIDTH, // No + 2
+    parameter FIFO_DATA_WIDTH       = AXIS_DATA_WIDTH,
     parameter FIFO_DEPTH            = 4, // 8, 16 // Has to be power of 2
     parameter INVERT_AXI_RESET      = 1,
     parameter INVERT_AXIS_RESET     = 1
@@ -314,49 +314,49 @@ always @ (posedge i_axi_clk) begin
         if (w_reg_in_rdy) begin
             // M_AXI to here
             case (w_reg_address)
-                REG_CONTROL: begin
-                    r_control <= w_reg_in_data;
-                end
-                REG_STATUS: begin
-                    // this reg stores status
-                end
-                REG_REF_LEN: begin
-                    r_ref_len <= w_reg_in_data;
-                end
-                REG_VERSION: begin
-                    // this reg stores version
-                end
-                REG_KEY: begin
-                    // this reg stores ca7cafe
-                end
-                default: begin // unknown address
-                    $display ("Unknown address: 0x%h", w_reg_address);
-                    r_reg_invalid_addr <= 1;
-                end
+            REG_CONTROL: begin
+                r_control <= w_reg_in_data;
+            end
+            REG_STATUS: begin
+                // this reg stores status
+            end
+            REG_REF_LEN: begin
+                r_ref_len <= w_reg_in_data;
+            end
+            REG_VERSION: begin
+                // this reg stores version
+            end
+            REG_KEY: begin
+                // this reg stores ca7cafe
+            end
+            default: begin // unknown address
+                $display ("Unknown address: 0x%h", w_reg_address);
+                r_reg_invalid_addr <= 1;
+            end
             endcase
             r_reg_in_ack_stb <= 1; // Tell AXI Slave we are done with the data
         end else if (w_reg_out_req) begin
             // Here to M_AXI
             case (w_reg_address)
-                REG_CONTROL: begin
-                    r_reg_out_data <= r_control;
-                end
-                REG_STATUS: begin
-                    r_reg_out_data <= r_status;
-                end
-                REG_REF_LEN: begin
-                    r_reg_out_data <= r_ref_len;
-                end
-                REG_VERSION: begin
-                    r_reg_out_data <= w_version;
-                end
-                REG_KEY: begin
-                    r_reg_out_data <= w_key;
-                end
-                default: begin // Unknown address
-                    r_reg_out_data      <= 32'h00;
-                    r_reg_invalid_addr  <= 1;
-                end
+            REG_CONTROL: begin
+                r_reg_out_data <= r_control;
+            end
+            REG_STATUS: begin
+                r_reg_out_data <= r_status;
+            end
+            REG_REF_LEN: begin
+                r_reg_out_data <= r_ref_len;
+            end
+            REG_VERSION: begin
+                r_reg_out_data <= w_version;
+            end
+            REG_KEY: begin
+                r_reg_out_data <= w_key;
+            end
+            default: begin // Unknown address
+                r_reg_out_data      <= 32'h00;
+                r_reg_invalid_addr  <= 1;
+            end
             endcase
             r_reg_out_rdy_stb <= 1; // Tell AXI Slave to send back this packet
         end

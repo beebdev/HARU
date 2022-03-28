@@ -1,21 +1,31 @@
 module dtw_core_ref_mem #(
-    parameter width = 16,
-    parameter ptrWid = 15,
-    parameter depth = 2**ptrWid,
+    parameter width     = 16,
+    parameter ptrWid    = 15,
+    parameter depth     = 2**ptrWid,
     parameter initalize = 1
 )(
-    input clk,
-    input [ptrWid-1:0] addrR,
-    input [ptrWid-1:0] addrW,
-    input wren,
-    input [width-1 : 0] datain,
-    output reg [width-1 : 0] dataout
+    input   wire                clk,
+
+    // Write
+    input   wire                wren,
+    input   wire [ptrWid-1:0]   addrW,
+    input   wire [width-1 : 0]  datain,
+
+    // Read
+    input   wire [ptrWid-1:0]   addrR,
+    output  reg  [width-1 : 0]  dataout
 );
 
+/* ===============================
+ * registes/wires
+ * =============================== */
 (* ram_style = "block" *) 
 reg [width-1:0] MEM [0:depth-1];
 reg [depth-1:0] i;
 
+/* ===============================
+ * initialisation
+ * =============================== */
 initial begin
     if (initalize) begin
         $readmemb("data/reference.txt", MEM);
@@ -26,6 +36,9 @@ initial begin
     end
 end
 
+/* ===============================
+ * synchronous logic
+ * =============================== */
 always @(posedge clk) begin
     dataout <= MEM[addrR];
 	if (wren) begin

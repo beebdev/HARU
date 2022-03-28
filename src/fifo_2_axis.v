@@ -1,8 +1,8 @@
 `timescale 1ps / 1ps
 
 module fifo_2_axis_adapter #(
-    parameter AXIS_DATA_WIDTH     = 32,
-    parameter FIFO_DATA_WIDTH     = AXIS_DATA_WIDTH
+    parameter AXIS_DATA_WIDTH   = 32,
+    parameter FIFO_DATA_WIDTH   = AXIS_DATA_WIDTH
 )(
     input  wire [FIFO_DATA_WIDTH - 1: 0]    i_fifo_data,
     output wire                             o_fifo_r_stb,

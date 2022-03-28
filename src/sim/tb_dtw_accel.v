@@ -60,11 +60,6 @@ module tb_dtw_accel #(
     input       [AXIS_DATA_WIDTH - 1:0] axis_out_tdata
 );
 
-
-/* ===============================
- * local parameters
- * =============================== */
- 
 /* ===============================
  * Registers
  * =============================== */
@@ -110,7 +105,7 @@ dtw_accel #(
     .o_rresp          (aximl_rresp),
     .o_rdata          (aximl_rdata),
 
-    //Input AXI Stream
+    // Input AXI Stream
     .i_axis_clk       (axis_clk),
     .i_axis_rst       (r_axis_rst),
 
@@ -134,13 +129,5 @@ dtw_accel #(
     .o_axis_out_tlast (axis_out_tlast),
     .o_axis_out_tdata (axis_out_tdata)
 );
-
-/* ===============================
- * asynchronus logic
- * =============================== */
-
-/* ===============================
- * synchronous logic
- * =============================== */
 
 endmodule
