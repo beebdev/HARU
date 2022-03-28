@@ -38,4 +38,6 @@ MODULE = test_dut
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
+# TODO: Add waveform generation
+
 endif

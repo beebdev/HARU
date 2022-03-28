@@ -253,7 +253,7 @@ def test_load_ref(dut):
 ###############################################################################
 ## Test query processing
 ###############################################################################
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_load_query(dut):
     """
     Description:
@@ -345,7 +345,7 @@ def test_load_query(dut):
 ###############################################################################
 ## Test query processing
 ###############################################################################
-@cocotb.test(skip = False)
+@cocotb.test(skip = True)
 def test_load_query_multiple(dut):
     """
     Description:

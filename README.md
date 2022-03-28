@@ -15,10 +15,22 @@ pip3 install cocotb
 pip3 install cocotbext-axi
 ```
 
-For icarus verilog, on mac:
+For icarus verilog:
 ```
+# ubuntu
+sudo apt install iverilog
+# mac
 brew install icarus-verilog
 ```
+
+Installing gtkwave:
+```
+# ubuntu
+sudo apt-get install gtkwave
+
+# mac
+brew install --cask gtkwave
+``` 
 
 # Running tests
 ```
