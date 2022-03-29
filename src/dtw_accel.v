@@ -21,52 +21,54 @@ module dtw_accel #(
     parameter INVERT_AXI_RESET      = 1,
     parameter INVERT_AXIS_RESET     = 1
 )(
-    input  wire                             i_axi_clk,
-    input  wire                             i_axi_rst,
+    input  wire                             S_AXI_clk,
+    input  wire                             S_AXI_rst,
 
     // Write Address Channel
-    input  wire                             i_awvalid,
-    input  wire [ADDR_WIDTH - 1: 0]         i_awaddr,
-    output wire                             o_awready,
+    input  wire                             S_AXI_awvalid,
+    input  wire [ADDR_WIDTH - 1: 0]         S_AXI_awaddr,
+    output wire                             S_AXI_awready,
 
     // Write Data Channel
-    input  wire                             i_wvalid,
-    output wire                             o_wready,
-    input  wire [DATA_WIDTH - 1: 0]         i_wdata,
+    input  wire                             S_AXI_wvalid,
+    output wire                             S_AXI_wready,
+    input  wire [DATA_WIDTH - 1: 0]         S_AXI_wdata,
 
     // Write Response Channel
-    output wire                             o_bvalid,
-    input  wire                             i_bready,
-    output wire [1:0]                       o_bresp,
+    output wire                             S_AXI_bvalid,
+    input  wire                             S_AXI_bready,
+    output wire [1:0]                       S_AXI_bresp,
 
     // Read Address Channel
-    input  wire                             i_arvalid,
-    output wire                             o_arready,
-    input  wire [ADDR_WIDTH - 1: 0]         i_araddr,
+    input  wire                             S_AXI_arvalid,
+    output wire                             S_AXI_arready,
+    input  wire [ADDR_WIDTH - 1: 0]         S_AXI_araddr,
 
     // Read Data Channel
-    output wire                             o_rvalid,
-    input  wire                             i_rready,
-    output wire [1:0]                       o_rresp,
-    output wire [DATA_WIDTH - 1: 0]         o_rdata,
+    output wire                             S_AXI_rvalid,
+    input  wire                             S_AXI_rready,
+    output wire [1:0]                       S_AXI_rresp,
+    output wire [DATA_WIDTH - 1: 0]         S_AXI_rdata,
 
     // AXI Stream
-    input  wire                             i_axis_clk,
-    input  wire                             i_axis_rst,
 
     // Input AXI Stream
-    input  wire                             i_axis_in_tuser,
-    input  wire                             i_axis_in_tvalid,
-    output wire                             o_axis_in_tready,
-    input  wire                             i_axis_in_tlast,
-    input  wire [AXIS_DATA_WIDTH - 1:0]     i_axis_in_tdata,
+    input  wire                             SRC_AXIS_clk,
+    input  wire                             SRC_AXIS_rst,
+    input  wire                             SRC_AXIS_tuser,
+    input  wire                             SRC_AXIS_tvalid,
+    output wire                             SRC_AXIS_tready,
+    input  wire                             SRC_AXIS_tlast,
+    input  wire [AXIS_DATA_WIDTH - 1:0]     SRC_AXIS_tdata,
 
     // Output AXI Stream
-    output wire                             o_axis_out_tuser,
-    output wire                             o_axis_out_tvalid,
-    input  wire                             i_axis_out_tready,
-    output wire                             o_axis_out_tlast,
-    output wire [AXIS_DATA_WIDTH - 1:0]     o_axis_out_tdata
+    input  wire                             SINK_AXIS_clk,
+    input  wire                             SINK_AXIS_rst,
+    output wire                             SINK_AXIS_tuser,
+    output wire                             SINK_AXIS_tvalid,
+    input  wire                             SINK_AXIS_tready,
+    output wire                             SINK_AXIS_tlast,
+    output wire [AXIS_DATA_WIDTH - 1:0]     SINK_AXIS_tdata
 );
 
 /* ===============================
@@ -108,7 +110,7 @@ reg   [DATA_WIDTH - 1 : 0]      r_reg_out_data;
 
 // DTW accel
 reg   [DATA_WIDTH - 1 : 0]      r_control;
-reg   [DATA_WIDTH - 1 : 0]      r_status;
+wire  [DATA_WIDTH - 1 : 0]      w_status;
 reg   [DATA_WIDTH - 1 : 0]      r_ref_len;
 wire  [DATA_WIDTH - 1 : 0]      w_version;
 wire  [DATA_WIDTH - 1 : 0]      w_key;
@@ -146,6 +148,10 @@ wire                            w_sink_fifo_r_stb;
 wire                            w_sink_fifo_empty;
 wire                            w_sink_fifo_not_empty;
 
+// dtw core debug
+wire  [2:0]                     w_dtw_core_state;
+wire  [14:0]                    w_dtw_core_addrW_ref;
+
 
 /* ===============================
  * initialization
@@ -163,29 +169,29 @@ axi_lite_slave #(
     .ADDR_WIDTH         (ADDR_WIDTH),
     .DATA_WIDTH         (DATA_WIDTH)
 ) axi_lite_reg_interface (
-    .clk                (i_axi_clk),
+    .clk                (S_AXI_clk),
     .rst                (w_axi_rst),
 
-    .i_awvalid          (i_awvalid),
-    .i_awaddr           (i_awaddr),
-    .o_awready          (o_awready),
+    .i_awvalid          (S_AXI_awvalid),
+    .i_awaddr           (S_AXI_awaddr),
+    .o_awready          (S_AXI_awready),
 
-    .i_wvalid           (i_wvalid),
-    .o_wready           (o_wready),
-    .i_wdata            (i_wdata),
+    .i_wvalid           (S_AXI_wvalid),
+    .o_wready           (S_AXI_wready),
+    .i_wdata            (S_AXI_wdata),
 
-    .o_bvalid           (o_bvalid),
-    .i_bready           (i_bready),
-    .o_bresp            (o_bresp),
+    .o_bvalid           (S_AXI_bvalid),
+    .i_bready           (S_AXI_bready),
+    .o_bresp            (S_AXI_bresp),
 
-    .i_arvalid          (i_arvalid),
-    .o_arready          (o_arready),
-    .i_araddr           (i_araddr),
+    .i_arvalid          (S_AXI_arvalid),
+    .o_arready          (S_AXI_arready),
+    .i_araddr           (S_AXI_araddr),
 
-    .o_rvalid           (o_rvalid),
-    .i_rready           (i_rready),
-    .o_rresp            (o_rresp),
-    .o_rdata            (o_rdata),
+    .o_rvalid           (S_AXI_rvalid),
+    .i_rready           (S_AXI_rready),
+    .o_rresp            (S_AXI_rresp),
+    .o_rdata            (S_AXI_rdata),
 
 
     // Simple Register Interface
@@ -208,11 +214,11 @@ axi_lite_slave #(
 axis_2_fifo_adapter #(
     .AXIS_DATA_WIDTH    (AXIS_DATA_WIDTH)
 ) a2fa (
-    .i_axis_tuser       (i_axis_in_tuser),
-    .i_axis_tvalid      (i_axis_in_tvalid),
-    .o_axis_tready      (o_axis_in_tready),
-    .i_axis_tlast       (i_axis_in_tlast),
-    .i_axis_tdata       (i_axis_in_tdata),
+    .i_axis_tuser       (SRC_AXIS_tuser),
+    .i_axis_tvalid      (SRC_AXIS_tvalid),
+    .o_axis_tready      (SRC_AXIS_tready),
+    .i_axis_tlast       (SRC_AXIS_tlast),
+    .i_axis_tdata       (SRC_AXIS_tdata),
 
     .o_fifo_data        (w_src_fifo_w_data),
     .o_fifo_w_stb       (w_src_fifo_w_stb),
@@ -223,7 +229,7 @@ fifo #(
     .DEPTH              (FIFO_DEPTH),
     .WIDTH              (FIFO_DATA_WIDTH)
 ) src_fifo (
-    .clk                (i_axis_clk),
+    .clk                (SRC_AXIS_clk),
     .rst                (w_axis_rst | w_src_fifo_clear),
 
     .i_fifo_w_stb       (w_src_fifo_w_stb),
@@ -243,7 +249,7 @@ dtw_core #(
     .AXIS_WIDTH         (AXIS_DATA_WIDTH),
     .REF_INIT           (0)
 ) dc (
-    .clk                (i_axi_clk),
+    .clk                (S_AXI_clk),
     .rst                (w_dtw_core_rst),
     .rs                 (w_dtw_core_rs),
 
@@ -260,14 +266,17 @@ dtw_core #(
     .sink_fifo_wren     (w_sink_fifo_w_stb),
     .sink_fifo_full     (w_sink_fifo_full),
     .sink_fifo_data     (w_sink_fifo_w_data),
-    .sink_fifo_last     (w_sink_fifo_r_last)
+    .sink_fifo_last     (w_sink_fifo_r_last),
+
+    .dbg_state          (w_dtw_core_state),
+    .dbg_addrW_ref      (w_dtw_core_addrW_ref)
 );
 
 fifo #(
     .DEPTH              (FIFO_DEPTH),
     .WIDTH              (FIFO_DATA_WIDTH)
 ) sink_fifo (
-    .clk                (i_axis_clk),
+    .clk                (SRC_AXIS_clk),
     .rst                (w_axis_rst),
 
     .i_fifo_w_stb       (w_sink_fifo_w_stb),
@@ -290,18 +299,18 @@ fifo_2_axis_adapter #(
     .i_fifo_not_empty   (w_sink_fifo_not_empty),
     .i_fifo_last        (w_sink_fifo_r_last),
 
-    .o_axis_tuser       (o_axis_out_tuser),
-    .o_axis_tdata       (o_axis_out_tdata),
-    .o_axis_tvalid      (o_axis_out_tvalid),
-    .i_axis_tready      (i_axis_out_tready),
-    .o_axis_tlast       (o_axis_out_tlast)
+    .o_axis_tuser       (SINK_AXIS_tuser),
+    .o_axis_tdata       (SINK_AXIS_tdata),
+    .o_axis_tvalid      (SINK_AXIS_tvalid),
+    .i_axis_tready      (SINK_AXIS_tready),
+    .o_axis_tlast       (SINK_AXIS_tlast)
 );
 
 /* ===============================
  * asynchronous logic
  * =============================== */
-assign w_axi_rst                        = INVERT_AXI_RESET  ? ~i_axi_rst    : i_axi_rst;
-assign w_axis_rst                       = INVERT_AXIS_RESET ? ~i_axis_rst   : i_axis_rst;
+assign w_axi_rst                        = INVERT_AXI_RESET  ? ~S_AXI_rst    : S_AXI_rst;
+assign w_axis_rst                       = INVERT_AXIS_RESET ? ~SRC_AXIS_rst : SRC_AXIS_rst;
 assign w_version[`MAJOR_RANGE]          = `MAJOR_VERSION;
 assign w_version[`MINOR_RANGE]          = `MINOR_VERSION;
 assign w_version[`REVISION_RANGE]       = `REVISION;
@@ -312,16 +321,20 @@ assign w_dtw_core_rst                   = r_control[0];
 assign w_dtw_core_rs                    = r_control[1];
 assign w_dtw_core_mode                  = r_control[2];
 
-assign r_status[0]                      = w_dtw_core_busy;
-assign r_status[1]                      = w_dtw_core_load_done;
-assign r_status[2]                      = w_src_fifo_full;
-assign r_status[3]                      = w_sink_fifo_empty;
-assign r_status[31:4]                   = 0;
+assign w_status[0]                      = w_dtw_core_busy;
+assign w_status[1]                      = w_dtw_core_load_done;
+assign w_status[2]                      = w_src_fifo_empty;
+assign w_status[3]                      = w_src_fifo_full;
+assign w_status[4]                      = w_sink_fifo_empty;
+assign w_status[5]                      = w_sink_fifo_full;
+assign w_status[8:6]                    = w_dtw_core_state;
+assign w_status[23:9]                   = w_dtw_core_addrW_ref;
+assign w_status[31:24]                  = 0;
 
 /* ===============================
  * synchronous logic
  * =============================== */
-always @ (posedge i_axi_clk) begin
+always @ (posedge S_AXI_clk) begin
     // De-assert Strobes
     r_reg_in_ack_stb    <=  0;
     r_reg_out_rdy_stb   <=  0;
@@ -365,7 +378,7 @@ always @ (posedge i_axi_clk) begin
                 r_reg_out_data <= r_control;
             end
             REG_STATUS: begin
-                r_reg_out_data <= r_status;
+                r_reg_out_data <= w_status;
             end
             REG_REF_LEN: begin
                 r_reg_out_data <= r_ref_len;

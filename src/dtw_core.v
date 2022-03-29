@@ -26,7 +26,11 @@ module dtw_core #(
     output  reg                     sink_fifo_wren,     // Sink FIFO Write enable
     input   wire                    sink_fifo_full,     // Sink FIFO Full
     output  reg [31:0]              sink_fifo_data,     // Sink FIFO Data
-    output  reg                     sink_fifo_last      // Sink FIFO Last
+    output  reg                     sink_fifo_last,     // Sink FIFO Last
+
+    // debug signals
+    output  wire [2:0]              dbg_state,
+    output  wire [14:0]             dbg_addrW_ref
 );
 
 /* ===============================
@@ -108,6 +112,8 @@ dtw_core_datapath #(
  * =============================== */
 assign load_done = r_load_done;
 assign src_fifo_clear = r_src_fifo_clear;
+assign dbg_state = r_state;
+assign dbg_addrW_ref = addrW_ref;
 
 /* ===============================
  * synchronous logic

@@ -301,12 +301,12 @@ def test_load_query(dut):
     query[0].insert(1, 0)
     # print("Ref len: {}".format(len(ref[0])))
 
-    # with open("ref_dbg.txt", "w") as f:
-    #     for i in range(len(ref[0])):
-    #         f.write("mem[{}]= {}\n".format(i, ref[0][i]))
-    # with open("query_dbg.txt", "w") as f:
-    #     for i in range(len(query[0])):
-    #         f.write("mem[{}]= {}\n".format(i, query[0][i]))
+    with open("ref_dbg.txt", "w") as f:
+        for i in range(len(ref[0])):
+            f.write("mem[{}]= {}\n".format(i, ref[0][i]))
+    with open("query_dbg.txt", "w") as f:
+        for i in range(len(query[0])):
+            f.write("mem[{}]= {}\n".format(i, query[0][i]))
 
     # Set ref_len
     yield tester.set_ref_len(len(ref[0]))

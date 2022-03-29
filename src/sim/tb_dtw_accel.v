@@ -81,53 +81,56 @@ dtw_accel #(
     .INVERT_AXI_RESET (0),
     .INVERT_AXIS_RESET(0)
 ) dut (
-    .i_axi_clk        (clk),
-    .i_axi_rst        (r_rst),
+    .S_AXI_clk        (clk),
+    .S_AXI_rst        (r_rst),
 
-    .i_awvalid        (aximl_awvalid),
-    .i_awaddr         (aximl_awaddr),
-    .o_awready        (aximl_awready),
+    .S_AXI_awvalid        (aximl_awvalid),
+    .S_AXI_awaddr         (aximl_awaddr),
+    .S_AXI_awready        (aximl_awready),
 
-    .i_wvalid         (aximl_wvalid),
-    .o_wready         (aximl_wready),
-    .i_wdata          (aximl_wdata),
+    .S_AXI_wvalid         (aximl_wvalid),
+    .S_AXI_wready         (aximl_wready),
+    .S_AXI_wdata          (aximl_wdata),
 
-    .o_bvalid         (aximl_bvalid),
-    .i_bready         (aximl_bready),
-    .o_bresp          (aximl_bresp),
+    .S_AXI_bvalid         (aximl_bvalid),
+    .S_AXI_bready         (aximl_bready),
+    .S_AXI_bresp          (aximl_bresp),
 
-    .i_arvalid        (aximl_arvalid),
-    .o_arready        (aximl_arready),
-    .i_araddr         (aximl_araddr),
+    .S_AXI_arvalid        (aximl_arvalid),
+    .S_AXI_arready        (aximl_arready),
+    .S_AXI_araddr         (aximl_araddr),
 
-    .o_rvalid         (aximl_rvalid),
-    .i_rready         (aximl_rready),
-    .o_rresp          (aximl_rresp),
-    .o_rdata          (aximl_rdata),
+    .S_AXI_rvalid         (aximl_rvalid),
+    .S_AXI_rready         (aximl_rready),
+    .S_AXI_rresp          (aximl_rresp),
+    .S_AXI_rdata          (aximl_rdata),
 
     // Input AXI Stream
-    .i_axis_clk       (axis_clk),
-    .i_axis_rst       (r_axis_rst),
+    .SRC_AXIS_clk       (axis_clk),
+    .SRC_AXIS_rst       (r_axis_rst),
 
 `ifdef AXIS_IN_TUSER_EN
-    .i_axis_in_tuser  (axis_in_tuser),
+    .SRC_AXIS_tuser  (axis_in_tuser),
 `else
-    .i_axis_in_tuser  (1'b0),
+    .SRC_AXIS_tuser  (1'b0),
 `endif
-    .i_axis_in_tvalid (axis_in_tvalid),
-    .o_axis_in_tready (axis_in_tready),
-    .i_axis_in_tlast  (axis_in_tlast),
-    .i_axis_in_tdata  (axis_in_tdata),
+    .SRC_AXIS_tvalid (axis_in_tvalid),
+    .SRC_AXIS_tready (axis_in_tready),
+    .SRC_AXIS_tlast  (axis_in_tlast),
+    .SRC_AXIS_tdata  (axis_in_tdata),
 
+    // Output AXI Stream
+    .SINK_AXIS_clk   (axis_clk),
+    .SINK_AXIS_rst   (r_axis_rst),
 `ifdef AXIS_IN_TUSER_EN
-    .o_axis_out_tuser (axis_out_tuser),
+    .SINK_AXIS_tuser (axis_out_tuser),
 `else
-    .i_axis_out_tuser (1'b0),
+    .SINK_AXIS_tuser (1'b0),
 `endif
-    .o_axis_out_tvalid(axis_out_tvalid),
-    .i_axis_out_tready(axis_out_tready),
-    .o_axis_out_tlast (axis_out_tlast),
-    .o_axis_out_tdata (axis_out_tdata)
+    .SINK_AXIS_tvalid(axis_out_tvalid),
+    .SINK_AXIS_tready(axis_out_tready),
+    .SINK_AXIS_tlast (axis_out_tlast),
+    .SINK_AXIS_tdata (axis_out_tdata)
 );
 
 endmodule
