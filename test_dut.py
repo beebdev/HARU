@@ -62,6 +62,7 @@ def test_read_version(dut):
     dut_version = dut.dut.w_version.value
     dut._log.info ("Dut Version: %s" % dut_version)
     dut._log.info ("Version: 0x%08X" % version)
+    # print("Dut Version: %s" % dut_version)
     yield Timer(CLK_PERIOD * 20)
     dut._log.debug("Done")
     assert dut_version == version
@@ -253,7 +254,7 @@ def test_load_ref(dut):
 ###############################################################################
 ## Test query processing
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_load_query(dut):
     """
     Description:
@@ -345,7 +346,7 @@ def test_load_query(dut):
 ###############################################################################
 ## Test query processing
 ###############################################################################
-@cocotb.test(skip = True)
+@cocotb.test(skip = False)
 def test_load_query_multiple(dut):
     """
     Description:

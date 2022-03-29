@@ -73,11 +73,19 @@ module dtw_accel #(
  * local parameters
  * =============================== */
 // Address Map
-localparam  REG_CONTROL      = 0 << 2;
-localparam  REG_STATUS       = 1 << 2;
-localparam  REG_REF_LEN      = 2 << 2;
-localparam  REG_VERSION      = 3 << 2;
-localparam  REG_KEY          = 4 << 2;
+// localparam  REG_CONTROL      = 0 << 2;
+// localparam  REG_STATUS       = 1 << 2;
+// localparam  REG_REF_LEN      = 2 << 2;
+// localparam  REG_VERSION      = 3 << 2;
+// localparam  REG_KEY          = 4 << 2;
+localparam  REG_CONTROL      = 0;
+localparam  REG_STATUS       = 1;
+localparam  REG_REF_LEN      = 2;
+localparam  REG_VERSION      = 3;
+localparam  REG_KEY          = 4;
+
+localparam  integer ADDR_LSB = (DATA_WIDTH / 32) + 1;
+localparam  integer ADDR_BITS = 2;
 
 localparam  MAX_ADDR = REG_KEY;
 
@@ -137,6 +145,15 @@ wire  [FIFO_DATA_WIDTH - 1:0]   w_sink_fifo_r_data;
 wire                            w_sink_fifo_r_stb;
 wire                            w_sink_fifo_empty;
 wire                            w_sink_fifo_not_empty;
+
+
+/* ===============================
+ * initialization
+ * =============================== */
+initial begin
+    r_control <= 0;
+    r_ref_len <= 4000;
+end
 
 /* ===============================
  * submodules
@@ -295,6 +312,12 @@ assign w_dtw_core_rst                   = r_control[0];
 assign w_dtw_core_rs                    = r_control[1];
 assign w_dtw_core_mode                  = r_control[2];
 
+assign r_status[0]                      = w_dtw_core_busy;
+assign r_status[1]                      = w_dtw_core_load_done;
+assign r_status[2]                      = w_src_fifo_full;
+assign r_status[3]                      = w_sink_fifo_empty;
+assign r_status[31:4]                   = 0;
+
 /* ===============================
  * synchronous logic
  * =============================== */
@@ -313,7 +336,7 @@ always @ (posedge i_axi_clk) begin
     end else begin
         if (w_reg_in_rdy) begin
             // M_AXI to here
-            case (w_reg_address)
+            case (w_reg_address[ADDR_LSB + ADDR_BITS:ADDR_LSB])
             REG_CONTROL: begin
                 r_control <= w_reg_in_data;
             end
@@ -337,7 +360,7 @@ always @ (posedge i_axi_clk) begin
             r_reg_in_ack_stb <= 1; // Tell AXI Slave we are done with the data
         end else if (w_reg_out_req) begin
             // Here to M_AXI
-            case (w_reg_address)
+            case (w_reg_address[ADDR_LSB + ADDR_BITS:ADDR_LSB])
             REG_CONTROL: begin
                 r_reg_out_data <= r_control;
             end
