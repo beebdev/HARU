@@ -1,3 +1,34 @@
+/*
+Distributed under the MIT license.
+Copyright (c) 2022 Elton Shih (beebdev@gmail.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
+ * Author: Elton Shih (beebdev@gmail.com)
+ * Description: Datapath for the DTW core
+ *
+ * Changes:     Author         Description
+ *  03/31/2022  Elton Shih     Initial Commit
+ */
+
 `timescale 1ns / 1ps
 
 module dtw_core_datapath #(
@@ -13,7 +44,10 @@ module dtw_core_datapath #(
     input   wire [31:0]         ref_len,        // Reference length
     output  wire [width-1:0]    minval,         // Minimum value
     output  wire [31:0]         position,       // Position of minimum value
-    output  wire                done            // Query search done
+    output  wire                done,           // Query search done
+
+    // debug
+    output  wire [31:0]         dbg_cycle_counter
 );
 
 /* ===============================
@@ -84,6 +118,7 @@ endgenerate
 assign minval     = Minval;
 assign position   = Minpos;
 assign done       = (cycle_counter >= ref_len);
+assign dbg_cycle_counter = cycle_counter;
 
 /* ===============================
  * synchronous logic
