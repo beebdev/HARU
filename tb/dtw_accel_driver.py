@@ -1,5 +1,3 @@
-
-
 __author__ = "<your@email.here>"
 
 import sys
