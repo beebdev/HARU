@@ -4,22 +4,40 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
+ifneq ($(TOPLEVEL_LANG),verilog)
+all:
+	@echo "Skipping; DTW accel does not support VHDL at the top-level"
+clean::
+
+else
+
+ifeq ($(SIM),icarus)
+COMPILE_ARGS+=-I$(PWD)/src/
+else
+COMPILE_ARGS+=+incdir+$(PWD)/src/
+endif
+
+#DUT
 VERILOG_SOURCES += $(PWD)/src/dtw_accel.v \
-				  $(PWD)/src/dtw_accel_M00_AXIS.v \
-				  $(PWD)/src/dtw_accel_S00_AXIS.v \
-				  $(PWD)/src/dtw_accel_S00_AXI.v \
-				  $(PWD)/src/dtw_core.v \
-				  $(PWD)/src/dtw_core_ref_mem.v \
-				  $(PWD)/src/dtw_core_datapath.v \
-				  $(PWD)/src/dtw_core_pe.v \
+				   $(PWD)/src/axi_lite_slave.v \
+				   $(PWD)/src/axis_2_fifo.v \
+				   $(PWD)/src/fifo.v \
+				   $(PWD)/src/fifo_2_axis.v \
+				   $(PWD)/src/dtw_core.v \
+				   $(PWD)/src/dtw_core_datapath.v \
+				   $(PWD)/src/dtw_core_ref_mem.v \
+				   $(PWD)/src/dtw_core_pe.v \
 
-# use VHDL_SOURCES for VHDL files
+#Test Bench
+VERILOG_SOURCES += $(PWD)/src/sim/tb_dtw_accel.v
 
-# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = dtw_accel
+TOPLEVEL = tb_dtw_accel
+GPI_IMPL := vpi
 
-# MODULE is the basename of the Python test file
 MODULE = test_dut
 
-# include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+# TODO: Add waveform generation
+
+endif
