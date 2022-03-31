@@ -1,0 +1,3 @@
+[submodule "ip_driver"]
+	path = ip_driver
+	url = git@github.com:beebdev/sw__haru.git

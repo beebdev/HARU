@@ -2,4 +2,4 @@ __pycache__
 results.xml
 sim_build
 venv
-
+*dbg*

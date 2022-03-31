@@ -18,6 +18,9 @@ pip3 install cocotbext-axi
 Install a verilog simulator of your choice. By default we use [Icarus verilog](https://iverilog.fandom.com/wiki/Installation_Guide#Obtaining_Source_From_git).
 To install icarus verilog:
 ```
+# ubuntu
+sudo apt install iverilog
+# mac
 brew install icarus-verilog
 ```
 
