@@ -17,6 +17,8 @@
 #define HARU_AXI_SRC_ADDR           0x10000000
 #define HARU_AXI_DST_ADDR           0x20000000
 
+#define HARU_AXI_BUFFER_SIZE        0xffff
+
 typedef struct {
     dtw_accel_t dtw_accel;
     axi_dma_t axi_dma;

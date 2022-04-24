@@ -10,8 +10,6 @@
  * AXI DMA general function
  */
 int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, uint32_t dst_addr, uint32_t size) {
-    printf("[%s] Initializing AXI DMA\n", __func__);
-
     // Open /dev/mem for memory mapping
     int32_t dev_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (dev_fd < 0) {
@@ -23,13 +21,11 @@ int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, ui
     device->p_baseaddr = baseaddr;
     device->v_baseaddr = (uint32_t *) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
     if (device->v_baseaddr == MAP_FAILED) {
-        printf("[axi_dma] Initialize failed\n");
         close(dev_fd);
         return -1;
     }
 
     if (dma_mm2s_sg_active(device) || dma_s2mm_sg_active(device)) {
-        printf("[axi_dma] DMA SG is active, aborting..\n");
         close(dev_fd);
         return -1;
     }
@@ -40,7 +36,6 @@ int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, ui
     device->p_src_addr = src_addr;
     device->v_src_addr = (void *) mmap(NULL, 0xffff, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, src_addr);
     if (device->v_src_addr == MAP_FAILED) {
-        printf("[axi_dma] Initialize failed\n");
         munmap(device->v_baseaddr, device->size);
         close(dev_fd);
         return -1;
@@ -49,7 +44,6 @@ int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, ui
     device->p_dst_addr = dst_addr;
     device->v_dst_addr = (void *) mmap(NULL, 0xffff, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, dst_addr);
     if (device->v_dst_addr == MAP_FAILED) {
-        printf("[axi_dma] Initialize failed\n");
         munmap(device->v_baseaddr, device->size);
         munmap(device->v_src_addr, device->size);
         close(dev_fd);
@@ -96,8 +90,6 @@ void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t size) {
     _reg_set(device->v_baseaddr, AXI_DMA_S2MM_LENGTH, size);
     
     dma_s2mm_busy_wait(device);
-    printf("s2mm transferred %d bytes\n", size);
-    HARU_INFO("s2mm transfer done\n");
 }
 
 void axi_dma_haru_query_transfer(axi_dma_t *device, uint32_t src_len, uint32_t dst_len) {
@@ -116,9 +108,6 @@ void axi_dma_haru_query_transfer(axi_dma_t *device, uint32_t src_len, uint32_t d
     
     dma_mm2s_busy_wait(device);
     dma_s2mm_busy_wait(device);
-    printf("mm2s transferred %d bytes\n", src_len);
-    printf("s2mm transferred %d bytes\n", dst_len);
-    HARU_INFO("s2mm and mm2s transfer done\n");
 }
 
 // TODO: find a more efficient way to do this
