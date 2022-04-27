@@ -64,7 +64,7 @@ void haru_get_load_done(haru_t *haru) {
     fprintf(stderr, "Load done\n");
 }
 
-void haru_load_reference(haru_t *haru, int32_t *ref, uint32_t size) {
+int32_t haru_load_reference(haru_t *haru, int32_t *ref, uint32_t size) {
 
     // Reset dtw_accel
     dtw_accel_reset(&haru->dtw_accel);
@@ -75,14 +75,16 @@ void haru_load_reference(haru_t *haru, int32_t *ref, uint32_t size) {
     uint32_t size_left = size;
     int32_t *curr_ref = ref;
     while (size_left > 0) {
-        uint32_t transfer_size = size_left < HARU_AXI_BUFFER_SIZE ? size_left : HARU_AXI_BUFFER_SIZE;
+        uint32_t transfer_size = size_left < HARU_AXIS_BATCH_MAX_SIZE ? size_left : HARU_AXIS_BATCH_MAX_SIZE;
         memset((void *) haru->axi_dma.v_src_addr, 0, 0xffff);
         memcpy((void *) haru->axi_dma.v_src_addr, (void *) curr_ref, transfer_size * sizeof(int32_t));
-        axi_dma_mm2s_transfer(&haru->axi_dma, (transfer_size) * sizeof(uint32_t));
+        axi_dma_mm2s_transfer(&haru->axi_dma, (transfer_size) * sizeof(int32_t));
         
         size_left -= transfer_size;
         curr_ref += transfer_size;
     }
+    // fprintf(stderr, "ref_addr: %d\n", dtw_accel_addrw_ref(&haru->dtw_accel));
+    return dtw_accel_ref_load_done(&haru->dtw_accel);
 }
 
 void haru_process_query(haru_t *haru, int32_t *query, uint32_t size, search_result_t *results) {

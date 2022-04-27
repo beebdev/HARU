@@ -19,6 +19,8 @@
 
 #define HARU_AXI_BUFFER_SIZE        0xffff
 
+#define HARU_AXIS_BATCH_MAX_SIZE    0x0fff
+
 typedef struct {
     dtw_accel_t dtw_accel;
     axi_dma_t axi_dma;
@@ -36,7 +38,7 @@ void haru_check_key(haru_t *haru);
 uint32_t haru_get_version(haru_t *haru);
 void haru_get_load_done(haru_t *haru);
 
-void haru_load_reference(haru_t *haru, int32_t *ref, uint32_t size);
+int32_t haru_load_reference(haru_t *haru, int32_t *ref, uint32_t size);
 void haru_process_query(haru_t *haru, int32_t *query, uint32_t size, search_result_t *results);
 
 #endif // HARU_H

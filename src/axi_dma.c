@@ -75,8 +75,8 @@ void axi_dma_mm2s_transfer(axi_dma_t *device, uint32_t size) {
     
     // Wait for completion
     dma_mm2s_busy_wait(device);
-    printf("mm2s transferred %d bytes\n", size);
-    HARU_INFO("mm2s transfer done\n");
+    // printf("mm2s transferred %d bytes\n", size);
+    // HARU_INFO("mm2s transfer done\n");
 }
 
 void axi_dma_s2mm_transfer(axi_dma_t *device, uint32_t size) {
