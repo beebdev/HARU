@@ -35,7 +35,8 @@ module dtw_core #(
     parameter WIDTH         = 16,   // Data width
     parameter AXIS_WIDTH    = 32,   // AXI data width
     parameter SQG_SIZE      = 250,  // Squiggle size
-    parameter REF_INIT      = 0
+    parameter REF_INIT      = 0,
+    parameter REFMEM_PTR_WIDTH = 20
 )(
     // Main DTW signals
     input   wire                    clk,
@@ -61,14 +62,8 @@ module dtw_core #(
 
     // debug signals
     output  wire [2:0]              dbg_state,
-    output  wire [14:0]             dbg_addrW_ref,
-    output  wire [14:0]             dbg_addrR_ref,
+    output  wire [REFMEM_PTR_WIDTH-1:0]             dbg_addr_ref,
 
-    input   wire                    dbg_b_wren,
-    input   wire [14:0]             dbg_b_addrW_ref,
-    input   wire [14:0]             dbg_b_addrR_ref,
-    input   wire [15:0]             dbg_b_din,
-    output  wire [15:0]             dbg_b_dout,
     output  wire [31:0]             dbg_cycle_counter,
     output  wire [31:0]             dbg_nquery,
     output  wire [31:0]             dbg_curr_qid
@@ -97,8 +92,7 @@ reg r_load_done;
 reg r_src_fifo_clear;
 
 // Ref mem signals
-reg  [14:0]         addrR_ref;          // Read address for refmem 
-reg  [14:0]         addrW_ref;          // Write address for refmem
+reg  [REFMEM_PTR_WIDTH-1:0] addr_ref;          // Read address for refmem 
 reg                 wren_ref;           // Write enable for refmem
 wire [WIDTH-1:0]    dataout_ref;        // Reference data
 
@@ -123,21 +117,15 @@ reg [31:0] r_dbg_nquery;
 // Reference memory
 dtw_core_ref_mem #(
     .width      (WIDTH),
-    .initalize  (REF_INIT)
+    .initalize  (REF_INIT),
+    .ptrWid     (REFMEM_PTR_WIDTH)
 ) inst_dtw_core_ref_mem (
     .clk            (clk),
 
-    .a_wen          (wren_ref),
-    .a_addrW        (addrW_ref),
-    .a_addrR        (addrR_ref),
-    .a_din          (src_fifo_data[15:0]),
-    .a_dout         (dataout_ref),
-
-    .b_wen          (dbg_b_wren),
-    .b_addrW        (dbg_b_addrW_ref),
-    .b_addrR        (dbg_b_addrR_ref),
-    .b_din          (dbg_b_din),
-    .b_dout         (dbg_b_dout)
+    .wen          (wren_ref),
+    .addr         (addr_ref[REFMEM_PTR_WIDTH-1:0]),
+    .din          (src_fifo_data[15:0]),
+    .dout         (dataout_ref)
 );
 
 // DTW datapath
@@ -165,7 +153,7 @@ dtw_core_datapath #(
 assign load_done = r_load_done;
 assign src_fifo_clear = r_src_fifo_clear;
 assign dbg_state = r_state;
-assign dbg_addrW_ref = addrW_ref;
+assign dbg_addr_ref = addr_ref;
 assign dbg_nquery = r_dbg_nquery;
 assign dbg_curr_qid = curr_qid;
 
@@ -193,7 +181,7 @@ always @(posedge clk) begin
             end
         end
         REF_LOAD: begin
-            if (addrW_ref < ref_len) begin
+            if (addr_ref < ref_len) begin
                 r_state <= REF_LOAD;
             end else begin
                 r_load_done <= 1;
@@ -232,8 +220,7 @@ always @(posedge clk) begin
         busy                <= 0;
         src_fifo_rden       <= 0;
         sink_fifo_wren      <= 0;
-        addrR_ref           <= 0;
-        addrW_ref           <= 0;
+        addr_ref           <= 0;
         dp_rst              <= 1;
         dp_running          <= 0;
         stall_counter       <= 0;
@@ -253,7 +240,7 @@ always @(posedge clk) begin
         r_dbg_nquery        <= 0;
 
         if (!src_fifo_empty && src_fifo_rden) begin
-            addrW_ref       <= addrW_ref + 1;
+            addr_ref        <= addr_ref + 1;
             wren_ref        <= 1;
         end else begin
             wren_ref        <= 0;
@@ -266,6 +253,7 @@ always @(posedge clk) begin
         dp_rst              <= 0;
         stall_counter       <= 0;
         r_src_fifo_clear    <= 0;
+        wren_ref            <= 0;
 
         if (!src_fifo_empty) begin
             curr_qid        <= src_fifo_data;
@@ -280,11 +268,12 @@ always @(posedge clk) begin
         dp_rst                  <= 0;
         stall_counter           <= 0;
         r_src_fifo_clear        <= 0;
+        wren_ref            <= 0;
 
-        if (addrR_ref < SQG_SIZE) begin
+        if (addr_ref < SQG_SIZE) begin
             // Query loading
             if (!src_fifo_empty) begin
-                addrR_ref       <= addrR_ref + 1;
+                addr_ref       <= addr_ref + 1;
                 src_fifo_rden   <= 1;
                 dp_running      <= 1;
             end else begin
@@ -293,7 +282,7 @@ always @(posedge clk) begin
             end
         end else begin
             // Query loaded
-            addrR_ref           <= addrR_ref + 1;
+            addr_ref           <= addr_ref + 1;
             src_fifo_rden       <= 0;
             dp_running          <= 1;
         end
@@ -303,6 +292,7 @@ always @(posedge clk) begin
         src_fifo_rden   <= 0;
         dp_rst          <= 0;
         dp_running      <= 0;
+        wren_ref        <= 0;
 
         // Serialize output
         if (!sink_fifo_full) begin

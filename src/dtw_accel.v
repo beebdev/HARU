@@ -129,6 +129,8 @@ localparam  integer ADDR_BITS = 3;
 
 localparam  MAX_ADDR = REG_KEY;
 
+localparam REFMEM_PTR_WIDTH = 18;
+
 /* ===============================
  * registers/wires
  * =============================== */
@@ -192,8 +194,7 @@ wire                            w_sink_fifo_not_empty;
 
 // dtw core debug
 wire  [2:0]                     w_dtw_core_state;
-wire  [14:0]                    w_dtw_core_addrW_ref;
-wire  [14:0]                    w_dtw_core_addrR_ref;
+wire  [REFMEM_PTR_WIDTH-1:0]   w_dtw_core_addr_ref;
 wire  [31:0]                    w_dtw_core_nquery;
 wire  [31:0]                    w_dtw_core_curr_qid;
 
@@ -292,7 +293,8 @@ fifo #(
 dtw_core #(
     .WIDTH              (16),
     .AXIS_WIDTH         (AXIS_DATA_WIDTH),
-    .REF_INIT           (0)
+    .REF_INIT           (0),
+    .REFMEM_PTR_WIDTH   (REFMEM_PTR_WIDTH)
 ) dc (
     .clk                (S_AXI_clk),
     .rst                (w_dtw_core_rst),
@@ -314,14 +316,8 @@ dtw_core #(
     .sink_fifo_last     (w_sink_fifo_r_last),
 
     .dbg_state          (w_dtw_core_state),
-    .dbg_addrW_ref      (w_dtw_core_addrW_ref),
-    .dbg_addrR_ref      (w_dtw_core_addrR_ref),
+    .dbg_addr_ref       (w_dtw_core_addr_ref),
 
-    .dbg_b_wren         (r_dbg_ref_addr[31]),
-    .dbg_b_addrW_ref    (r_dbg_ref_addr[29:15]),
-    .dbg_b_addrR_ref    (r_dbg_ref_addr[14:0]),
-    .dbg_b_din          (r_dbg_ref_din[15:0]),
-    .dbg_b_dout         (w_dbg_ref_dout[15:0]),
     .dbg_cycle_counter  (w_dtw_core_cycle_counter),
     .dbg_nquery         (w_dtw_core_nquery),
     .dbg_curr_qid       (w_dtw_core_curr_qid)
@@ -471,7 +467,7 @@ always @ (posedge S_AXI_clk) begin
                 r_reg_out_data <= w_dtw_core_cycle_counter;
             end
             REG_CORE_REF_ADDR: begin
-                r_reg_out_data <= {3'h0, w_dtw_core_addrR_ref, w_dtw_core_addrW_ref};
+                r_reg_out_data <= {12'h0, w_dtw_core_addr_ref};
             end
             REG_NQUERY: begin
                 r_reg_out_data <= w_dtw_core_nquery;

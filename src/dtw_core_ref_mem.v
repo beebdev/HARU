@@ -33,25 +33,16 @@ SOFTWARE.
 
 module dtw_core_ref_mem #(
     parameter width     = 16,
-    parameter ptrWid    = 15,
+    parameter ptrWid    = 18,
     parameter depth     = 2**ptrWid,
-    parameter initalize = 1
+    parameter initalize = 0
 )(
     input   wire                clk,
 
-    // Port A
-    input   wire                a_wen,
-    input   wire [ptrWid-1:0]   a_addrW,
-    input   wire [ptrWid-1:0]   a_addrR,
-    input   wire [width-1:0]    a_din,
-    output  reg  [width-1:0]    a_dout,
-
-    // Port B
-    input   wire                b_wen,
-    input   wire [ptrWid-1:0]   b_addrW,
-    input   wire [ptrWid-1:0]   b_addrR,
-    input   wire [width-1:0]    b_din,
-    output  reg  [width-1:0]    b_dout
+    input   wire                wen,
+    input   wire [ptrWid-1:0]   addr,
+    input   wire [width-1:0]    din,
+    output  reg  [width-1:0]    dout
 );
 
 /* ===============================
@@ -59,37 +50,34 @@ module dtw_core_ref_mem #(
  * =============================== */
 (* ram_style = "block" *) 
 reg [width-1:0] MEM [0:depth-1];
-reg [depth-1:0] i;
-
+// reg [depth-1:0] i; // only used for simulation, comment out for synthesis
 /* ===============================
  * initialisation
  * =============================== */
-initial begin
-    if (initalize) begin
-        $readmemb("data/reference.txt", MEM);
-    end else begin
-        for (i = 0; i < depth; i = i + 1) begin
-            MEM[i] = 0;
-        end
-    end
-end
+//initial begin
+//    if (initalize) begin
+//        $readmemb("data/reference.txt", MEM);
+//    // end else begin
+//    //     // only used for simulation, comment out for synthesis
+//    //     for (i=0; i<depth; i=i+1) begin
+//    //         MEM[i] = 0;
+//    //     end
+//    end
+//end
 
 /* ===============================
  * synchronous logic
  * =============================== */
 // Write
 always @(posedge clk) begin
-	if (a_wen) begin
-		MEM[a_addrW] <= a_din;
-    end else if (b_wen) begin
-        MEM[b_addrW] <= b_din;
-    end
+	if (wen) begin
+		MEM[addr] <= din;
+	end
 end
 
 // Read
 always @(posedge clk) begin
-    a_dout <= MEM[a_addrR];
-    b_dout <= MEM[b_addrR];
+    dout <= MEM[addr];
 end
 
 endmodule

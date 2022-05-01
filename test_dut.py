@@ -219,8 +219,8 @@ def test_load_ref(dut):
 
     ## Body
     # Check first few cells of ref mem
-    t0_ref_mem_0 = dut.dut.dc.inst_dtw_core_ref_mem.MEM[0].value
-    assert t0_ref_mem_0 == 0 # before loading it should be zero
+    # t0_ref_mem_0 = dut.dut.dc.inst_dtw_core_ref_mem.MEM[0].value
+    # assert t0_ref_mem_0 == 0 # before loading it should be zero
     
     # Set opmode
     yield tester.set_opmode(1) # load ref mode
@@ -249,6 +249,13 @@ def test_load_ref(dut):
         assert dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer == sdata[0][i]
     assert dut.dut.dc.r_load_done.value.integer == 1
     assert dut.dut.dc.r_state.value.integer == 0
+
+    # print("Ref len: {}".format(len(dut.dut.dc.inst_dtw_core_ref_mem.MEM)))
+    # for i in range(200):
+    #     try:
+    #         print(dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value.integer)
+    #     except:
+    #         print(dut.dut.dc.inst_dtw_core_ref_mem.MEM[i].value)
 
 
 ###############################################################################
@@ -473,15 +480,25 @@ def test_load_small_query(dut):
     ref = [[]]
     query = [[]]
 
-    with open("data/ref_dbg.txt", "w") as f:
-        for i in range(2000):
-            ref[0].append(i)
-            f.write("ref[{}] = {}\n".format(i, ref[0][i]))
+    # with open("data/ref_dbg.txt", "w") as f:
+    #     for i in range(2000):
+    #         ref[0].append(i)
+    #         f.write("ref[{}] = {}\n".format(i, ref[0][i]))
             
-    with open("data/query_dbg.txt", "w") as f:
-        for i in range(252):
-            query[0].append(i)
-            f.write("query[{}] = {}\n".format(i, query[0][i]))
+    # with open("data/query_dbg.txt", "w") as f:
+    #     for i in range(252):
+    #         query[0].append(i)
+    #         f.write("query[{}] = {}\n".format(i, query[0][i]))
+
+    for i in range(4000):
+        # ref[0].append(random.randint(0, 10))
+        ref[0].append(i%1000)
+    
+    query[0].append(1)
+    query[0].append(0)
+    for i in range(250):
+        query[0].append(ref[0][i+200])
+
 
     # Set ref_len
     yield tester.set_ref_len(len(ref[0]))
@@ -514,21 +531,39 @@ def test_load_small_query(dut):
     # Start loading query
     cocotb.fork(axis_sink.receive())
     yield axis_source.send_raw_data(query)
-    yield Timer(CLK_PERIOD * (261 + len(ref[0]))) # This takes time!
+    yield Timer(CLK_PERIOD * (262 + len(ref[0]))) # This takes time!
     # yield Timer(CLK_PERIOD * 7)
     print("state: {}".format(dut.dut.dc.r_state.value.integer))
     print("running: {}".format(dut.dut.dc.inst_dtw_core_datapath.running.value))
     print("running_d: {}".format(dut.dut.dc.inst_dtw_core_datapath.running_d.value))
     print("cycle_counter: {}".format(dut.dut.dc.inst_dtw_core_datapath.cycle_counter.value.integer))
     print("ref_len: {}".format(dut.dut.dc.inst_dtw_core_datapath.ref_len.value.integer))
-    print("done: {}".format(dut.dut.dc.inst_dtw_core_datapath.done.value))
-    print("Minpos: {}".format(dut.dut.dc.curr_position.value.integer))
-    print("Minval: {}".format(dut.dut.dc.curr_minval.value.integer))
-    print("DTW_lastrow: {}".format(dut.dut.dc.inst_dtw_core_datapath.DTW_lastrow.value.integer))
-    rdata = axis_sink.read_data()
     
+    print("load_done: {}".format(dut.dut.dc.r_load_done.value))
+    print("addr_ref: {}".format(dut.dut.dc.addr_ref.value.integer))
+    
+    dtw_dp = dut.dut.dc.inst_dtw_core_datapath
+    # for i in range(80):    
+    #     yield Timer(CLK_PERIOD * 50)
+
+    #     print("============")
+    #     print("running: {}".format(dtw_dp.running.value))
+    #     print("Input_squiggle: {}".format(dtw_dp.Input_squiggle.value.integer))
+    #     print("Rword: {}".format(dtw_dp.Rword.value.integer))
+    #     print("ref_len: {}".format(dtw_dp.ref_len.value.integer))
+    #     print("minval: {}".format(dtw_dp.minval.value.integer))
+    #     try:
+    #         print("DTW_lastrow: {}".format(dtw_dp.DTW_lastrow.value.integer))
+    #     except:
+    #         print("DTW_lastrow: {}".format(dtw_dp.DTW_lastrow.value))
+
+    #     print("position: {}".format(dtw_dp.position.value.integer))
+    #     print("done: {}".format(dtw_dp.done.value))
+
+    rdata = axis_sink.read_data()
+    print("rdata: {}".format(rdata))
     assert len(rdata) == 1
     assert len(rdata[0]) == 3
-    assert rdata[0][0] == 0
-    assert rdata[0][1] == 252
+    assert rdata[0][0] == 1
+    assert rdata[0][1] == 450
     assert rdata[0][2] == 0
