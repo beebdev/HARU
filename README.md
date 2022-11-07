@@ -9,8 +9,6 @@ The current implementation of the subsequence DTW was developed using HLS for so
 The HARU system composes of the modified RUscripts implementation that sends the query squiggle through a socket connection to the Zedboard where the PS side hosts a minimal server waiting for incoming queries. When receiving a query squiggle, the HARU server on PS starts the subseekDTW accelerator on the PL side of the Zynq MPSoC and transfers the squiggle sequence via AXI stream. Once the whole sequence is streamed, the accelerator starts processing and the server application polls for completion. On completion, the results are obtained through General Purpose AXI and sent back to the RUscripts Python implementation where the Read Until API interface is being done.
 
 ## Repo structure
-### RUscripts
-This is an extended implementation of the original [RUscripts](https://github.com/mattloose/RUscripts). The script included here has been updated to work with Python 3.8 and has simple socket code to send the squiggle through ethernet.
 
 ### HARU_server
 This directory contains the C application code being run on the PS side of the Zynq MPSoC.
