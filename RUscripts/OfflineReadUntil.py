@@ -1,69 +1,87 @@
-#!/usr/bin/python3
-
 import os
 import sys
 import platform
 import argparse
 import glob
-import h5py
+import pyslow5
+import events
 import multiprocessing as mp
 import shutil
-import time
 
 from tools import ruutils as ruu
 from tools import haruutils as haru
 
-__version__ = "0.1"
-__logo__ = """▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌  
-▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•  
-▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪  
+__version__ = "v0.0.99"
+__logo__ = """
+▄▄▄  ▄▄▄ . ▄▄▄· ·▄▄▄▄  ▄• ▄▌ ▐ ▄ ▄▄▄▄▄▪  ▄▄▌
+▀▄ █·▀▄.▀·▐█ ▀█ ██▪ ██ █▪██▌•█▌▐█•██  ██ ██•
+▐▀▀▄ ▐▀▀▪▄▄█▀▀█ ▐█· ▐█▌█▌▐█▌▐█▐▐▌ ▐█.▪▐█·██▪
 ▐█•█▌▐█▄▄▌▐█ ▪▐▌██. ██ ▐█▄█▌██▐█▌ ▐█▌·▐█▌▐█▌▐▌
-.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀ """
+.▀  ▀ ▀▀▀  ▀  ▀ ▀▀▀▀▀•  ▀▀▀ ▀▀ █▪ ▀▀▀ ▀▀▀.▀▀▀
+"""
 
-
-max_cost = []
-swDTW_time = []
-hwDTW_time = []
 
 def process_hdf5(arg):
-    filename, seqIDs, threedarray, proc_ampres, seqLen, args, RID = arg
-    hdf = h5py.File(filename, 'r')
+    # Unpack args
+    filename, seqIDs, threedarray, seqLen, args = arg
+    print(filename, file=sys.stderr)
 
-    for read in hdf['Analyses']['EventDetection_000']['Reads']:
-        events = hdf['Analyses']['EventDetection_000']['Reads'][read]['Events'][()]
+    # Create generator
+    s5 = pyslow5.Open(filename,'r')
+    reads = s5.seq_reads(pA=True)
+
+    for i, read in enumerate(reads):
+        print("\rRead {}".format(i), file=sys.stderr, end="")
+
+        events_means = events.get_events_from_raw(read['signal'], read['len_raw_signal'])
+
         event_collection = list()
-        for event in events:
-            event_collection.append(float(event[0]))
+        for i in range(0,len(events_means)):
+            event_collection.append(float(events_means[i]))
 
         # We ignore the first 50 events (Protein driver) and process the following 250 events
-        squiggle = event_collection[50:300]
+        squiggle = event_collection[args.barcode_size : args.barcode_size + args.squiggle_query_size]
 
-        # hw_result = haru.squiggle_search(squiggle, RID)
+        # Search squiggle in reference squiggle
+        # haru.send_squiggle(squiggle) # TODO: move this to a separate function or add a condition for HARU flag
+        squiggleres = ruu.squiggle_search(squiggle, seqIDs, threedarray)
+        seqid = squiggleres[0]
+        direction = squiggleres[2]
+        position = squiggleres[3]
 
-        # Subsequence search for the squiggle
-        sw_result = ruu.squiggle_search(squiggle, seqIDs, threedarray)
-        seqID = sw_result[0]
-        direction = sw_result[2]
-        position = sw_result[3]
+        # Output of results
+        res_string = str(read['read_id']) + "\t"    # Query sequence name
+        res_string += "250\t50\t300\t"              # Query sequence length, start, end
+        if direction == "F":                        # Direction
+            res_string += "+\t"
+        else:
+            res_string += "-\t"
+        res_string += str(seqid) + "\t"             # Target sequence name
+        res_string += str(seqLen[seqid]) + "\t"     # Target sequence length
+        res_string += str(position) + " \t"         # Target start
+        res_string += str(position + 250) + "\t"    # Target end
+        res_string += str(seqLen[seqid]) + "\t"     # Number of residues
+        res_string += str(seqLen[seqid]) + "\t"     # Alignment block length
+        res_string += "60\n"                          # Mapping quality
+        print(res_string, end="")
         
-        # Determine rejection decision
-        try:
-            result = ruu.go_or_no(
-                seqID, direction, position, args)
-        except Exception as err:
-            print("error occurred", err, file=sys.stderr)
-    hdf.close()
-    return (result, filename, sw_result)#, hw_result)
+    return ""
+
+    # TODO: Currently for accuracy test we don't need go_or_no
+        # try:
+        #     result = ruu.go_or_no(
+        #         seqid, direction, position, seqLen, args)
+        # except Exception as err:
+        #     print("error occurred", err, file=sys.stderr)
+
+    # return (result, filename, squiggleres)
 
 
+# TODO: Currently for accuracy test we don't need go_or_no
 def mycallback(arg):
-    # (result, filename, sw_result, hw_result, hw_time) = arg
-    # (result, filename, sw_result, hw_result) = arg
-    (result, filename, sw_result) = arg
+    (result, filename, squiggleres) = arg
     filetocheck = os.path.split(filename)
     sourcefile = filename
-    swDTW_time.append(sw_result[6])
-    # hwDTW_time.append(hw_result[0])
 
     if result == "Sequence":
         path_output = os.path.join(args.output_folder, 'sequence')
@@ -80,10 +98,9 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        print("[{}-{} @{}] [{}]\t\u001b[32mSequence found\u001b[0m max {}".format(sw_result[0],
-              sw_result[2], sw_result[4], filename, sw_result[5]))
-        max_cost.append(sw_result[5])
-        
+        # logger.info("[%s-%s @%s] \033[42;1mSequence found\033[0m\n[%s]", squiggleres[0], squiggleres[2], squiggleres[3], filename)
+        print("[{}-{} @{}] [{}] [{}]\t\u001b[32mSequence found\u001b[0m".format(squiggleres[0],
+              squiggleres[2], squiggleres[4], squiggleres[1], filename), file=sys.stderr)
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -107,10 +124,8 @@ def mycallback(arg):
         if not os.path.exists(path_fail):
             os.makedirs(path_fail)
 
-        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m max{}".format(sw_result[0],
-              sw_result[2], sw_result[3], filename, sw_result[5]))
-        max_cost.append(sw_result[5])
-
+        print("[{}-{} @{}] [{}]\t\u001b[31mNo match\u001b[0m".format(squiggleres[0],
+              squiggleres[2], squiggleres[3], filename), file=sys.stderr)
         if "pass" in filename:
             destfile = os.path.join(path_pass, filetocheck[1])
         else:
@@ -135,9 +150,6 @@ if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(
         description='Offline Read Until simulation.')
-    parser.add_argument('-H', "--hw",
-                        action="store_true", default=False,
-                        dest="hw", help="Use hardware search")
     parser.add_argument('-f', '--fasta', metavar='FILE', required=True,
                         dest='fasta', type=str, default=None, action='store',
                         help='The fasta format file describing the reference sequence for your organism.')
@@ -162,15 +174,24 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', required=False,
                         dest='output_folder', type=str, default='test_ru_out',
                         help='Path to a folder to symbolically place reads representing match and not match.')
+    parser.add_argument('-H', '--haru', required=False,
+                        dest='haru', action='store_true', default=False,
+                        help='Use this flag if you are using the Haru version of the model.')
+    parser.add_argument('-b', '--barcode-size', required=False,
+                        dest='barcode_size', type=int, default=50,
+                        help='The size of barcode sequence in read. RU skips the barcode sequence. Default is 50.')
+    parser.add_argument('-q', '--squiggle-query-size', required=False,
+                        dest='squiggle_query_size', type=int, default=250,
+                        help='The size of squiggle query to be mapped with DTW. Default uis 250.')
     parser.add_argument('-V', '--verbose',
                         dest='verbose', action='store_true', default=False,
                         help='Print detailed messages while processing files.')
     parser.add_argument('-v', '--version', action='version',
                         version=('%(prog)s version={version}').format(version=__version__))
     args = parser.parse_args()
-    hw_run = args.hw # Uses HARU if enabled
 
-    print(__logo__)
+    # HARU logo
+    sys.stderr.write(__logo__)
 
     # Validate fasta and model files
     ruu.file_existance_check((args.fasta, args.model))
@@ -178,8 +199,6 @@ if __name__ == "__main__":
 
     # Multiprocess setup
     p = mp.Pool(args.procs)
-    manager = mp.Manager()
-    proc_ampres = manager.dict()
     fast_file = args.fasta
     seq_len = ruu.get_seq_len(fast_file)
 
@@ -191,59 +210,38 @@ if __name__ == "__main__":
     seqIDs, threedarray = ruu.process_ref_fasta(
         fast_file, model_ker_means, kmer_len)
 
-    # haru.save_reference(seqIDs, threedarray)
+    # Currently used for HARU FPGA setup 
+    if args.haru:
+        haru.save_reference_bram(seqIDs, threedarray)
+        for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
+            haru.save_query_bram(filename)
+            break
+        print("exiting...")
+        exit()
 
+    print("continuing...", file=sys.stderr)
     # Scrap filenames
     data = []
     filenamecounter = 0
-    for filename in glob.glob(os.path.join(args.watchdir, '*.fast5')):
+    for filename in glob.glob(os.path.join(args.watchdir, '*.blow5')):
         filenamecounter += 1
-        if hw_run:
-            data.append([filename, filenamecounter])
-        else:
-            data.append([filename, seqIDs, threedarray,
-                        proc_ampres, seq_len, args, filenamecounter])
-
-    for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.fast5')):
+        data.append([filename, seqIDs, threedarray, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "pass", '*.blow5')):
         filenamecounter += 1
-        if hw_run:
-            data.append([filename, filenamecounter])
-        else:
-            data.append([filename, seqIDs, threedarray,
-                        proc_ampres, seq_len, args, filenamecounter])
-
-    for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.fast5')):
+        data.append([filename, seqIDs, threedarray, seq_len, args])
+    for filename in glob.glob(os.path.join(args.watchdir, "fail", '*.blow5')):
         filenamecounter += 1
-        if hw_run:
-            data.append([filename, filenamecounter])
-        else:
-            data.append([filename, seqIDs, threedarray,
-                        proc_ampres, seq_len, args, filenamecounter])
-
+        data.append([filename, seqIDs, threedarray, seq_len, args])
     procdata = tuple(data)
 
+    # Assign process hdf5 to processes
+    print("Start spawing hdf5 processes", file=sys.stderr)
+    results = []
+    for d in (procdata):
+        result = p.apply_async(process_hdf5, args=(d,))#, callback=mycallback)
+        print(result.get(), file=sys.stderr) # uncomment if RU did not run to see error
+        results.append(result)
+    for result in results:
+        result.wait()
 
-    # Start multiprocessing
-    if hw_run:
-        result = haru.send_batch_to_hw(procdata)
-
-        # print("max cost value: ", max(max_cost))
-        # print("Total runs: ", len(swDTW_time))
-        # print("Total hw time: ", sum(hwDTW_time), "sec")
-        # print("Average hw time per squiggle: ", sum(hwDTW_time) / len(hwDTW_time), "sec")
-    else:
-        print("Start spawning hdf5 processes")
-        results = []
-        for d in (procdata):
-            result = p.apply_async(process_hdf5, args=(d,), callback=mycallback)
-            # print(result.get()) # In case you want to see the results
-            results.append(result)
-        for result in results:
-            result.wait()
-
-        print("max cost value: ", max(max_cost))
-        print("Total runs: ", len(swDTW_time))
-        print("Total sw time: ", sum(swDTW_time), "sec")
-        print("Average sw time per squiggle: ", sum(swDTW_time) / len(swDTW_time), "sec")
-
-    print("Read until completed. Exiting...")
+    print("Read until completed. Exiting...", file=sys.stderr)
