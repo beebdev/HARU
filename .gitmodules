@@ -1,0 +1,3 @@
+[submodule "examples/sigfish"]
+	path = examples/sigfish
+	url = git@github.com:beebdev/sigfish.git

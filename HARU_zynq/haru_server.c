@@ -33,7 +33,7 @@
 
 
 /* Server information */
-#define MY_STATIC_IP "10.10.130.3"
+#define MY_STATIC_IP "10.10.130.3" // Hardcoded for now..
 #define PORT 3490
 #define BACKLOG 10
 #define BUFSIZE 4096
