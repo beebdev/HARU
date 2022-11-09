@@ -15,8 +15,8 @@ To quickly test out HARU and the example system, Sigfish, you can download the p
 4. Transfer the prebuilt package of HARU to the device either through `scp` or a drive.
 5. Untar the package and run the installation script. Check the output for `haru-core` in the list.
     ```
-    tar -xzf haru-v0.1-binaries.tgz
-    cd haru-v0.1-binaries
+    tar -xzf haru-v0.0-binaries.tgz
+    cd haru-v0.0-binaries
     ./haru_install.sh
     ```
 6. Load the accelerator.
