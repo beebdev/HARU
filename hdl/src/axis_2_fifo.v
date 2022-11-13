@@ -23,12 +23,12 @@ SOFTWARE.
 
 /*
  * Author: David McCoy (dave.mccoy@cospandesign.com)
- *         Elton Shih  (beebdev@gmail.com)
+ *         Po Jui Shih  (beebdev@gmail.com)
  * Description: Simple adapter to connect FIFO to AXI Stream Master interface
  *
  * Changes:     Author         Description
  *  03/24/2017  David McCoy    Initial Commit
- *  03/31/2022  Elton Shih     Removed unused extra padding for tuser and tlast.
+ *  03/31/2022  Po Jui Shih     Removed unused extra padding for tuser and tlast.
  *                             Also removed the redundant i_fifo_not_full anding
  *                             for o_fifo_w_stb. Style changes for consistency.
  */

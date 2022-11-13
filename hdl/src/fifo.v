@@ -27,7 +27,7 @@
  *                last position, previously this incorrectly pointed
  *                to the last and not the read_ptr last
  *    2021.08.10: Added a note that the DEPTH must be a power of 2
- *    2022.03.20: Changes to align coding style (Elton Shih)
+ *    2022.03.20: Changes to align coding style (Po Jui Shih)
 **/
 
 `timescale 1ns / 1ps

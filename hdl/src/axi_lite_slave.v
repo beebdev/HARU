@@ -23,13 +23,13 @@ SOFTWARE.
 
 /*
  * Author: David McCoy (dave.mccoy@cospandesign.com)
- *         Elton Shih  (beebdev@gmail.com)
+ *         Po Jui Shih  (beebdev@gmail.com)
  * Description: An AXI Lite Slave interface that simplifies register access
  *  XXX: Currently there is no strobe level access
  *
  * Changes:     Author         Description
  *  03/24/2017  David McCoy    Initial Commit
- *  03/31/2022  Elton Shih     Style changes for consistency.
+ *  03/31/2022  Po Jui Shih     Style changes for consistency.
  */
 
 `timescale 1ps / 1ps
