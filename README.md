@@ -18,7 +18,7 @@ To quickly test out HARU, you can download the pre-built binary package built fo
 3. Once the Micro SD card is prepared, insert it into the Micro SD card slot on the Kria board. 
 4. Connect the USB serial port on the Kria board (micro USB slot) to your host machine's USB port. Two serial devices (COM ports) with consecutive numbers should appear (e.g., COM5 and COM6 on Windows) where the lower numbered COM port is associated with the USART.
 5. Using your preferred serial terminal software (e.g., [TeraTerm](https://ttssh2.osdn.jp/index.html.en)) on your host machine, open the COM port with the lower number (e.g., COM5) with BAUD rate of 115000.  
-6. Power on the Kria board and go through the setup process on your first power-on. The dafault username is *root*. You can optionally connect the Kria board to Internet using Ethernet and SSH to it if you wish.
+6. Power on the Kria board and go through the setup process on your first power-on. The dafault username is *root* which does not require a password. You can optionally connect the Kria board to Internet using Ethernet and SSH to it if you wish. **IMPORTANT: to avoid any security issues make sure at least you set a password using `passwd` command if you are connecting to a network.**
 4. Transfer the prebuilt package of HARU available under [releases](https://github.com/beebdev/HARU/releases) (named *haru-\<version\>-binaries.tgz*
 ) to the Kria board either through `scp` command or a USB drive. If you connected the Kria board to Internet using Ethernet, you can simply use `wget` to download directly from the GitHub link.
 5. On the Kria board, untar the package and run the installation script to install the accelerator.
