@@ -47,7 +47,7 @@ To quickly test out HARU, you can download the pre-built binary package built fo
 
 ## Building
 > Warnings:
-> - The building of the core acccelerator may not be intuitive and require proprietary softare from AMD Xilinx.
+> - The building of the core acccelerator is not intuitive and require proprietary sowtware from AMD Xilinx.
 > - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria.
 
 To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two components:
@@ -55,24 +55,26 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 - Sigfish + driver (C, build with cross-compilation toolchain or build on Kria)
 
 ### Prerequisites
-- Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC_ is included in the installation
+- Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC) is included in the installation
+    - Download [Vivado (hw developer) 2021.1 installer](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2021-1.html). We suggest downloading the Self Extracting Web Installer.
+    - Select Vitis during the installation wizard.
 - device-tree-xlnx - make sure to checkout the version to align with other tools.
     ```sh
     git clone https://github.com/Xilinx/device-tree-xlnx
     cd device-tree-xlnx
     git checkout xlnx_rel_v2021.1
     ```
-- `dtc` - can use WSL or other terminals to run. To build and install from source:
+- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:
     ```sh
     git clone https://git.kernel.org/pub/scm/utils/dtc/dtc.git
     cd dtc
     make
-    export PATH=$PATH:/<path-to-dtc>/ # optionally, add this to your .bashrc (WSL)
+    export PATH=$PATH:/<path-to-dtc>/ # optionally, add this to your .bashrc 
     ```
 ### Core Accelerator
 1. Clone the repository if you have not done so.
     ```sh
-    git clone git@github.com:beebdev/HARU.git
+    git clone https://github.com/beebdev/HARU
     ```
 2. Start Vivado, click on create project and follow the prompt to setup project. When selecting parts, navigate to *Boards* and search "kria" in the search bar and select *Kria KV260 Vision AI Starter Kit*.
 3. Once the project is created, click on Settings -> General, select *Verilog* as the target language. Navigate to *Bitstream* and tick on *-bin_file* for headerless bitstream to be generated later.
