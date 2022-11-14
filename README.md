@@ -156,10 +156,10 @@ Steps to build sigfish:
 3. Build with `make`.
     ```sh
     # Building sigfish WITHOUT hardware acceleration
-    make 
+    make PROCESSOR=aarch64
 
     # Building sigfish WITH hardware acceleration
-    make fpga=1
+    make fpga=1 PROCESSOR=aarch64
     ```
 4. Run `sigfish` with accelerator loaded (see above for steps).
 
