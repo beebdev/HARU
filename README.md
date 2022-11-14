@@ -52,7 +52,7 @@ To quickly test out HARU, you can download the pre-built binary package built fo
 
 To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two components:
 - Core Accelerator (HDL, build with Vivado)
-- Sigfish-haru + driver (C, build with cross-compilation toolchain or build on Kria)
+- Sigfish-haru + driver (C, build with cross-compilation toolchain)
 
 ### Prerequisites
 - Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC) is included in the installation
@@ -128,10 +128,9 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
     xmutil loadapp haru-dtw-firmware # Load haru-dtw-firmware
     xmutil listapps         # List the accelerators and check status for haru
 
-### Sigfish
-There are two ways to build sigfish: cross-compilation on another machine, natively build on the Kria board.
+### Sigfish-haru
 
-For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the [release](https://github.com/beebdev/HARU/releases) as `petalinux-sdk.sh`.
+We recommend cross-compilation of sigfish-haru on the host machine. For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the [release](https://github.com/beebdev/HARU/releases) as `petalinux-sdk.sh`.
 ```sh
 $ <path-to>/petalinux-sdk.sh
 PetaLinux SDK installer version 2021.1_SOM
