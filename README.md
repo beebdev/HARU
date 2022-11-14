@@ -101,7 +101,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
     hsi create_sw_design device-tree -os device_tree -proc psu_cortexa53_0
     hsi set property CONFIG.dt_overlay true [hsi::get_os]
     hsi generate_target -dir haru_dtconfig
-    hsi close_dtw_design design_1_wrapper
+    hsi close_hw_design design_1_wrapper
     ```
 15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.
     ```sh
