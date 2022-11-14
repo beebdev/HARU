@@ -98,7 +98,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
     cd <path-to-vivado-project>
     hsi open_hw_design design_1_wrapper.xsa
     hsi set_repo_path <path-to>/device-tree-xlnx
-    hsi create_sw_design device-tree -os devices_tree -proc psu_cortexa53_0
+    hsi create_sw_design device-tree -os device_tree -proc psu_cortexa53_0
     hsi set property CONFIG.dt_overlay true [hsi::get_os]
     hsi generate_target -dir haru_dtconfig
     hsi close_dtw_design design_1_wrapper
