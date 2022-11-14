@@ -149,8 +149,8 @@ Steps to build sigfish:
 
 1. Clone the sigfish repo.
     ```sh
-    git clone https://github.com/beebdev/sigfish-haru
-    git submodule init --update --remote
+    git clone --recursive https://github.com/beebdev/sigfish-haru
+    cd sigfish-haru
     ```
 2. Source environment script if cross-compiling.
 3. Build with `make`.
