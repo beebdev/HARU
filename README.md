@@ -106,7 +106,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.
     ```sh
     cd <path-to-vivado-project>/haru_dtconfig
-    dtc -@ -O dtb -o haru-dtw-firmwar.dtbo pl.dtsi
+    dtc -@ -O dtb -o haru-dtw-firmware.dtbo pl.dtsi
     ```
 16. Transfer the bitstream (`haru-dtw-firmware.bit.bin`) and device tree overlay blob (`haru-dtw-firmware.dtbo`) to your Kria device.
 17. On your Kria, create the `haru-dtw-firmware` directory under `/lib/firmware/xilinx/` and copy the bitstream and device tree overlay blob into it.
