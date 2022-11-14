@@ -131,7 +131,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 ### Sigfish
 There are two ways to build sigfish: cross-compilation on another machine, natively build the Kria board.
 
-For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the release as `sdk.sh`.
+For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the [release](https://github.com/beebdev/HARU/releases) as `sdk.sh`.
 ```sh
 $ <path-to>/sdk.sh
 PetaLinux SDK installer version 2021.1_SOM
