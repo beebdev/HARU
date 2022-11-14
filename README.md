@@ -131,9 +131,9 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 ### Sigfish
 There are two ways to build sigfish: cross-compilation on another machine, natively build on the Kria board.
 
-For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the [release](https://github.com/beebdev/HARU/releases) as `sdk.sh`.
+For cross-compilation, you will need to setup the cross-compilation toolchain for the Kria board, which is included in the [release](https://github.com/beebdev/HARU/releases) as `petalinux-sdk.sh`.
 ```sh
-$ <path-to>/sdk.sh
+$ <path-to>/petalinux-sdk.sh
 PetaLinux SDK installer version 2021.1_SOM
 ============================================
 Enter target directory for SDK (default: /opt/petalinux/2021.1_SOM): <desired-installation-dir>
@@ -159,7 +159,7 @@ Steps to build sigfish:
     make 
 
     # Building sigfish WITH hardware acceleration
-    make FPGA=1
+    make fpga=1
     ```
 4. Run `sigfish` with accelerator loaded (see above for steps).
 
