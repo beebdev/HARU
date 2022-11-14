@@ -87,7 +87,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.
 9. Connect the AXI Stream connections between AXI DMA and dtw_accel.
     - Connect `SINK_AXIS` of *dtw_accel* to `S_AXIS_S2MM` of *AXI Direct Memory Access*.
-    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_M2SS` of *AXI Direct Memory Access*.
+    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_MM2S` of *AXI Direct Memory Access*.
     - Click on *Run Connection Automation* and tick *All Automation* to configure clock of `SRC_AXIS` and `SINK_AXIS`' clock.
 10. Under *Sources*, right click on *design_1*, click on *Create HDL Wrapper*, and select *Let Vivado manage wrapper and auto-update*. This will create a Verilog wrapper for the design block configured above. It may take some time to complete and update in the *Sources* window.
 11. Right click on the newly generated *design_1_wrapper* under *Sources* and click *Set as Top* .
