@@ -82,7 +82,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
 5. Under *Sources*, click on *Add Sources* -> select *Add or create design sources*, -> navigate to `<path-to>/HARU/hdl/src/` and select the Verilog files (not including the simulation subdirectory).
 6. Add the following IP with the corresponding configurations:
     - **Zynq Ultrascale+ MPSoC**; Run *Block Automation* for board preset, double click to configure and navigate to *PS-PL Configuration* -> *PS-PL Interfaces* -> *Slave Interface* -> *AXI HP* -> enable *AXI HPC0 FPD*.
-    - **AXI DMA**; Double click to configure and untick *Enable Scatter Gather Engine*.
+    - **AXI DMA**; Double click to configure and make sure to *DESELECT* the option *Enable Scatter Gather Engine*.
 7. Right click on the block design diagram and select *Add Module*. Select *dtw_accel* and click OK.
 8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.
 9. Connect the AXI Stream connections between AXI DMA and dtw_accel.
