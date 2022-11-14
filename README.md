@@ -141,7 +141,7 @@ You are about to install the SDK to "<desired-installation-dir>". Proceed [Y/n]?
 ```
 When you want to cross-compile in a new terminal session, source the following file to setup the environment variables.
 ```sh
-`. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux`
+. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux
 echo $CC # to double check the configuration 
 ```
 
