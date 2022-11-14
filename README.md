@@ -64,7 +64,7 @@ To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two compo
     cd device-tree-xlnx
     git checkout xlnx_rel_v2021.1
     ```
-- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:
+- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager, but make sure it is version 1.5 or higher (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:
     ```sh
     git clone https://git.kernel.org/pub/scm/utils/dtc/dtc.git
     cd dtc
