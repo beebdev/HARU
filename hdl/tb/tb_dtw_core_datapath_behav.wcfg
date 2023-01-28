@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_dtw_core_datapath_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_dtw_core_datapath" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="979.666 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,004.067 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="246"></NameColumnWidth>
+      <ValueColumnWidth column_width="135"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="23" />
+   <wvobject fp_name="/tb_dtw_core_datapath/i" type="array">
+      <obj_property name="ElementShortName">i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">i[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/test_case" type="array">
+      <obj_property name="ElementShortName">test_case[160:1]</obj_property>
+      <obj_property name="ObjectShortName">test_case[160:1]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/running" type="logic">
+      <obj_property name="ElementShortName">running</obj_property>
+      <obj_property name="ObjectShortName">running</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/load_squiggle" type="logic">
+      <obj_property name="ElementShortName">load_squiggle</obj_property>
+      <obj_property name="ObjectShortName">load_squiggle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/squiggle_word" type="array">
+      <obj_property name="ElementShortName">squiggle_word[15:0]</obj_property>
+      <obj_property name="ObjectShortName">squiggle_word[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/reference_word" type="array">
+      <obj_property name="ElementShortName">reference_word[15:0]</obj_property>
+      <obj_property name="ObjectShortName">reference_word[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="group326" type="group">
+      <obj_property name="label">!!!</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/reference_len" type="array">
+         <obj_property name="ElementShortName">reference_len[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reference_len[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/cycle_counter" type="array">
+         <obj_property name="ElementShortName">cycle_counter[31:0]</obj_property>
+         <obj_property name="ObjectShortName">cycle_counter[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/done" type="logic">
+         <obj_property name="ElementShortName">done</obj_property>
+         <obj_property name="ObjectShortName">done</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/best_score" type="array">
+         <obj_property name="ElementShortName">best_score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">best_score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/best_position" type="array">
+         <obj_property name="ElementShortName">best_position[31:0]</obj_property>
+         <obj_property name="ObjectShortName">best_position[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/dtw_score" type="array">
+         <obj_property name="ElementShortName">dtw_score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dtw_score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/curr_best_score" type="array">
+         <obj_property name="ElementShortName">curr_best_score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_best_score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/curr_best_position" type="array">
+         <obj_property name="ElementShortName">curr_best_position[31:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_best_position[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/scores" type="array">
+      <obj_property name="ElementShortName">scores[1:5][15:0]</obj_property>
+      <obj_property name="ObjectShortName">scores[1:5][15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/l1_score" type="array">
+      <obj_property name="ElementShortName">l1_score[1:5][15:0]</obj_property>
+      <obj_property name="ObjectShortName">l1_score[1:5][15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/l2_score" type="array">
+      <obj_property name="ElementShortName">l2_score[1:5][15:0]</obj_property>
+      <obj_property name="ObjectShortName">l2_score[1:5][15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/WORD_LEN" type="array">
+      <obj_property name="ElementShortName">WORD_LEN[31:0]</obj_property>
+      <obj_property name="ObjectShortName">WORD_LEN[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/SQG_LEN" type="array">
+      <obj_property name="ElementShortName">SQG_LEN[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SQG_LEN[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer" type="array">
+      <obj_property name="ElementShortName">squiggle_buffer[1:5][15:0]</obj_property>
+      <obj_property name="ObjectShortName">squiggle_buffer[1:5][15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer[1]" type="array">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer[2]" type="array">
+         <obj_property name="ElementShortName">[2][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer[3]" type="array">
+         <obj_property name="ElementShortName">[3][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer[4]" type="array">
+         <obj_property name="ElementShortName">[4][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[4][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/squiggle_buffer[5]" type="array">
+         <obj_property name="ElementShortName">[5][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[5][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/sqb_address" type="array">
+      <obj_property name="ElementShortName">sqb_address[7:0]</obj_property>
+      <obj_property name="ObjectShortName">sqb_address[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/running_d" type="array">
+      <obj_property name="ElementShortName">running_d[1:6]</obj_property>
+      <obj_property name="ObjectShortName">running_d[1:6]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_dtw_core_datapath/dut/reference_buffer" type="array">
+      <obj_property name="ElementShortName">reference_buffer[1:5][15:0]</obj_property>
+      <obj_property name="ObjectShortName">reference_buffer[1:5][15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="group348" type="group">
+      <obj_property name="label">PE1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/running" type="logic">
+         <obj_property name="ElementShortName">running</obj_property>
+         <obj_property name="ObjectShortName">running</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/x" type="array">
+         <obj_property name="ElementShortName">x[15:0]</obj_property>
+         <obj_property name="ObjectShortName">x[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/y" type="array">
+         <obj_property name="ElementShortName">y[15:0]</obj_property>
+         <obj_property name="ObjectShortName">y[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/N" type="array">
+         <obj_property name="ElementShortName">N[15:0]</obj_property>
+         <obj_property name="ObjectShortName">N[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#0000FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/W" type="array">
+         <obj_property name="ElementShortName">W[15:0]</obj_property>
+         <obj_property name="ObjectShortName">W[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#0000FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/NW" type="array">
+         <obj_property name="ElementShortName">NW[15:0]</obj_property>
+         <obj_property name="ObjectShortName">NW[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#0000FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/score" type="array">
+         <obj_property name="ElementShortName">score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FF0000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/l1_score[1]" type="array">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/yp" type="array">
+         <obj_property name="ElementShortName">yp[15:0]</obj_property>
+         <obj_property name="ObjectShortName">yp[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/diff" type="array">
+         <obj_property name="ElementShortName">diff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">diff[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/cost" type="array">
+         <obj_property name="ElementShortName">cost[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cost[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/inst_dtw_core_pe_001/min3" type="array">
+         <obj_property name="ElementShortName">min3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">min3[15:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group349" type="group">
+      <obj_property name="label">PE2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /running" type="logic">
+         <obj_property name="ElementShortName">running</obj_property>
+         <obj_property name="ObjectShortName">running</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /x" type="array">
+         <obj_property name="ElementShortName">x[15:0]</obj_property>
+         <obj_property name="ObjectShortName">x[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /y" type="array">
+         <obj_property name="ElementShortName">y[15:0]</obj_property>
+         <obj_property name="ObjectShortName">y[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /N" type="array">
+         <obj_property name="ElementShortName">N[15:0]</obj_property>
+         <obj_property name="ObjectShortName">N[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /W" type="array">
+         <obj_property name="ElementShortName">W[15:0]</obj_property>
+         <obj_property name="ObjectShortName">W[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /NW" type="array">
+         <obj_property name="ElementShortName">NW[15:0]</obj_property>
+         <obj_property name="ObjectShortName">NW[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /score" type="array">
+         <obj_property name="ElementShortName">score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FF0000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/l1_score[1]" type="array">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/l1_score[2]" type="array">
+         <obj_property name="ElementShortName">[2][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/l2_score[1]" type="array">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /yp" type="array">
+         <obj_property name="ElementShortName">yp[15:0]</obj_property>
+         <obj_property name="ObjectShortName">yp[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /diff" type="array">
+         <obj_property name="ElementShortName">diff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">diff[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /cost" type="array">
+         <obj_property name="ElementShortName">cost[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cost[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[2].inst_dtw_core_pe_n /min3" type="array">
+         <obj_property name="ElementShortName">min3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">min3[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group1136" type="group">
+      <obj_property name="label">PE3</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /running" type="logic">
+         <obj_property name="ElementShortName">running</obj_property>
+         <obj_property name="ObjectShortName">running</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /x" type="array">
+         <obj_property name="ElementShortName">x[15:0]</obj_property>
+         <obj_property name="ObjectShortName">x[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /y" type="array">
+         <obj_property name="ElementShortName">y[15:0]</obj_property>
+         <obj_property name="ObjectShortName">y[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /N" type="array">
+         <obj_property name="ElementShortName">N[15:0]</obj_property>
+         <obj_property name="ObjectShortName">N[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /W" type="array">
+         <obj_property name="ElementShortName">W[15:0]</obj_property>
+         <obj_property name="ObjectShortName">W[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /NW" type="array">
+         <obj_property name="ElementShortName">NW[15:0]</obj_property>
+         <obj_property name="ObjectShortName">NW[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /score" type="array">
+         <obj_property name="ElementShortName">score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /yp" type="array">
+         <obj_property name="ElementShortName">yp[15:0]</obj_property>
+         <obj_property name="ObjectShortName">yp[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /diff" type="array">
+         <obj_property name="ElementShortName">diff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">diff[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /cost" type="array">
+         <obj_property name="ElementShortName">cost[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cost[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[3].inst_dtw_core_pe_n /min3" type="array">
+         <obj_property name="ElementShortName">min3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">min3[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group1669" type="group">
+      <obj_property name="label">PE4</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /running" type="logic">
+         <obj_property name="ElementShortName">running</obj_property>
+         <obj_property name="ObjectShortName">running</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /x" type="array">
+         <obj_property name="ElementShortName">x[15:0]</obj_property>
+         <obj_property name="ObjectShortName">x[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /y" type="array">
+         <obj_property name="ElementShortName">y[15:0]</obj_property>
+         <obj_property name="ObjectShortName">y[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /N" type="array">
+         <obj_property name="ElementShortName">N[15:0]</obj_property>
+         <obj_property name="ObjectShortName">N[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /W" type="array">
+         <obj_property name="ElementShortName">W[15:0]</obj_property>
+         <obj_property name="ObjectShortName">W[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /NW" type="array">
+         <obj_property name="ElementShortName">NW[15:0]</obj_property>
+         <obj_property name="ObjectShortName">NW[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /score" type="array">
+         <obj_property name="ElementShortName">score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /yp" type="array">
+         <obj_property name="ElementShortName">yp[15:0]</obj_property>
+         <obj_property name="ObjectShortName">yp[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /diff" type="array">
+         <obj_property name="ElementShortName">diff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">diff[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /cost" type="array">
+         <obj_property name="ElementShortName">cost[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cost[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[4].inst_dtw_core_pe_n /min3" type="array">
+         <obj_property name="ElementShortName">min3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">min3[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group1670" type="group">
+      <obj_property name="label">PE5</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /running" type="logic">
+         <obj_property name="ElementShortName">running</obj_property>
+         <obj_property name="ObjectShortName">running</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /x" type="array">
+         <obj_property name="ElementShortName">x[15:0]</obj_property>
+         <obj_property name="ObjectShortName">x[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /y" type="array">
+         <obj_property name="ElementShortName">y[15:0]</obj_property>
+         <obj_property name="ObjectShortName">y[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /N" type="array">
+         <obj_property name="ElementShortName">N[15:0]</obj_property>
+         <obj_property name="ObjectShortName">N[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /W" type="array">
+         <obj_property name="ElementShortName">W[15:0]</obj_property>
+         <obj_property name="ObjectShortName">W[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /NW" type="array">
+         <obj_property name="ElementShortName">NW[15:0]</obj_property>
+         <obj_property name="ObjectShortName">NW[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /score" type="array">
+         <obj_property name="ElementShortName">score[15:0]</obj_property>
+         <obj_property name="ObjectShortName">score[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /yp" type="array">
+         <obj_property name="ElementShortName">yp[15:0]</obj_property>
+         <obj_property name="ObjectShortName">yp[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /diff" type="array">
+         <obj_property name="ElementShortName">diff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">diff[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /cost" type="array">
+         <obj_property name="ElementShortName">cost[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cost[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_dtw_core_datapath/dut/\genblk1[5].inst_dtw_core_pe_n /min3" type="array">
+         <obj_property name="ElementShortName">min3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">min3[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

@@ -32,21 +32,17 @@ SOFTWARE.
 `timescale 1ns / 1ps
 
 module dtw_core #(
-    parameter WIDTH         = 16,   // Data width
-    parameter AXIS_WIDTH    = 32,   // AXI data width
-    parameter SQG_SIZE      = 250,  // Squiggle size
-    parameter REF_INIT      = 0,
-    parameter REFMEM_PTR_WIDTH = 20
+    parameter WORD_LEN      = 16,       // Data width
+    parameter AXIS_WIDTH    = 32,       // AXI data width
+    parameter SQG_LEN      = 250        // Squiggle size
 )(
     // Main DTW signals
     input   wire                    clk,
     input   wire                    rst,
-    input   wire                    rs,
+    input   wire                    rs,                 // run/stop signal
 
-    input   wire [AXIS_WIDTH-1 : 0] ref_len,
-    input   wire                    op_mode,            // Reference mode: 0, query mode: 1
-    output  reg                     busy,               // Idle: 0, busy: 1
-    output  wire                    load_done,
+    input   wire [31:0]             reference_len,
+    output  reg                     running,            // Idle: 0, running: 1
 
     // Src FIFO signals
     output  wire                    src_fifo_clear,     // Src FIFO Clear signal
@@ -58,265 +54,150 @@ module dtw_core #(
     output  reg                     sink_fifo_wren,     // Sink FIFO Write enable
     input   wire                    sink_fifo_full,     // Sink FIFO Full
     output  reg [31:0]              sink_fifo_data,     // Sink FIFO Data
-    output  reg                     sink_fifo_last,     // Sink FIFO Last
-
-    // debug signals
-    output  wire [2:0]              dbg_state,
-    output  wire [REFMEM_PTR_WIDTH-1:0]             dbg_addr_ref,
-
-    output  wire [31:0]             dbg_cycle_counter,
-    output  wire [31:0]             dbg_nquery,
-    output  wire [31:0]             dbg_curr_qid
+    output  reg                     sink_fifo_last      // Sink FIFO Last
 );
 
-/* ===============================
- * local parameters
- * =============================== */
-// Operation mode
-localparam
-    MODE_NORMAL = 1'b0,
-    MODE_LOAD_REF = 1'b1;
+reg dtw_core_rst;
+reg dtw_core_running;
+wire dtw_core_done;
 
-// FSM states
-localparam [2:0] // n states
-    IDLE = 0,
-    REF_LOAD = 1,
-    DTW_Q_INIT = 2,
-    DTW_Q_RUN = 3,
-    DTW_Q_DONE = 4;
+reg                 dtw_load_squiggle;
+reg  [WORD_LEN-1:0] dtw_core_squiggle_word;
+reg  [WORD_LEN-1:0] dtw_core_reference_word;
+wire [WORD_LEN-1:0] dtw_core_best_score; // TODO: is this the right width?
+wire [31:0] dtw_core_best_position;
 
-/* ===============================
- * registers/wires
- * =============================== */
-reg r_load_done;
-reg r_src_fifo_clear;
+reg [31:0] n_loaded_query;
 
-// Ref mem signals
-reg  [REFMEM_PTR_WIDTH-1:0] addr_ref;          // Read address for refmem 
-reg                 wren_ref;           // Write enable for refmem
-wire [WIDTH-1:0]    dataout_ref;        // Reference data
-
-// DTW datapath signals
-reg                 dp_rst;             // dp core reset
-reg                 dp_running;         // dp core run enable
-wire                dp_done;            // dp core done
-reg  [31:0]         curr_qid;           // Current query id
-wire [WIDTH-1:0]    curr_minval;        // Current minimum value
-wire [31:0]         curr_position;      // Current best match position
-
-// FSM state
-reg [2:0] r_state;
-
-// Others
-reg [1:0] stall_counter;
-reg [31:0] r_dbg_nquery;
+// constant for delaying FSM transition (3 cycles)
+localparam [1:0] SEND_RESULT_DELAY = 2'h3;
+reg     [1:0] send_result_timer;
 
 /* ===============================
- * submodules
+ * DTW core datapath
  * =============================== */
-// Reference memory
-dtw_core_ref_mem #(
-    .width      (WIDTH),
-    .initalize  (REF_INIT),
-    .ptrWid     (REFMEM_PTR_WIDTH)
-) inst_dtw_core_ref_mem (
-    .clk            (clk),
-
-    .wen          (wren_ref),
-    .addr         (addr_ref[REFMEM_PTR_WIDTH-1:0]),
-    .din          (src_fifo_data[15:0]),
-    .dout         (dataout_ref)
-);
-
-// DTW datapath
 dtw_core_datapath #(
-    .width      (WIDTH),
-    .SQG_SIZE   (SQG_SIZE)
+    .WORD_LEN       (WORD_LEN),
+    .SQG_LEN        (SQG_LEN)
 ) inst_dtw_core_datapath (
     .clk            (clk),
-    .rst            (dp_rst),
-    .running        (dp_running),
-    .Input_squiggle (src_fifo_data[15:0]),
-    .Rword          (dataout_ref),
-    .ref_len        (ref_len),
-    .minval         (curr_minval),
-    .position       (curr_position),
-    .done           (dp_done),
+    .rst            (dtw_core_rst),
+    .running        (dtw_core_running),
 
-    // debug
-    .dbg_cycle_counter (dbg_cycle_counter)
+    .squiggle_word  (dtw_core_squiggle_word),
+    .reference_word (dtw_core_reference_word),
+    .reference_len  (reference_len),
+    .best_score     (dtw_core_best_score),
+    .best_position  (dtw_core_best_position),
+    .done           (dtw_core_done)
 );
 
 /* ===============================
- * asynchronous logic
+ * FSM
  * =============================== */
-assign load_done = r_load_done;
-assign src_fifo_clear = r_src_fifo_clear;
-assign dbg_state = r_state;
-assign dbg_addr_ref = addr_ref;
-assign dbg_nquery = r_dbg_nquery;
-assign dbg_curr_qid = curr_qid;
+/* FSM States */
+localparam [1:0] // n states
+    state_IDLE = 0,
+    state_LOAD_QUERY = 1,
+    state_DTW_RUN = 2,
+    state_DTW_POST = 3;
 
-/* ===============================
- * synchronous logic
- * =============================== */
-// FSM State change
-always @(posedge clk) begin
+reg [1:0] r_state;
+reg [1:0] r_next_state;
+
+always @(posedge clk, posedge rst) begin
     if (rst) begin
-        r_state <= IDLE;
-        r_load_done <= 0;
+        r_state <= state_IDLE;
     end else begin
-        case (r_state)
-        IDLE: begin
-            if (rs) begin
-                if (op_mode == MODE_NORMAL && r_load_done == 1) begin
-                    r_state <= DTW_Q_INIT;
-                end else if (op_mode == MODE_LOAD_REF && r_load_done == 0) begin
-                    r_state <= REF_LOAD;
-                end else begin
-                    r_state <= IDLE;
-                end
-            end else begin
-                r_state <= IDLE;
-            end
-        end
-        REF_LOAD: begin
-            if (addr_ref < ref_len) begin
-                r_state <= REF_LOAD;
-            end else begin
-                r_load_done <= 1;
-                r_state <= IDLE;
-            end
-        end
-        DTW_Q_INIT: begin
-            if (!src_fifo_empty) begin
-                r_state <= DTW_Q_RUN;
-            end else begin
-                r_state <= DTW_Q_INIT;
-            end
-        end
-        DTW_Q_RUN: begin
-            if (!dp_done) begin
-                r_state <= DTW_Q_RUN;
-            end else begin
-                r_state <= DTW_Q_DONE;
-            end
-        end
-        DTW_Q_DONE: begin
-            if (sink_fifo_full || stall_counter < 2'h3) begin
-                r_state <= DTW_Q_DONE;
-            end else begin
-                r_state <= IDLE;
-            end
-        end
-        endcase
+        r_state <= r_next_state;
     end
 end
 
-// FSM output
-always @(posedge clk) begin
+/* Mealy FSM */
+always @(r_state, rs, src_fifo_empty, n_loaded_query, dtw_core_done, sink_fifo_full) begin
+    // Default outputs
+    dtw_core_rst <= 0;
+    dtw_core_running <= 0;
+    dtw_load_squiggle <= 0;
+    dtw_core_squiggle_word <= 0;
+    dtw_core_reference_word <= 0;
+    n_loaded_query <= 0;
+    src_fifo_rden <= 0;
+    send_result_timer <= send_result_timer;
+    sink_fifo_wren <= 0;
+    sink_fifo_data <= 0;
+    sink_fifo_last <= 0;
+
+    // State transition
     case (r_state)
-    IDLE: begin
-        busy                <= 0;
-        src_fifo_rden       <= 0;
-        sink_fifo_wren      <= 0;
-        addr_ref           <= 0;
-        dp_rst              <= 1;
-        dp_running          <= 0;
-        stall_counter       <= 0;
-        wren_ref            <= 0;
-        r_src_fifo_clear    <= 1;
-        sink_fifo_last      <= 0;
-        curr_qid            <= 0;
-    end
-    REF_LOAD: begin
-        busy                <= 1;
-        src_fifo_rden       <= 1;
-        sink_fifo_wren      <= 0;
-        dp_rst              <= 1;
-        dp_running          <= 0;
-        stall_counter       <= 0;
-        r_src_fifo_clear    <= 0;
-        r_dbg_nquery        <= 0;
+    state_IDLE: begin
+        r_next_state = state_IDLE;
+        dtw_core_rst <= 1;
+        send_result_timer <= 0;
 
-        if (!src_fifo_empty && src_fifo_rden) begin
-            addr_ref        <= addr_ref + 1;
-            wren_ref        <= 1;
-        end else begin
-            wren_ref        <= 0;
+        if (rs) begin
+            r_next_state = state_LOAD_QUERY;
+            dtw_core_rst <= 0;
         end
     end
-    DTW_Q_INIT: begin
-        busy                <= 1;
-        src_fifo_rden       <= 1;
-        sink_fifo_wren      <= 0;
-        dp_rst              <= 0;
-        stall_counter       <= 0;
-        r_src_fifo_clear    <= 0;
-        wren_ref            <= 0;
+    state_LOAD_QUERY: begin
+        r_next_state = state_LOAD_QUERY;
+        dtw_core_squiggle_word <= src_fifo_data[WORD_LEN-1:0];
 
+        // If fifo not empty, read data
         if (!src_fifo_empty) begin
-            curr_qid        <= src_fifo_data;
-            dp_running      <= 1;
-        end else begin
-            dp_running      <= 0;
+            src_fifo_rden <= 1;
+            n_loaded_query <= n_loaded_query + 1;
+            dtw_load_squiggle <= 1;
+        end
+
+        // Transition when loaded all query
+        if (n_loaded_query == SQG_LEN) begin
+            r_next_state = state_DTW_RUN;
         end
     end
-    DTW_Q_RUN: begin
-        busy                    <= 1;
-        sink_fifo_wren          <= 0;
-        dp_rst                  <= 0;
-        stall_counter           <= 0;
-        r_src_fifo_clear        <= 0;
-        wren_ref            <= 0;
+    state_DTW_RUN: begin
+        r_next_state = state_DTW_RUN;
+        dtw_core_reference_word <= src_fifo_data[WORD_LEN-1:0];
 
-        if (addr_ref < SQG_SIZE) begin
-            // Query loading
-            if (!src_fifo_empty) begin
-                addr_ref       <= addr_ref + 1;
-                src_fifo_rden   <= 1;
-                dp_running      <= 1;
-            end else begin
-                src_fifo_rden   <= 0;
-                dp_running      <= 0;
-            end
-        end else begin
-            // Query loaded
-            addr_ref           <= addr_ref + 1;
-            src_fifo_rden       <= 0;
-            dp_running          <= 1;
+        // If fifo not empty, read data
+        if (!src_fifo_empty) begin
+            src_fifo_rden <= 1;
+            dtw_core_running <= 1;
+        end
+
+        // Transition when done
+        if (dtw_core_done) begin
+            r_next_state = state_DTW_POST;
         end
     end
-    DTW_Q_DONE: begin
-        busy            <= 1;
-        src_fifo_rden   <= 0;
-        dp_rst          <= 0;
-        dp_running      <= 0;
-        wren_ref        <= 0;
+    state_DTW_POST: begin
+        r_next_state = state_DTW_POST;
 
-        // Serialize output
+        // If sink fifo not full, write data
         if (!sink_fifo_full) begin
-            stall_counter <= stall_counter + 1;
-
-            if (stall_counter == 0) begin
-                sink_fifo_last  <= 0;
-                sink_fifo_wren  <= 1;
-                sink_fifo_data  <= curr_qid;
-            end else if (stall_counter == 1) begin
-                sink_fifo_last  <= 0;
-                sink_fifo_wren  <= 1;
-                sink_fifo_data  <= curr_position;
-            end else if (stall_counter == 2) begin
-                sink_fifo_last  <= 0;
-                sink_fifo_wren  <= 1;
-                sink_fifo_data  <= {16'b0, curr_minval};
-            end else begin
-                sink_fifo_last  <= 1;
-                sink_fifo_wren  <= 0;
-                sink_fifo_data  <= 0;
-                r_dbg_nquery    <= r_dbg_nquery + 1;
+            // What to send
+            case (send_result_timer)
+            0: begin
+                sink_fifo_wren <= 1;
+                sink_fifo_data <= dtw_core_best_position;
             end
-        end 
+            1: begin
+                sink_fifo_wren <= 1;
+                sink_fifo_data <= {16'b0, dtw_core_best_score};
+            end
+            2: begin // Done! Transition to idle
+                r_next_state <= state_IDLE;
+                sink_fifo_wren <= 0; // Don't write
+                sink_fifo_last <= 1; // Tell AXIS that this is the last word
+                sink_fifo_data <= 0; // No data
+            end
+            endcase
+            send_result_timer <= send_result_timer + 1;
+        end
+    end
+    default: begin
+        r_next_state = r_state;
     end
     endcase
 end

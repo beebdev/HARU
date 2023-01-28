@@ -143,3 +143,5 @@ RUgOUT
 *.zip
 output/
 test_ru_out/
+
+vivado/

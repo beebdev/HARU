@@ -25,9 +25,9 @@ SOFTWARE. */
 
 `timescale 1ps / 1ps
 
-`define MAJOR_VERSION       1
+`define MAJOR_VERSION       0
 `define MINOR_VERSION       0
-`define REVISION            0
+`define REVISION            2
 
 `define MAJOR_RANGE         31:28
 `define MINOR_RANGE         27:20

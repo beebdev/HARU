@@ -26,22 +26,21 @@ SOFTWARE. */
 `timescale 1ns / 1ps
 
 module dtw_core_datapath #(
-    parameter width     = 16,
-    parameter SQG_SIZE  = 250
+    parameter WORD_LEN = 16,
+    parameter SQG_LEN  = 250
 )(
     input   wire                clk,
     input   wire                rst,
     input   wire                running,        // Run enable
 
-    input   wire [width-1:0]    Input_squiggle, // Squiggle sample
-    input   wire [width-1:0]    Rword,          // Reference sample
-    input   wire [31:0]         ref_len,        // Reference length
-    output  wire [width-1:0]    minval,         // Minimum value
-    output  wire [31:0]         position,       // Position of minimum value
-    output  wire                done,           // Query search done
+    input   wire                load_squiggle,  // Load squiggle
+    input   wire [WORD_LEN-1:0] squiggle_word,  // Squiggle sample
+    input   wire [WORD_LEN-1:0] reference_word, // Reference sample
+    input   wire [31:0]         reference_len,  // Reference length
+    output  wire [WORD_LEN-1:0] best_score,     // Minimum value
+    output  wire [31:0]         best_position,  // best_position of minimum value
+    output  wire                done            // Query search done
 
-    // debug
-    output  wire [31:0]         dbg_cycle_counter
 );
 
 /* ===============================
@@ -49,59 +48,63 @@ module dtw_core_datapath #(
  * =============================== */
 integer k;
 
-reg     [31:0]          cycle_counter;
-reg     [7:0]           squiggle_buffaddress;
+reg     [31:0]              cycle_counter;
+reg     [7:0]               sqb_address;    // Squiggle buffer address
 
-reg     [width-1:0]     Squiggle_Buffer [1:SQG_SIZE];
-reg     [width-1:0]     Rword_buff;
+/* Buffer for squiggles and reference */
+reg     [WORD_LEN-1:0]      squiggle_buffer     [1:SQG_LEN];
+reg     [WORD_LEN-1:0]      ref_word_buffer;
 
-wire    [width-1:0]     DTW_curr    [1:SQG_SIZE];
-wire    [width-1:0]     p_Rword     [1:SQG_SIZE];
+wire    [WORD_LEN-1:0]      scores              [1:SQG_LEN]; // Stores the scores of each PE
+wire    [WORD_LEN-1:0]      reference_buffer    [1:SQG_LEN]; // Stores the reference values of each PE (shifted by 1)
 
-reg     [width-1:0]     DTW_prev    [1:SQG_SIZE];
-reg     [width-1:0]     DTW_pprev   [1:SQG_SIZE];
-reg     [0:SQG_SIZE+1]  running_d;
+reg     [WORD_LEN-1:0]      l1_score            [1:SQG_LEN]; // Dependency for PE chain
+reg     [WORD_LEN-1:0]      l2_score            [1:SQG_LEN]; // Dependency for PE chain
+// reg     [0:SQG_LEN+1]       running_d; // Status of each PE (1 bit per PE)
+reg     [1:SQG_LEN+1]         running_d; // Status of each PE (1 bit per PE)
 
-reg     [width-1:0]     Minval;
-reg     [31:0]          Minpos;
-reg     [width-1:0]     DTW_lastrow;
+reg     [WORD_LEN-1:0]      curr_best_score;        // Current best score
+reg     [31:0]              curr_best_position;     // Current best position
+reg     [WORD_LEN-1:0]      dtw_score;              // Last row's score; candidate for best score
 
 /* ===============================
- * submodules
+ * PE Chain
  * =============================== */
-// First PE
+/* First PE */
 dtw_core_pe #(
-    .width(width)
+    .WORD_LEN(WORD_LEN)
 ) inst_dtw_core_pe_001 (
-    .clk  (clk),
-    .rst  (rst),
-    .running (running),
-    .x    (Squiggle_Buffer[001]),
-    .y    (Rword_buff),
-    .W    (DTW_prev[001]),
-    .N    (16'd0),
-    .NW   (16'd0),
-    .DTWc (DTW_curr[001]),
-    .yp   (p_Rword[001])
+    .clk    (clk),
+    .rst    (rst),
+    .running (running_d[1]),
+    
+    .x      (squiggle_buffer[001]),
+    .y      (ref_word_buffer),
+    .W      (l1_score[001]),
+    .N      (16'd0),
+    .NW     (16'd0),
+    .score  (scores[001]),
+    .yp     (reference_buffer[001])
 );
 
-// Other PEs
+/* Rest of PE chain */
 genvar m;
 generate
-for (m = 2; m <= SQG_SIZE; m = m + 1) begin
+for (m = 2; m <= SQG_LEN; m = m + 1) begin
 	dtw_core_pe #(
-        .width(width)
+        .WORD_LEN(WORD_LEN)
     ) inst_dtw_core_pe_n (
         .clk    (clk),
         .rst    (rst),
-        .running (running),
-        .x      (Squiggle_Buffer[m]),
-        .y      (p_Rword[m-1]),
-        .W      (DTW_prev[m]),
-        .N      (DTW_prev[m-1]),
-        .NW     (DTW_pprev[m-1]),
-        .DTWc   (DTW_curr[m]),
-        .yp     (p_Rword[m])
+        .running (running_d[m]),
+
+        .x      (squiggle_buffer[m]),
+        .y      (reference_buffer[m-1]),
+        .W      (l1_score[m]),
+        .N      (l1_score[m-1]),
+        .NW     (l2_score[m-1]),
+        .score   (scores[m]),
+        .yp     (reference_buffer[m])
     );
 end
 endgenerate
@@ -109,112 +112,142 @@ endgenerate
 /* ===============================
  * asynchronous logic
  * =============================== */
-assign minval     = Minval;
-assign position   = Minpos;
-assign done       = (cycle_counter >= ref_len);
-assign dbg_cycle_counter = cycle_counter;
+assign best_score       = curr_best_score;
+assign best_position    = curr_best_position;
+assign done             = (cycle_counter >= reference_len);
 
 /* ===============================
  * synchronous logic
  * =============================== */
-// shift PE running status
+
+/**
+ * When dtw_core's running is asserted, we assert the running_d of bit 0 and
+ * shift the running_d to the right. This inserts a 1 (run enable) at the first
+ * PE.
+ * On reset, we set all running_d to 0.
+ */
 always @(posedge clk) begin
     if(rst) begin
-        for (k = 0; k <= SQG_SIZE + 1; k = k + 1) begin
+        for (k = 0; k <= SQG_LEN + 1; k = k + 1) begin
             running_d[k] <= 0;
         end
     end else if (running) begin
-        running_d[0] <= 1;
-        for (k = 1; k <= SQG_SIZE + 1; k = k + 1) begin
+        // running_d[0] <= 1;
+        // for (k = 1; k <= SQG_LEN + 1; k = k + 1) begin
+        //     running_d[k] <= running_d[k-1];
+        // end
+        for (k = SQG_LEN + 1; k > 1; k = k - 1) begin
             running_d[k] <= running_d[k-1];
         end
+        running_d[1] <= 1;
     end
 end
 
-// update DTW_prev and DTW_pprev
+/** 
+ * Update l1_score and l2_score:
+ * On each clock cycle when the global dtw_core running is asserted, we update
+ * the l1_score and l2_score. The l1_score receives the current score from the
+ * PE chain while l2_score receives the l1_score from the previous clock cycle.
+ */
 always @(posedge clk) begin
     if (rst) begin
-        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
-            DTW_prev [k] <= -1;
-            DTW_pprev[k] <= -1;
+        for(k = 1; k <= SQG_LEN; k = k + 1) begin
+            l1_score [k] <= -1;
+            l2_score[k] <= -1;
         end
     end else if (running) begin
-        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
-            if(running_d[k]) begin
-                DTW_prev[k] <= DTW_curr[k];
-            end
+        for(k = 1; k <= SQG_LEN; k = k + 1) begin
             if(running_d[k+1]) begin
-                DTW_pprev[k] <= DTW_prev[k];
+                l1_score[k] <= scores[k];
+            end
+            if(running_d[k+2]) begin
+                l2_score[k] <= l1_score[k];
             end
         end
     end
 end
 
-// Load squiggle sample value
+
+/**  Load squiggle sample value
+ * On each clock cycle if the global dtw_core running is asserted, when
+ * the first PE will be running in the next clock cycle, we load the squiggle
+ * sample value into the squiggle buffer. As the address to load into is 
+ * managed by sqb_address, once squiggle buffer is fully loaded the address
+ * won't be incremented anymore and the squiggle buffer's extra cell will
+ * contibue being loaded with the last squiggle_word.
+ */
 always @(posedge clk) begin
     if (rst) begin
-        for(k = 1; k <= SQG_SIZE; k = k + 1) begin
-            Squiggle_Buffer[k] <= 0;
+        for(k = 1; k <= SQG_LEN; k = k + 1) begin
+            squiggle_buffer[k] <= 0;
         end
-    end else if (running) begin
-        if (running_d[0]) begin
-            Squiggle_Buffer[squiggle_buffaddress] <= Input_squiggle;
+    end else if (load_squiggle) begin
+        squiggle_buffer[sqb_address] <= squiggle_word;
+    end
+end
+
+always @(posedge clk) begin
+    if (rst) begin
+        sqb_address <= 1;
+    end else if (load_squiggle) begin
+        if(sqb_address <= SQG_LEN) begin
+            sqb_address <= sqb_address + 1;
         end
     end
 end
 
-// Squiggle buffer address handling
+/** reference sample loading
+ * Load the reference word into a temporary buffer.
+ */
 always @(posedge clk) begin
     if (rst) begin
-        squiggle_buffaddress <= 1;
+        ref_word_buffer <= 0;
     end else if (running) begin
-        if(running_d[0] && (squiggle_buffaddress <= SQG_SIZE)) begin
-            squiggle_buffaddress <= squiggle_buffaddress + 1;
+        if(running_d[1]) begin
+            ref_word_buffer <= reference_word;
         end
     end
 end
 
-// reference sample loading
-always @(posedge clk) begin
-    if (rst) begin
-        Rword_buff <= 0;
-    end else if (running) begin
-        if(running_d[0]) begin
-            Rword_buff <= Rword;
-        end
-    end
-end
-
-// cycle counter handling
+/**
+ * This cycle counter only increments when the gloabl dtw_core running is
+ * asserted and the last PE is running in the next clock cycle.
+ * This is used to determine if the search is done.
+ */
 always @(posedge clk) begin
     if (rst) begin
         cycle_counter <=  0;
     end else if (running) begin
-        if(running_d[SQG_SIZE]) begin
+        if(running_d[SQG_LEN]) begin
             cycle_counter <= cycle_counter + 1;
         end
     end
 end
 
-// Last row value
+/**
+ * Updates the dtw_score with the score of the last PE.
+ */
 always @(posedge clk) begin
     if (rst) begin
-        DTW_lastrow <= -1;
+        dtw_score <= -1;
     end else if (running) begin
-        if(running_d[SQG_SIZE]) begin
-            DTW_lastrow <= DTW_curr[SQG_SIZE];
+        if(running_d[SQG_LEN+1]) begin
+            dtw_score <= scores[SQG_LEN];
         end
     end
 end
 
-// Min value and position update
+/**
+ * Compare current best with the current dtw_score and update the best score
+ * and best position if the current dtw_score is better.
+ */
 always @(posedge clk) begin
     if (rst) begin
-        Minval <= -1;
-        Minpos <= 0;
-    end else if (DTW_lastrow < Minval) begin
-        Minval <= DTW_lastrow;
-        Minpos <= cycle_counter;
+        curr_best_score <= -1;
+        curr_best_position <= 0;
+    end else if (dtw_score < curr_best_score) begin
+        curr_best_score <= dtw_score;
+        curr_best_position <= cycle_counter - 32'h2;
     end
 end
 
