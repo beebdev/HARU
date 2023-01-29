@@ -40,7 +40,6 @@ module dtw_core_datapath #(
     output  wire [WORD_LEN-1:0] best_score,     // Minimum value
     output  wire [31:0]         best_position,  // best_position of minimum value
     output  wire                done            // Query search done
-
 );
 
 /* ===============================
