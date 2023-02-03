@@ -100,7 +100,7 @@ always @ (posedge clk) begin
     end
 end
 
-always @ ( posedge clk ) begin
+always @ (posedge clk) begin
     if (rst) begin
         write_ptr       <=  0;
         read_ptr        <=  0;

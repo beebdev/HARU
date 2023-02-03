@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_zynq_dtw_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_zynq_dtw" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="134.650 ns"></ZoomStartTime>
+      <ZoomEndTime time="183.815 ns"></ZoomEndTime>
+      <Cursor1Time time="171.393 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="246"></NameColumnWidth>
+      <ValueColumnWidth column_width="119"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="11" />
+   <wvobject fp_name="/tb_zynq_dtw/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_zynq_dtw/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_zynq_dtw/test_case" type="array">
+      <obj_property name="ElementShortName">test_case[160:1]</obj_property>
+      <obj_property name="ObjectShortName">test_case[160:1]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="group2359" type="group">
+      <obj_property name="label">axi_lite</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="group2362" type="group">
+         <obj_property name="label">aw</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_awvalid" type="logic">
+            <obj_property name="ElementShortName">axi_lite_awvalid</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_awvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_awaddr" type="array">
+            <obj_property name="ElementShortName">axi_lite_awaddr[15:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_awaddr[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_awready" type="logic">
+            <obj_property name="ElementShortName">axi_lite_awready</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_awready</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group2363" type="group">
+         <obj_property name="label">w</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_wvalid" type="logic">
+            <obj_property name="ElementShortName">axi_lite_wvalid</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_wvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_wready" type="logic">
+            <obj_property name="ElementShortName">axi_lite_wready</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_wready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_wdata" type="array">
+            <obj_property name="ElementShortName">axi_lite_wdata[31:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_wdata[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group2364" type="group">
+         <obj_property name="label">b</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_bvalid" type="logic">
+            <obj_property name="ElementShortName">axi_lite_bvalid</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_bvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_bready" type="logic">
+            <obj_property name="ElementShortName">axi_lite_bready</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_bready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_bresp" type="array">
+            <obj_property name="ElementShortName">axi_lite_bresp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_bresp[1:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group2365" type="group">
+         <obj_property name="label">ar</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_arvalid" type="logic">
+            <obj_property name="ElementShortName">axi_lite_arvalid</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_arvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_arready" type="logic">
+            <obj_property name="ElementShortName">axi_lite_arready</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_arready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_araddr" type="array">
+            <obj_property name="ElementShortName">axi_lite_araddr[15:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_araddr[15:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group2366" type="group">
+         <obj_property name="label">r</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_rvalid" type="logic">
+            <obj_property name="ElementShortName">axi_lite_rvalid</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_rvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_rready" type="logic">
+            <obj_property name="ElementShortName">axi_lite_rready</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_rready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_rresp" type="array">
+            <obj_property name="ElementShortName">axi_lite_rresp[1:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_rresp[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/axi_lite_rdata" type="array">
+            <obj_property name="ElementShortName">axi_lite_rdata[31:0]</obj_property>
+            <obj_property name="ObjectShortName">axi_lite_rdata[31:0]</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group2369" type="group">
+      <obj_property name="label">zynq_dtw</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_0_control" type="array">
+         <obj_property name="ElementShortName">reg_0_control[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_0_control[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_1_status" type="array">
+         <obj_property name="ElementShortName">reg_1_status[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_1_status[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_2_version" type="array">
+         <obj_property name="ElementShortName">reg_2_version[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_2_version[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_3_key" type="array">
+         <obj_property name="ElementShortName">reg_3_key[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_3_key[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_4_ref_len" type="array">
+         <obj_property name="ElementShortName">reg_4_ref_len[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_4_ref_len[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_5_best_score" type="array">
+         <obj_property name="ElementShortName">reg_5_best_score[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_5_best_score[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_6_best_position" type="array">
+         <obj_property name="ElementShortName">reg_6_best_position[31:0]</obj_property>
+         <obj_property name="ObjectShortName">reg_6_best_position[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axis_rst" type="logic">
+         <obj_property name="ElementShortName">s_axis_rst</obj_property>
+         <obj_property name="ObjectShortName">s_axis_rst</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group2402" type="group">
+      <obj_property name="label">axilite_slave</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/state" type="array">
+         <obj_property name="ElementShortName">state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">state[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/i_awvalid" type="logic">
+         <obj_property name="ElementShortName">i_awvalid</obj_property>
+         <obj_property name="ObjectShortName">i_awvalid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/o_awready" type="logic">
+         <obj_property name="ElementShortName">o_awready</obj_property>
+         <obj_property name="ObjectShortName">o_awready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/i_arvalid" type="logic">
+         <obj_property name="ElementShortName">i_arvalid</obj_property>
+         <obj_property name="ObjectShortName">i_arvalid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/o_arready" type="logic">
+         <obj_property name="ElementShortName">o_arready</obj_property>
+         <obj_property name="ObjectShortName">o_arready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/o_rvalid" type="logic">
+         <obj_property name="ElementShortName">o_rvalid</obj_property>
+         <obj_property name="ObjectShortName">o_rvalid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/i_rready" type="logic">
+         <obj_property name="ElementShortName">i_rready</obj_property>
+         <obj_property name="ObjectShortName">i_rready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/reg_interface/o_rresp" type="array">
+         <obj_property name="ElementShortName">o_rresp[1:0]</obj_property>
+         <obj_property name="ObjectShortName">o_rresp[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axi_reg_in_rdy" type="logic">
+         <obj_property name="ElementShortName">s_axi_reg_in_rdy</obj_property>
+         <obj_property name="ObjectShortName">s_axi_reg_in_rdy</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axi_reg_out_req" type="logic">
+         <obj_property name="ElementShortName">s_axi_reg_out_req</obj_property>
+         <obj_property name="ObjectShortName">s_axi_reg_out_req</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axi_reg_address" type="array">
+         <obj_property name="ElementShortName">s_axi_reg_address[15:0]</obj_property>
+         <obj_property name="ObjectShortName">s_axi_reg_address[15:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axi_reg_in_data" type="array">
+         <obj_property name="ElementShortName">s_axi_reg_in_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_axi_reg_in_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/s_axi_reg_out_data" type="array">
+         <obj_property name="ElementShortName">s_axi_reg_out_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_axi_reg_out_data[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group2360" type="group">
+      <obj_property name="label">axi_stream</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/axi_stream_tuser" type="logic">
+         <obj_property name="ElementShortName">axi_stream_tuser</obj_property>
+         <obj_property name="ObjectShortName">axi_stream_tuser</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/axi_stream_tvalid" type="logic">
+         <obj_property name="ElementShortName">axi_stream_tvalid</obj_property>
+         <obj_property name="ObjectShortName">axi_stream_tvalid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/axi_stream_tready" type="logic">
+         <obj_property name="ElementShortName">axi_stream_tready</obj_property>
+         <obj_property name="ObjectShortName">axi_stream_tready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/axi_stream_tlast" type="logic">
+         <obj_property name="ElementShortName">axi_stream_tlast</obj_property>
+         <obj_property name="ObjectShortName">axi_stream_tlast</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/axi_stream_tdata" type="array">
+         <obj_property name="ElementShortName">axi_stream_tdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">axi_stream_tdata[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group2438" type="group">
+      <obj_property name="label">a2fa</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/i_axis_tuser" type="logic">
+         <obj_property name="ElementShortName">i_axis_tuser</obj_property>
+         <obj_property name="ObjectShortName">i_axis_tuser</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/i_axis_tvalid" type="logic">
+         <obj_property name="ElementShortName">i_axis_tvalid</obj_property>
+         <obj_property name="ObjectShortName">i_axis_tvalid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/o_axis_tready" type="logic">
+         <obj_property name="ElementShortName">o_axis_tready</obj_property>
+         <obj_property name="ObjectShortName">o_axis_tready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/i_axis_tlast" type="logic">
+         <obj_property name="ElementShortName">i_axis_tlast</obj_property>
+         <obj_property name="ObjectShortName">i_axis_tlast</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/i_axis_tdata" type="array">
+         <obj_property name="ElementShortName">i_axis_tdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">i_axis_tdata[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/o_fifo_data" type="array">
+         <obj_property name="ElementShortName">o_fifo_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/o_fifo_w_stb" type="logic">
+         <obj_property name="ElementShortName">o_fifo_w_stb</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_w_stb</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/i_fifo_not_full" type="logic">
+         <obj_property name="ElementShortName">i_fifo_not_full</obj_property>
+         <obj_property name="ObjectShortName">i_fifo_not_full</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/a2fa/AXIS_DATA_WIDTH" type="array">
+         <obj_property name="ElementShortName">AXIS_DATA_WIDTH[31:0]</obj_property>
+         <obj_property name="ObjectShortName">AXIS_DATA_WIDTH[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group2456" type="group">
+      <obj_property name="label">fifo</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/rst" type="logic">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/i_fifo_w_stb" type="logic">
+         <obj_property name="ElementShortName">i_fifo_w_stb</obj_property>
+         <obj_property name="ObjectShortName">i_fifo_w_stb</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/i_fifo_w_data" type="array">
+         <obj_property name="ElementShortName">i_fifo_w_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">i_fifo_w_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/o_fifo_full" type="logic">
+         <obj_property name="ElementShortName">o_fifo_full</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_full</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/o_fifo_not_full" type="logic">
+         <obj_property name="ElementShortName">o_fifo_not_full</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_not_full</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/i_fifo_r_stb" type="logic">
+         <obj_property name="ElementShortName">i_fifo_r_stb</obj_property>
+         <obj_property name="ObjectShortName">i_fifo_r_stb</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/o_fifo_r_data" type="array">
+         <obj_property name="ElementShortName">o_fifo_r_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_r_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/o_fifo_empty" type="logic">
+         <obj_property name="ElementShortName">o_fifo_empty</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_empty</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/o_fifo_not_empty" type="logic">
+         <obj_property name="ElementShortName">o_fifo_not_empty</obj_property>
+         <obj_property name="ObjectShortName">o_fifo_not_empty</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/MEM" type="array">
+         <obj_property name="ElementShortName">MEM[0:3][31:0]</obj_property>
+         <obj_property name="ObjectShortName">MEM[0:3][31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/write_ptr" type="array">
+         <obj_property name="ElementShortName">write_ptr[1:0]</obj_property>
+         <obj_property name="ObjectShortName">write_ptr[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/read_ptr" type="array">
+         <obj_property name="ElementShortName">read_ptr[1:0]</obj_property>
+         <obj_property name="ObjectShortName">read_ptr[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/r_read_ptr" type="array">
+         <obj_property name="ElementShortName">r_read_ptr[1:0]</obj_property>
+         <obj_property name="ObjectShortName">r_read_ptr[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/WIDTH" type="array">
+         <obj_property name="ElementShortName">WIDTH[31:0]</obj_property>
+         <obj_property name="ObjectShortName">WIDTH[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/src_fifo/DEPTH" type="array">
+         <obj_property name="ElementShortName">DEPTH[31:0]</obj_property>
+         <obj_property name="ObjectShortName">DEPTH[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/tb_zynq_dtw/tag" type="array">
+      <obj_property name="ElementShortName">tag[200:1]</obj_property>
+      <obj_property name="ObjectShortName">tag[200:1]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="group2426" type="group">
+      <obj_property name="label">dtw_core</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/r_state" type="array">
+         <obj_property name="ElementShortName">r_state[1:0]</obj_property>
+         <obj_property name="ObjectShortName">r_state[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/n_loaded_query" type="array">
+         <obj_property name="ElementShortName">n_loaded_query[31:0]</obj_property>
+         <obj_property name="ObjectShortName">n_loaded_query[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="group2428" type="group">
+         <obj_property name="label">dp</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/squiggle_word" type="array">
+            <obj_property name="ElementShortName">squiggle_word[15:0]</obj_property>
+            <obj_property name="ObjectShortName">squiggle_word[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/reference_word" type="array">
+            <obj_property name="ElementShortName">reference_word[15:0]</obj_property>
+            <obj_property name="ObjectShortName">reference_word[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/load_squiggle" type="logic">
+            <obj_property name="ElementShortName">load_squiggle</obj_property>
+            <obj_property name="ObjectShortName">load_squiggle</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/sqb_address" type="array">
+            <obj_property name="ElementShortName">sqb_address[7:0]</obj_property>
+            <obj_property name="ObjectShortName">sqb_address[7:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/squiggle_buffer" type="array">
+            <obj_property name="ElementShortName">squiggle_buffer[1:5][15:0]</obj_property>
+            <obj_property name="ObjectShortName">squiggle_buffer[1:5][15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/reference_buffer" type="array">
+            <obj_property name="ElementShortName">reference_buffer[1:5][15:0]</obj_property>
+            <obj_property name="ObjectShortName">reference_buffer[1:5][15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/l1_score" type="array">
+            <obj_property name="ElementShortName">l1_score[1:5][15:0]</obj_property>
+            <obj_property name="ObjectShortName">l1_score[1:5][15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/l2_score" type="array">
+            <obj_property name="ElementShortName">l2_score[1:5][15:0]</obj_property>
+            <obj_property name="ObjectShortName">l2_score[1:5][15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/running_d" type="array">
+            <obj_property name="ElementShortName">running_d[1:6]</obj_property>
+            <obj_property name="ObjectShortName">running_d[1:6]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/curr_best_score" type="array">
+            <obj_property name="ElementShortName">curr_best_score[15:0]</obj_property>
+            <obj_property name="ObjectShortName">curr_best_score[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/curr_best_position" type="array">
+            <obj_property name="ElementShortName">curr_best_position[31:0]</obj_property>
+            <obj_property name="ObjectShortName">curr_best_position[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/dtw_score" type="array">
+            <obj_property name="ElementShortName">dtw_score[15:0]</obj_property>
+            <obj_property name="ObjectShortName">dtw_score[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/best_score" type="array">
+            <obj_property name="ElementShortName">best_score[15:0]</obj_property>
+            <obj_property name="ObjectShortName">best_score[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_zynq_dtw/dut/inst_dtw_core/inst_dtw_core_datapath/best_position" type="array">
+            <obj_property name="ElementShortName">best_position[31:0]</obj_property>
+            <obj_property name="ObjectShortName">best_position[31:0]</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+</wave_config>

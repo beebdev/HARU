@@ -42,20 +42,18 @@ COMPILE_ARGS+=+incdir+$(PWD)/src/
 endif
 
 #DUT
-VERILOG_SOURCES += $(PWD)/src/dtw_accel.v \
+VERILOG_SOURCES += $(PWD)/src/zynq_dtw.v \
 				   $(PWD)/src/axi_lite_slave.v \
 				   $(PWD)/src/axis_2_fifo.v \
 				   $(PWD)/src/fifo.v \
-				   $(PWD)/src/fifo_2_axis.v \
 				   $(PWD)/src/dtw_core.v \
 				   $(PWD)/src/dtw_core_datapath.v \
-				   $(PWD)/src/dtw_core_ref_mem.v \
 				   $(PWD)/src/dtw_core_pe.v \
 
 #Test Bench
-VERILOG_SOURCES += $(PWD)/src/sim/tb_dtw_accel.v
+VERILOG_SOURCES += $(PWD)/src/sim/cocotb_zynq_dtw.v
 
-TOPLEVEL = tb_dtw_accel
+TOPLEVEL = tb_zynq_dtw
 GPI_IMPL := vpi
 
 MODULE = test_dut

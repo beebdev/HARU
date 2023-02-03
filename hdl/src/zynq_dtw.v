@@ -33,14 +33,14 @@ SOFTWARE.
 
 /* Version Information */
 // version 0.0.2
-`define MAJOR_VERSION       0
-`define MINOR_VERSION       0
-`define REVISION            2
+// `define MAJOR_VERSION       0
+// `define MINOR_VERSION       0
+// `define REVISION            2
 
-`define MAJOR_RANGE         31:28
-`define MINOR_RANGE         27:20
-`define REVISION_RANGE      19:16
-`define VERSION_PAD_RANGE   15:0
+// `define MAJOR_RANGE         31:28
+// `define MINOR_RANGE         27:20
+// `define REVISION_RANGE      19:16
+// `define VERSION_PAD_RANGE   15:0
 
 module zynq_dtw #(
     parameter S_AXI_ADDR_WIDTH = 16,
@@ -48,7 +48,9 @@ module zynq_dtw #(
     parameter S_AXI_RST_INVERT = 1,
     parameter S_AXIS_DATA_WIDTH = 32,
     parameter S_AXIS_RST_INVERT = 1,
-    parameter SRC_FIFO_DEPTH    = 4
+    parameter SRC_FIFO_DEPTH    = 4,
+    parameter WORD_LEN = 16,
+    parameter SQG_LEN = 250
 ) (
     /* ===============================
      * Control interface (AXI4-Lite Slave)
@@ -98,6 +100,10 @@ module zynq_dtw #(
  * Control interface (AXI4-Lite Slave)
  * =============================== */
 
+localparam MAJOR_VERSION = 0;
+localparam MINOR_VERSION = 0;
+localparam REVISION = 2;
+
 /* Register map */
 localparam REG_0_CONTROL = 0;
 localparam REG_1_STATUS = 1;
@@ -108,13 +114,13 @@ localparam REG_5_BEST_SCORE = 5;
 localparam REG_6_BEST_POSITION = 6;
 // TODO: add a query count
 
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_0_control;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_1_status;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_2_version;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_3_key;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_4_ref_len;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_5_best_score;
-reg [S_AXI_DATA_WIDTH - 1: 0]   reg_6_best_position;
+reg [S_AXI_DATA_WIDTH - 1: 0]    reg_0_control;
+wire [S_AXI_DATA_WIDTH - 1: 0]   reg_1_status;
+wire [S_AXI_DATA_WIDTH - 1: 0]   reg_2_version;
+wire [S_AXI_DATA_WIDTH - 1: 0]   reg_3_key;
+reg [S_AXI_DATA_WIDTH - 1: 0]    reg_4_ref_len;
+wire [S_AXI_DATA_WIDTH - 1: 0]   reg_5_best_score;
+wire [S_AXI_DATA_WIDTH - 1: 0]   reg_6_best_position;
 
 localparam REG_0_CONTROL_RST_BIT = 0;
 localparam REG_0_CONTROL_RS_BIT = 1;
@@ -122,7 +128,7 @@ localparam REG_1_STATUS_RUNNING_BIT = 0;
 localparam REG_1_STATUS_DONE_BIT = 1;
 
 /* Address related */
-localparam  integer ADDR_LSB = (DATA_WIDTH / 32) + 1;
+localparam  integer ADDR_LSB = (S_AXI_ADDR_WIDTH / 32) + 1;
 localparam  integer ADDR_BITS = 3; // 2^3 = 8 registers
 // localparam  MAX_ADDR = REG_6_BEST_POSITION;
 
@@ -145,7 +151,7 @@ wire [S_AXIS_DATA_WIDTH - 1: 0] s_axis_fifo_w_data;
 wire                            s_axis_fifo_w_stb;
 wire                            s_axis_fifo_full;
 wire                            s_axis_fifo_not_full;
-wire                            s_axis_fifo_not_empty
+wire                            s_axis_fifo_not_empty;
 
 /* ===============================
  * DTW core
@@ -158,7 +164,7 @@ wire                            dtw_core_fifo_rden;
 wire                            dtw_core_fifo_empty;
 wire [S_AXIS_DATA_WIDTH - 1: 0] dtw_core_fifo_data;
 wire [S_AXI_DATA_WIDTH - 1: 0]  dtw_core_reference_len;
-wire [S_AXI_DATA_WIDTH - 1: 0]  dtw_core_best_score;
+wire [WORD_LEN - 1: 0]          dtw_core_best_score;
 wire [S_AXI_DATA_WIDTH - 1: 0]  dtw_core_best_position;
 wire                            dtw_core_done;
 
@@ -187,7 +193,7 @@ fifo #(
     .DEPTH              (SRC_FIFO_DEPTH),
     .WIDTH              (S_AXIS_DATA_WIDTH)
 ) src_fifo (
-    .clk                (SRC_AXIS_clk),
+    .clk                (S_AXIS_clk),
     .rst                (s_axis_rst | dtw_core_fifo_clear),
 
     .i_fifo_w_stb       (s_axis_fifo_w_stb),
@@ -204,7 +210,7 @@ fifo #(
 /* DTW core */
 assign dtw_core_rst = reg_0_control[REG_0_CONTROL_RST_BIT];
 assign dtw_core_rs = reg_0_control[REG_0_CONTROL_RS_BIT];
-assign dtw_core_reference_len = reg_2_reference_len;
+assign dtw_core_reference_len = reg_4_ref_len;
 dtw_core #(
     .WORD_LEN (WORD_LEN),
     .SQG_LEN (SQG_LEN)
@@ -275,13 +281,14 @@ axi_lite_slave #(
 
 // reg_0_control is written by master
 assign reg_1_status = {30'h0, dtw_core_done, dtw_core_running};
-assign reg_2_version[MAJOR_RANGE] = MAJOR_VERSION;
-assign reg_2_version[MINOR_RANGE] = MINOR_VERSION;
-assign reg_2_version[REVISION_RANGE] = REVISION;
-assign reg_2_version[VERSION_PAD_RANGE] = 0;
+assign reg_2_version[31:28] = MAJOR_VERSION;
+assign reg_2_version[27:20] = MINOR_VERSION;
+assign reg_2_version[19:16] = REVISION;
+assign reg_2_version[15:0] = 0;
 assign reg_3_key = 32'h0ca7cafe;
 // reg_4_ref_len is written by master
-assign reg_5_best_score = dtw_core_best_score;
+assign reg_5_best_score[WORD_LEN-1:0] = dtw_core_best_score;
+assign reg_5_best_score[S_AXI_DATA_WIDTH-1:WORD_LEN] = 16'h0;
 assign reg_6_best_position = dtw_core_best_position;
 
 always @ (posedge S_AXI_clk) begin
@@ -358,6 +365,10 @@ always @ (posedge S_AXI_clk) begin
             endcase
             // Tell AXI slave to send back this packet
             s_axi_reg_out_rdy_stb <= 1;
+        end
+        if (dtw_core_running) begin
+            // reset rs in control register
+            reg_0_control[1] <= 0;
         end
     end
 
