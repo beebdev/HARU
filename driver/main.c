@@ -26,20 +26,36 @@ SOFTWARE. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "haru.h"
-#include "haru_test.h"
 
-#define SRC_BUFFER_ADDR 0x10000000
-#define DST_BUFFER_ADDR 0x20000000
+#include "top.h"
+
+#define AXI_DMA_BASEADDR        0xA0000000
+#define AXI_DMA_SIZE            0xFFFF
+#define ZYNQ_DTW_BASEADDR       0xA0010000
+#define ZYNQ_DTW_SIZE           0xFFFF
+
 #define REFERENCE_SIZE 10000
 #define QUERY_SIZE 250
 #define QUERY_LOCATION 500
 
 int main(int argc, char *argv[]) {
-    int32_t ret;
+    int ret;
+
+    /* Two arguments: physical address of buffer and size of buffer */
+    if (argc != 3) {
+        printf("Usage: %s <physical address> <size>\n", argv[0]);
+        return -1;
+    }
+
+    uint32_t buffer_addr = strtoul(argv[1], NULL, 16);
+    uint32_t buffer_size = strtoul(argv[2], NULL, 16);
+    fprintf(stderr, "Buffer address: 0x%08x\n", buffer_addr);
+    fprintf(stderr, "Buffer size: 0x%08x\n", buffer_size);
     
-    haru_t haru;
-    ret = haru_init(&haru);
+    struct haru_info haru;
+    ret = haru_init(&haru, AXI_DMA_BASEADDR, AXI_DMA_SIZE,
+                           ZYNQ_DTW_BASEADDR, ZYNQ_DTW_SIZE,
+                           buffer_addr, buffer_size);
     if (ret != 0) {
         printf("haru_init failed\n");
         return -1;
@@ -47,7 +63,6 @@ int main(int argc, char *argv[]) {
 
     int32_t ref[REFERENCE_SIZE];
     int32_t query[QUERY_SIZE + 2];
-    search_result_t results;
 
     memset(ref, 0, sizeof(ref));
     memset(query, 0, sizeof(query));
@@ -60,14 +75,23 @@ int main(int argc, char *argv[]) {
         query[i] = ref[QUERY_LOCATION + i];
     }
 
-    printf("load reference\n");
-    if (haru_load_reference(&haru, ref, REFERENCE_SIZE)) {
-        printf("Load done: %x\n", dtw_accel_ref_load_done(&haru.dtw_accel));
-        haru_process_query(&haru, query, QUERY_SIZE+2, &results);
-        printf("results:\n\tqid:%d\n\tposition: %d\n\tscore: %d\n", results.qid, results.position, results.score);
-    } else {
-        printf("Load not done\n");
+    struct search_info search = {
+        .query = query,
+        .reference = ref,
+        .reference_len = REFERENCE_SIZE,
+        .best_position = 0,
+        .best_score = 0,
+    };
+
+    if (haru_search(&haru, &search) != 0) {
+        printf("haru_search failed\n");
+        haru_release(&haru);
+        return -1;
     }
+
+    printf("best position: %d\n", search.best_position);
+    printf("best score: %d\n", search.best_score);
+
 
     haru_release(&haru);
     return 0;

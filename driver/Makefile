@@ -24,21 +24,19 @@
 # SOFTWARE.
 
 LANGFLAG = -x c++
-CPPFLAGS += -Iinclude/
 CFLAGS   += -g -Wall -O2 -std=c++11
-LDFLAGS  += $(LIBS) -lpthread -lz -rdynamic
+LDFLAGS  += $(LIBS) -lz -rdynamic #-lpthread 
 BUILD_DIR = build
 
 ifeq ($(zstd),1)
 LDFLAGS		+= -lzstd
 endif
 
-BINARY = haru
+BINARY = haru_driver_example
 OBJ = $(BUILD_DIR)/main.o \
-	  $(BUILD_DIR)/haru.o \
+	  $(BUILD_DIR)/top.o \
 	  $(BUILD_DIR)/axi_dma.o \
-      $(BUILD_DIR)/dtw_accel.o \
- 	#   $(BUILD_DIR)/haru_test.o \
+      $(BUILD_DIR)/zynq_dtw.o \
 
 PREFIX = /usr/local
 VERSION = `git describe --tags`
@@ -53,26 +51,17 @@ endif
 $(BINARY): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(BUILD_DIR)/main.o: src/main.c src/haru.h src/haru_test.h
+$(BUILD_DIR)/main.o: main.c top.h
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
 
-# $(BUILD_DIR)/haru_test.o: src/haru_test.c src/haru_test.h src/haru.h
-# 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
-
-$(BUILD_DIR)/haru.o: src/haru.c
+$(BUILD_DIR)/top.o: top.c top.h
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
 
-$(BUILD_DIR)/axi_dma.o: src/axi_dma.c
+$(BUILD_DIR)/axi_dma.o: axi_dma.c axi_dma.h
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
 
-$(BUILD_DIR)/dtw_accel.o: src/dtw_accel.c
+$(BUILD_DIR)/zynq_dtw.o: zynq_dtw.c zynq_dtw.h
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LANGFLAG) $< -c -o $@
 
 clean:
 	rm -rf $(BINARY) $(BINARY_TEST) $(BUILD_DIR)/*.o
-
-# Delete all gitignored files (but not directories)
-distclean: clean
-	git clean -f -X
-	rm -rf $(BUILD_DIR)/* autom4te.cache
-

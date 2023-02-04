@@ -23,26 +23,44 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. */
 
-#ifndef MISC_H
-#define MISC_H
+#ifndef HARU_H
+#define HARU_H
 
-#include <stdio.h>
 #include <stdint.h>
 
-// TODO: add defines of error codes
+#include "axi_dma.h"
+#include "zynq_dtw.h"
 
-/*
- * Register getter and setter
- */
-#define _reg_set(BaseAddress, RegOffset, Data) \
-    *(volatile uint32_t*)((BaseAddress) + (RegOffset >> 2)) = (uint32_t)(Data)
-#define _reg_get(BaseAddress, RegOffset) \
-    *(volatile uint32_t*)((BaseAddress) + (RegOffset >> 2))
+#define HARU_QUERY_LEN        250
 
-#define HARU_INFO(msg) \
-    fprintf(stderr, "INFO: %s:%d: ", __FILE__, __LINE__); \
-    fprintf(stderr, "%s", msg);
+struct haru_info {
+    struct axi_dma_info axi_dma;
+    struct zynq_dtw_info zynq_dtw;
+};
 
-// uint32_t haru_errno = 0;
+struct search_info {
+    int32_t *query;
+    int32_t *reference;
 
-#endif // MISC_H
+    uint32_t reference_len;
+
+    uint32_t best_position;
+    uint32_t best_score;
+};
+
+int haru_init(struct haru_info *haru, 
+              uint32_t axi_dma_addr_base, uint32_t axi_dma_size,
+              uint32_t zynq_dtw_addr_base, uint32_t zynq_dtw_size,
+              uint32_t source_mm2s_addr_base, uint32_t source_mm2s_size);
+void haru_release(struct haru_info *haru);
+
+uint32_t haru_get_ip_core_version(struct haru_info *haru);
+void haru_print_ip_core_version(struct haru_info *haru);
+
+int haru_set_reference_len(struct haru_info *haru, uint32_t length);
+uint32_t haru_get_reference_len(struct haru_info *haru);
+
+int haru_search(struct haru_info *haru, struct search_info *search);
+
+
+#endif // HARU_H
