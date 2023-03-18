@@ -47,7 +47,7 @@ To quickly test out HARU, you can download the pre-built binary package built fo
 
 ## Building
 > Warnings:
-> - The building of the core acccelerator is not intuitive and require proprietary sowtware from AMD Xilinx.
+> - The building of the core acccelerator is not intuitive and require proprietary software from AMD Xilinx.
 > - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria.
 
 To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two components:
