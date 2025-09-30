@@ -27,6 +27,9 @@ int main(void) {
     ((volatile uint32_t*)cpu)[0] = 0xA5A5A5A5;
     printf("wrote first word via CPU mapping\n");
 
+    volatile uint32_t val = ((volatile uint32_t*) cpu)[0];
+    printf("val is %x\n", val);
+
     munmap(cpu, size);
     close(fd);
     return 0;
