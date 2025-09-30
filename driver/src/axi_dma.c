@@ -30,59 +30,99 @@ SOFTWARE. */
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 
 /*
  * AXI DMA general function
  */
-int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, uint32_t dst_addr, uint32_t size) {
-    // Open /dev/mem for memory mapping
+int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t size) {
+    // Open /dev/mem for DMA controller registers mapping
     int32_t dev_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (dev_fd < 0) {
+        fprintf(stderr, "Error: Failed to open /dev/mem\n");
         return -1;
     }
 
-    // Init device
+    // Init DMA controller device
     device->size = size;
     device->p_baseaddr = baseaddr;
     device->v_baseaddr = (uint32_t *) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, baseaddr);
     if (device->v_baseaddr == MAP_FAILED) {
+        fprintf(stderr, "Error: Failed to map DMA controller registers\n");
         close(dev_fd);
         return -1;
     }
+    close(dev_fd);
 
-    if (dma_mm2s_sg_active(device) || dma_s2mm_sg_active(device)) {
-        close(dev_fd);
-        return -1;
-    }
-    dma_mm2s_reset(device);
-    dma_s2mm_reset(device);
-
-    // Init buffers
-    device->p_src_addr = src_addr;
-    device->v_src_addr = (void *) mmap(NULL, 0xffff, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, src_addr);
-    if (device->v_src_addr == MAP_FAILED) {
+    // Open HARU DMA kernel module for CMA buffer access
+    device->haru_dma_fd = open("/dev/haru-dma", O_RDWR);
+    if (device->haru_dma_fd < 0) {
+        fprintf(stderr, "Error: Failed to open /dev/haru-dma\n");
         munmap(device->v_baseaddr, device->size);
-        close(dev_fd);
+        return -1;
+    }
+
+    // Get physical address and size from kernel module
+    if (ioctl(device->haru_dma_fd, HARU_GET_PHYS, &device->cma_phys) < 0) {
+        fprintf(stderr, "Error: Failed to get CMA physical address\n");
+        close(device->haru_dma_fd);
+        munmap(device->v_baseaddr, device->size);
+        return -1;
+    }
+
+    if (ioctl(device->haru_dma_fd, HARU_GET_SIZE, &device->cma_size) < 0) {
+        fprintf(stderr, "Error: Failed to get CMA buffer size\n");
+        close(device->haru_dma_fd);
+        munmap(device->v_baseaddr, device->size);
+        return -1;
+    }
+
+    // Map the CMA buffer to userspace
+    device->cma_cpu = mmap(NULL, device->cma_size, PROT_READ | PROT_WRITE, MAP_SHARED, device->haru_dma_fd, 0);
+    if (device->cma_cpu == MAP_FAILED) {
+        fprintf(stderr, "Error: Failed to map CMA buffer\n");
+        close(device->haru_dma_fd);
+        munmap(device->v_baseaddr, device->size);
+        return -1;
+    }
+
+    // Split CMA buffer into src/dst slices (4KiB-aligned)
+    size_t off_dst = (device->cma_size / 2) & ~0xFFF;   // 4KiB-align
+    device->v_src_addr = (uint8_t*)device->cma_cpu + 0;
+    device->v_dst_addr = (uint8_t*)device->cma_cpu + off_dst;
+    device->p_src_addr = device->cma_phys + 0;
+    device->p_dst_addr = device->cma_phys + off_dst;
+
+    fprintf(stderr, "CMA buffer: phys=0x%lx size=%lu bytes\n", 
+           (unsigned long)device->cma_phys, (unsigned long)device->cma_size);
+    fprintf(stderr, "SRC: virt=%p phys=0x%lx\n", device->v_src_addr, (unsigned long)device->p_src_addr);
+    fprintf(stderr, "DST: virt=%p phys=0x%lx\n", device->v_dst_addr, (unsigned long)device->p_dst_addr);
+
+    // Check and reset DMA controller
+    if (dma_mm2s_sg_active(device) || dma_s2mm_sg_active(device)) {
+        fprintf(stderr, "Error: DMA scatter/gather mode active\n");
+        munmap(device->cma_cpu, device->cma_size);
+        close(device->haru_dma_fd);
+        munmap(device->v_baseaddr, device->size);
         return -1;
     }
     
-    device->p_dst_addr = dst_addr;
-    device->v_dst_addr = (void *) mmap(NULL, 0xffff, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fd, dst_addr);
-    if (device->v_dst_addr == MAP_FAILED) {
-        munmap(device->v_baseaddr, device->size);
-        munmap(device->v_src_addr, device->size);
-        close(dev_fd);
-        return -1;
-    }
+    dma_mm2s_reset(device);
+    dma_s2mm_reset(device);
 
-    close(dev_fd);
     return 0;
 }
 
 void axi_dma_release(axi_dma_t *device) {
-    munmap(device->v_baseaddr, device->size);
-    munmap(device->v_src_addr, device->size);
-    munmap(device->v_dst_addr, device->size);
+    if (device->cma_cpu != MAP_FAILED && device->cma_cpu != NULL) {
+        munmap(device->cma_cpu, device->cma_size);
+    }
+    if (device->haru_dma_fd >= 0) {
+        close(device->haru_dma_fd);
+    }
+    if (device->v_baseaddr != MAP_FAILED && device->v_baseaddr != NULL) {
+        munmap(device->v_baseaddr, device->size);
+    }
 }
 
 /*
@@ -333,8 +373,11 @@ void dma_s2mm_ERR_IRQ_DIS(axi_dma_t *device) {
     _reg_set(device->v_baseaddr, AXI_DMA_S2MM_CR, cr & ~(1 << AXI_DMA_CR_ERR_IRQ_EN));
 }
 
-void dma_mm2s_set_src_addr(axi_dma_t *device, uint32_t addr) {
-    _reg_set(device->v_baseaddr, AXI_DMA_MM2S_SRC_ADDR, addr);
+void dma_mm2s_set_src_addr(axi_dma_t *device, uint64_t addr) {
+    // Set lower 32 bits
+    _reg_set(device->v_baseaddr, AXI_DMA_MM2S_SRC_ADDR, (uint32_t)(addr & 0xFFFFFFFF));
+    // Set upper 32 bits (if 64-bit addressing is enabled in IP)
+    _reg_set(device->v_baseaddr, AXI_DMA_MM2S_SRC_ADDR_MSB, (uint32_t)((addr >> 32) & 0xFFFFFFFF));
 }
 
 void dma_mm2s_set_src_addr_msb(axi_dma_t *device, uint32_t addr) {
@@ -348,8 +391,11 @@ void dma_mm2s_set_length(axi_dma_t *device, uint32_t length) {
     _reg_set(device->v_baseaddr, AXI_DMA_MM2S_LENGTH, length * 4);
 }
 
-void dma_s2mm_set_dst_addr(axi_dma_t *device, uint32_t addr) {
-    _reg_set(device->v_baseaddr, AXI_DMA_S2MM_DST_ADDR, addr);
+void dma_s2mm_set_dst_addr(axi_dma_t *device, uint64_t addr) {
+    // Set lower 32 bits
+    _reg_set(device->v_baseaddr, AXI_DMA_S2MM_DST_ADDR, (uint32_t)(addr & 0xFFFFFFFF));
+    // Set upper 32 bits (if 64-bit addressing is enabled in IP)
+    _reg_set(device->v_baseaddr, AXI_DMA_S2MM_DST_ADDR_MSB, (uint32_t)((addr >> 32) & 0xFFFFFFFF));
 }
 
 void dma_s2mm_set_dst_addr_msb(axi_dma_t *device, uint32_t addr) {

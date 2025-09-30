@@ -33,23 +33,28 @@ SOFTWARE. */
  */
 
 int32_t haru_init(haru_t *haru) {
+
+    fprintf(stderr, "Initializing HARU... (kernel module!)\n");
+
     uint32_t ret;
 
     // Initialize axi_dma
-    ret = axi_dma_init(&haru->axi_dma, HARU_AXI_DMA_ADDR_BASE, HARU_AXI_SRC_ADDR, HARU_AXI_DST_ADDR, HARU_AXI_DMA_SIZE);
+    ret = axi_dma_init(&haru->axi_dma, HARU_AXI_DMA_ADDR_BASE, HARU_AXI_DMA_SIZE);
     if (ret != 0) {
+        fprintf(stderr, "Error: Failed to initialize AXI DMA\n");
         return -1;
     }
 
     // Initialize dtw_accel
     ret = dtw_accel_init(&haru->dtw_accel, HARU_DTW_ACCEL_ADDR_BASE, HARU_DTW_ACCEL_SIZE);
     if (ret != 0) {
+        fprintf(stderr, "Error: Failed to initialize DTW_ACCEL\n");
         return -1;
     }
 
     haru_check_key(haru);
     uint32_t version = haru_get_version(haru);
-    // printf("HARU version: %x\n", version);
+    printf("HARU version: %x\n", version);
     // printf("DTW_ACCEL busy: %x\n", dtw_accel_busy(&haru->dtw_accel));
     // printf("DTW_ACCEL ref_load_done: %x\n", dtw_accel_ref_load_done(&haru->dtw_accel));
     // printf("DTW_ACCEL src_fifo_empty: %x\n", dtw_accel_src_fifo_empty(&haru->dtw_accel));

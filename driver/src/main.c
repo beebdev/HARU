@@ -29,8 +29,6 @@ SOFTWARE. */
 #include "haru.h"
 #include "haru_test.h"
 
-#define SRC_BUFFER_ADDR 0x10000000
-#define DST_BUFFER_ADDR 0x20000000
 #define REFERENCE_SIZE 10000
 #define QUERY_SIZE 250
 #define QUERY_LOCATION 500

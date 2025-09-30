@@ -30,6 +30,11 @@ SOFTWARE. */
 
 #include <stdint.h>
 
+// HARU DMA kernel module ioctl definitions
+#define HARU_IOC_MAGIC   'h'
+#define HARU_GET_PHYS    _IOR(HARU_IOC_MAGIC, 10, uint64_t)
+#define HARU_GET_SIZE    _IOR(HARU_IOC_MAGIC, 11, uint64_t)
+
 // AXI DMA register map offsets (Direct Register Mode)
 #define AXI_DMA_MM2S_CR             0x00
 #define AXI_DMA_MM2S_SR             0x04
@@ -67,19 +72,25 @@ SOFTWARE. */
 
 /* AXI DMA type */
 typedef struct {
-    // device info
+    // DMA controller device info
     uint32_t *v_baseaddr;    // Memory mapped virtual base address
-    uint32_t p_baseaddr;    // Physical base address
-    uint32_t size;          // Size of device
+    uint32_t p_baseaddr;     // Physical base address
+    uint32_t size;           // Size of device
+    
+    // CMA buffer info from kernel module
+    int haru_dma_fd;         // File descriptor for /dev/haru-dma
+    void *cma_cpu;           // Virtual address of CMA buffer
+    uint64_t cma_phys;       // Physical address of CMA buffer
+    uint64_t cma_size;       // Size of CMA buffer
 
-    // src and dst buffers
-    void *v_src_addr;
-    void *v_dst_addr;
-    uint32_t p_src_addr;
-    uint32_t p_dst_addr;
+    // src and dst buffer slices within CMA buffer
+    void *v_src_addr;        // Virtual source buffer (slice of cma_cpu)
+    void *v_dst_addr;        // Virtual destination buffer (slice of cma_cpu)
+    uint64_t p_src_addr;     // Physical source buffer (slice of cma_phys)
+    uint64_t p_dst_addr;     // Physical destination buffer (slice of cma_phys)
 } axi_dma_t;
 
-int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t src_addr, uint32_t dst_addr, uint32_t size);
+int32_t axi_dma_init(axi_dma_t *device, uint32_t baseaddr, uint32_t size);
 void axi_dma_release(axi_dma_t *device);
 
 void dma_mm2s_reset(axi_dma_t *device);
@@ -122,10 +133,10 @@ uint8_t dma_s2mm_DLY_IRQ(axi_dma_t *device);
 uint8_t dma_mm2s_ERR_IRQ(axi_dma_t *device);
 uint8_t dma_s2mm_ERR_IRQ(axi_dma_t *device);
 
-void dma_mm2s_set_src_addr(axi_dma_t *device, uint32_t addr);
+void dma_mm2s_set_src_addr(axi_dma_t *device, uint64_t addr);
 void dma_mm2s_set_src_addr_msb(axi_dma_t *device, uint32_t addr);
 void dma_mm2s_set_length(axi_dma_t *device, uint32_t length);
-void dma_s2mm_set_dst_addr(axi_dma_t *device, uint32_t addr);
+void dma_s2mm_set_dst_addr(axi_dma_t *device, uint64_t addr);
 void dma_s2mm_set_dst_addr_msb(axi_dma_t *device, uint32_t addr);
 void dma_s2mm_set_length(axi_dma_t *device, uint32_t length);
 

@@ -39,9 +39,6 @@ SOFTWARE. */
 #define HARU_AXI_DMA_INIT_ERROR     0x01
 #define HARU_DTW_ACCEL_INIT_ERROR   0x02
 
-#define HARU_AXI_SRC_ADDR           0x10000000
-#define HARU_AXI_DST_ADDR           0x20000000
-
 #define HARU_AXI_BUFFER_SIZE        0xffff
 
 #define HARU_AXIS_BATCH_MAX_SIZE    0x0fff
