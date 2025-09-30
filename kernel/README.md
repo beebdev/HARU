@@ -20,6 +20,9 @@ The recommended way to build and test the module is directly on the target syste
 ```sh
 make
 sudo insmod haru_dma.ko
+# or if you want to alloc a particular size
+sudo insmod haru_dma.ko buf_size_kib=2048 # 2MiB
+
 dmesg | tail
 ls -l /dev/haru-dma
 ```
